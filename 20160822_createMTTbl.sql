@@ -193,3 +193,4 @@ insert into master.dbo.MTTable
 		MT.placement_id,
 		MT.placement_label
 go
+-- 
