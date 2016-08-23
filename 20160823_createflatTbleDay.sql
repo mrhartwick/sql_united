@@ -259,8 +259,9 @@ sum(Report.Click_Thru_Tickets)              AS Click_Thru_Tickets,
 sum(cast(Report.View_Thru_Revenue AS DECIMAL(10, 2)))                   AS View_Thru_Revenue,
 sum(cast(Report.Click_Thru_Revenue AS DECIMAL(10, 2)))                   AS Click_Thru_Revenue,
 sum(cast(Report.Revenue AS DECIMAL(10, 2))) AS revenue
-from (
-SELECT Conversions.Click_Time as "Date"
+
+from ( select
+cast(Conversions.Click_Time as date) as "Date"
 ,order_id                                                                       as Buy_id
 ,Conversions.site_id      as Site_ID
 ,Conversions.page_id                                                                        as Placement_ID
@@ -279,42 +280,34 @@ from
 SELECT *
 FROM mec.UnitedUS.dfa_activity
 WHERE (cast(click_time as date) > ''2016-01-01'' )
-								 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
-								 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
+-- 								 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
+-- 								 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
--- and (
--- order_id = ''9739006''
--- or order_id = ''9548151''
--- or order_id = ''9408733''
--- or order_id = ''9639387''
--- or order_id = ''9630239''
--- or order_id = ''9407915''
--- )
-
 and (advertiser_id <> 0)
 )
 as Conversions
 
 LEFT JOIN mec.Cross_Client_Resources.EXCHANGE_RATES AS Rates
 ON UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) = UPPER(Rates.Currency)
-AND cast(Conversions.Activity_Time as date) = Rates.DATE
+AND cast(Conversions.Click_Time as date) = Rates.DATE
 
-GROUP BY Conversions.Click_Time
+GROUP BY
+cast(Conversions.Click_Time as date)
 ,Conversions.order_id
 ,Conversions.site_id
 ,Conversions.page_id
 UNION ALL
 
 SELECT
-Impressions.impression_time as "Date"
+cast(Impressions.impression_time as date) as "Date"
 ,Impressions.order_ID                 as Buy_id
 ,Impressions.Site_ID                  as Site_ID
 ,Impressions.Page_ID                  as Placement_ID
 ,count(*)                             as Impressions
 ,0                                    as Clicks
-,0   as Click_Thru_Conv
-,0                                   as Click_Thru_Tickets
+,0                                    as Click_Thru_Conv
+,0                                    as Click_Thru_Tickets
 ,0                                    as Click_Thru_Revenue
 ,0                                    as View_Thru_Conv
 ,0                                    as View_Thru_Tickets
@@ -325,17 +318,10 @@ FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
 WHERE cast(impression_time as date) > ''2016-01-01''
--- and (
--- order_id = ''9739006''
--- or order_id = ''9548151''
--- or order_id = ''9408733''
--- or order_id = ''9639387''
--- or order_id = ''9630239''
--- or order_id = ''9407915''
--- )
 
 ) AS Impressions
-GROUP BY Impressions.impression_time
+GROUP BY
+cast(Impressions.impression_time as date)
 ,Impressions.order_ID
 ,Impressions.Site_ID
 ,Impressions.Page_ID
@@ -361,17 +347,10 @@ FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_click
 WHERE cast(click_time as date) > ''2016-01-01''
--- and (
--- order_id = ''9739006''
--- or order_id = ''9548151''
--- or order_id = ''9408733''
--- or order_id = ''9639387''
--- or order_id = ''9630239''
--- or order_id = ''9407915''
--- )
 ) AS Clicks
 
-GROUP BY      Clicks.Click_time
+GROUP BY
+cast(Clicks.Click_time as date)
 ,Clicks.order_id
 ,Clicks.Site_ID
 ,Clicks.Page_ID
@@ -402,8 +381,7 @@ from mec.UnitedUS.dfa_site
 ) AS Directory
 ON Report.Site_ID = Directory.Site_ID
 
-WHERE Placements.Site_Placement NOT LIKE ''%[Dd][Oo]%[Nn][Oo][Tt]%[Uu][Ss][Ee]%''
-and Placements.Site_Placement NOT LIKE ''%[Nn]o%[Tt]racking%''
+WHERE NOT REGEXP_LIKE(Placements.site_placement,''.do\s*not\s*use.'',''ib'')
 
 
 GROUP BY
@@ -426,10 +404,9 @@ cast(Report.Date AS DATE)
 							     FROM [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.[dbo].summaryTable
 						     ) AS Prisma
 							     ON dcmReport.Placement_ID = Prisma.AdserverPlacementId
-					     WHERE ( ( Prisma.CostMethod = 'Flat' )
-					             AND ( dcmReport.Site_Placement NOT LIKE '%DONOTUSE%' )
-					             AND cast(Prisma.PlacementStart AS date) >= '2016-01-01'
-					     )
+					     WHERE Prisma.CostMethod = 'Flat' 
+
+					     
 -- =========================================================================================================================
 					     GROUP BY
 						     cast(dcmReport.dcmDate AS date)
@@ -471,4 +448,3 @@ cast(Report.Date AS DATE)
      ) AS f1
 ) as f2
 go
-
