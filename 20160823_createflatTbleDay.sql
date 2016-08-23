@@ -471,3 +471,4 @@ cast(Report.Date AS DATE)
      ) AS f1
 ) as f2
 go
+
