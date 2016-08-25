@@ -16,8 +16,8 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-08-18';
-SET @report_st = '2016-07-01';
+SET @report_ed = '2016-08-30';
+SET @report_st = '2016-06-01';
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
@@ -88,7 +88,7 @@ select
 	case when final.CostMethod = 'Flat' then final.flatCost / max(final.newCount) else sum(
 		final.cost) end                                      as cost,
 	sum(final.Impressions)                                   as Impressions,
--- 	sum(final.dcmImpressions)                                                        AS dcmImpressions,
+	sum(final.dcmImpressions)                                                        AS dcmImpressions,
 -- 	sum(MT.human_impressions)                                      AS MT_Impressions,
 -- 	sum(final.dv_impressions)                                                     AS DV_Impressions,
 -- 	sum(final.DV_Viewed)                                                          AS DV_Viewed,
@@ -118,7 +118,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-07-30';
--- SET @report_st = '2016-07-01';
+-- SET @report_st = '2016-06-01';
 
 	     select
 		     cast(almost.dcmDate as date)                                               as dcmDate,
@@ -166,12 +166,17 @@ from (
 		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE'))
 			     then ((sum(cast(almost.Impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
 
-		     --           Impression-based cost; not subject to viewability; DV source
+		     --           Impression-based cost; subject to viewability; DV source
 		     when (almost.DV_Map = 'Y' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
 		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE'))
 			     then ((sum(cast(DV.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
 
-		     --           Impression-based cost; not subject to viewability; MOAT source
+			 --           Impression-based cost; subject to viewability with flag; MT source
+		     when (almost.DV_Map = 'Y' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
+		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE') and MT.joinKey is not null)
+			     then ((sum(cast(MT.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
+
+		     --           Impression-based cost; subject to viewability; MOAT source
 		     when (almost.DV_Map = 'M' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
 		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE'))
 			     then ((sum(cast(MT.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
@@ -188,6 +193,13 @@ from (
 			         then (almost.View_Thru_Revenue) *
 			              ((cast(DV.groupm_passed_impressions as decimal) /
 			                cast(DV.total_impressions as decimal)))
+
+		         -- 		subject to viewability with flag; MT source
+		         when (almost.DV_Map = 'Y' and MT.joinKey is not null)
+			         then (almost.View_Thru_Revenue) *
+			              ((cast(MT.groupm_passed_impressions as decimal) /
+			                cast(MT.total_impressions as decimal)))
+
 		         -- 		subject to viewability; MOAT source
 		         when (almost.DV_Map = 'M')
 			         then (almost.View_Thru_Revenue) *
@@ -199,11 +211,19 @@ from (
 		         -- 		not subject to viewability
 		         when (almost.DV_Map = 'N')
 			         then cast(almost.View_Thru_Revenue * .2 * .15 as decimal(10,2))
+
 		         -- 		subject to viewability; DV source
 		         when (almost.DV_Map = 'Y')
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(DV.groupm_passed_impressions as decimal) /
 			                      cast(DV.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
+
+		         -- 		subject to viewability with flag; MT source
+		         when (almost.DV_Map = 'Y' and MT.joinKey is not null)
+			         then cast(((almost.View_Thru_Revenue) *
+			                    ((cast(MT.groupm_passed_impressions as decimal) /
+			                      cast(MT.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
+
 		         -- 		subject to viewability; MOAT source
 		         when (almost.DV_Map = 'M')
 			         then cast(((almost.View_Thru_Revenue) *
@@ -211,6 +231,7 @@ from (
 			                      cast(MT.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
 		         else 0 end)                                                            as adjsRevenue,
 		     sum(case when almost.DV_Map = 'Y' then DV.total_impressions
+			     when almost.DV_Map = 'Y' and MT.joinKey is not null then MT.total_impressions
 		         when almost.DV_Map = 'M' then MT.total_impressions
 		         else almost.Impressions end)                                           as Impressions,
 		     sum(almost.Impressions)                                                    as dcmImpressions,
@@ -240,7 +261,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-07-30';
--- SET @report_st = '2016-07-01';
+-- SET @report_st = '2016-06-01';
 			     select
 				     dcmReport.dcmDate                                                                                                                      as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as
@@ -371,9 +392,9 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-07-01'' AND ''2016-08-18'')
-								 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
-								 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
+WHERE (cast(Click_Time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30'')
+-- 								 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
+-- 								 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
 and quantity != 0
 AND (Activity_Type = ''ticke498'')
@@ -418,7 +439,7 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-07-01'' AND ''2016-08-18''
+WHERE cast(impression_time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
 
 
  and  order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649) -- Display 2016
@@ -431,7 +452,7 @@ WHERE cast(impression_time as date) BETWEEN ''2016-07-01'' AND ''2016-08-18''
 -- AND (Activity_Type = ''ticke498'')
 -- AND (Activity_Sub_Type = ''unite820'')
 -- and (advertiser_id <> 0)
---   and cast(Activity_Time as date) BETWEEN ''2016-07-01'' AND ''2016-08-18''
+--   and cast(Activity_Time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
 -- )
 
 
@@ -464,7 +485,7 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-07-01'' AND ''2016-08-18''
+WHERE cast(click_time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
 
  and  order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649) -- Display 2016
 --  and user_id not in (select
@@ -476,7 +497,7 @@ WHERE cast(click_time as date) BETWEEN ''2016-07-01'' AND ''2016-08-18''
 -- AND (Activity_Type = ''ticke498'')
 -- AND (Activity_Sub_Type = ''unite820'')
 -- and (advertiser_id <> 0)
---   and cast(Activity_Time as date) BETWEEN ''2016-07-01'' AND ''2016-08-18''
+--   and cast(Activity_Time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
 -- )
 
 ) AS Clicks
@@ -576,7 +597,7 @@ cast(Report.Date AS DATE)
 		   and almost.dcmMatchDate = flat.dcmDate
 
 -- DV Table JOIN ==============================================================================================================================================
-	
+
 	left join (
 		          select *
 		          from master.dbo.DVTable
@@ -656,9 +677,9 @@ cast(Report.Date AS DATE)
 				else almost.Directory_Site end
 				,' ','') + '_'
 			+ cast(almost.dcmDate as varchar(10)) = DV.joinKey
-	
+
 -- MOAT Table JOIN ==============================================================================================================================================
-	
+
 	left join (
 		          select *
 		          from master.dbo.MTTable
@@ -789,6 +810,7 @@ group by
 -- 	where final.Site_ID = '1853564' and final.DV_Map = 'Y'
 -- 	where final.CostMethod = 'CPC'
 	-- 	where final.CostMethod = 'Flat'
+	where final.Directory_Site like '%Martini%'
 
 group by
 	final.dcmDate
