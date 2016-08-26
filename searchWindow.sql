@@ -109,16 +109,18 @@ from (
 --                       user_id in ('AMsySZZiHBCWQjp2vJhEUQR_Qx1T', 'AMsySZYz8UCa9bCS-xNdJ-LIDUoW', 'AMsySZYyoDt0DQfbxjT-GWqT1il1', 'AMsySZa2LMuKJsjy057wcfVedydA', 'AMsySZb9aHI2WgGzF-klMrb_MZqc', 'AMsySZZvvr67w64JfUhNdBZziJgn', 'AMsySZbcl5slolFFeIQUPzv46ce_', 'AMsySZZ2i-DaWRbfJEKuw5M6a_Wf', 'AMsySZb1UlY0WfCfFQ1lYYds_z5b', 'AMsySZad4CSsihVR38Zcp6fVsXJK', 'AMsySZZsc8OKckDAOy4HOhMexY0v', 'AMsySZZzt4E30_XTNzmg799npCOv', 'AMsySZYniUHAalFu_VaVJD0suhgC', 'AMsySZZrKJy5nVRS5-UPDuKbRQ7A', 'AMsySZYsqIuzFAB18tg4XV800I4B', 'AMsySZY-NpMufD_EFqWINCXoF9DW', 'AMsySZbmVBLRITnL7By9j2JstNHl', 'AMsySZZyXcXtVchKfNqAy_E9QuX1', 'AMsySZY_2OTRAJ-gva2mWabz9MU2', 'AMsySZZG3vUOTbMUIgACG0ZG68Fu', 'AMsySZYqb6sWykbhWES0suQjfgpu', 'AMsySZa907i-zbWA5TvzYO6IVwyh', 'AMsySZb3W1r1ltG-5tMXFPNoWbRY', 'AMsySZaeuMEyxMcy5SA28hcFXKZU', 'AMsySZaFxmPs-2dl2qUbNbZdcAni', 'AMsySZbd8jwvP1M6b2lVK0ZV5iyF', 'AMsySZbwXxw8Z3VYfK23eXYIU36G', 'AMsySZb6cGZftOH1Btak55jxKTl1', 'AMsySZYrmI4m3M0b5o-3-wv964I-', 'AMsySZYT03IOMCLlfITOEZJKQFvw', 'AMsySZbWJK-1Xl871zBiw2HxPE3U', 'AMsySZbnHWtLt-0AzaEMXOjHD3lM', 'AMsySZYV15VZj0L_VrxrMmGHKO_v', 'AMsySZaEJ65Xt7IRECfbfXkXmayH', 'AMsySZaObsTUgl1gTMp1ISh_ENU-', 'AMsySZYPT99tNy4nDKNhwevKphGu', 'AMsySZabGtYKcRG1SBfOJaY8xCU1', 'AMsySZZygtvbSHU1Vo2vUx5dudLt', 'AMsySZaI7A8ZA5aGk3zH3RhnqtF7', 'AMsySZYs5EppRVDTpPbOKNb3pqeD', 'AMsySZZK0AbYWw4vL5NvlwWBoRJd', 'AMsySZaScKTo7foEIBN8bz547Vlo', 'AMsySZa6CXxgsAWOHDKHYXECQWSu', 'AMsySZatIiO0W0lOmgeJu87eS9r7', 'AMsySZbi213XnGn-gAQeOinFySjK', 'AMsySZbCW1I4SiSppze_ITTjwBce', 'AMsySZZn2jLkA1K83ZkMcsV2vHjQ', 'AMsySZZDMtC3bccK0TpEzcSDrkkV', 'AMsySZbBvkB8Jds6BeLVekhjgsYY', 'AMsySZZoTATMKjK7yso2a_3-hilc', 'AMsySZZrKJy5nVRS5-UPDuKbRQ7A', 'AMsySZateCZn63PhNkSr0ID6-f2i', 'AMsySZatUfVZXM72lDSGcT2VgIbd', 'AMsySZZnosSdjhnjnDjnNE_H9096', 'AMsySZYXjUBYIzGlMt1b_e3mSX73', 'AMsySZbb4BfM84WyXCK0lwZEdJms', 'AMsySZa1sTZWcP2SBy6SH300rVq8', 'AMsySZbesQT9QVAIjZE1J_UxrVIB', 'AMsySZbiQjmJ3KXvc15qLAkePd63', 'AMsySZa3v2TIb55HLb4dR9_L692h', 'AMsySZaWFSrZZdYSGYXS5qGFstFh', 'AMsySZbrF_HoGXnR_X6BqoeZB9Dt', 'AMsySZbu_xafp3JNcFHLwOuqf2Ju', 'AMsySZYPiY7hLqMOusoZ4pJGXggL', 'AMsySZa-hovKoeeYCGBhjuSPSp6s', 'AMsySZYRUtOQnUHmqFcyhq9zqtrX', 'AMsySZYJ6kL1tMEZqvbadELhYHJU', 'AMsySZZ5TNf8Z4foJHoNDEAS30zk', 'AMsySZbXhUOJM5U6uTea4CyQ4LtQ', 'AMsySZbJC7OOA9yGp-d98CbxQhjn', 'AMsySZbfJjqHYXnBI7DUKeThVIeY', 'AMsySZb2V6oAAmK2BlGpGRDesdIP', 'AMsySZad3Ky6nwdL_Pr3j1a5Srsh', 'AMsySZbSPG-FAE5TE8mxiuwbQWpb', 'AMsySZZxnofAj5rae9SQsCJr-Xbf', 'AMsySZaMnM1En1i4C0dp9TDXY3kf', 'AMsySZZtW8sMe1rdO5h8-4n2ciAb', 'AMsySZZNVjMb5UKm1aA7iQW_M72L', 'AMsySZaSD93HgAlimNNqoRJdDOZ1', 'AMsySZbzuUni2-67JyGVJAoCGLyw', 'AMsySZZVyi_GKH-zysD9rUFAVv2h', 'AMsySZat40Rzqx9WA9V_PW0vh7gZ', 'AMsySZbe4nOiaQ1CnuOsHBCpKUm3', 'AMsySZbdb9GXRMK-WXa-DXtENSHg', 'AMsySZa2GnheI8s0jKsKq49-ABRb', 'AMsySZYr9y5bT_rs3VowFYGqmx0u', 'AMsySZYHeHzAwzFMWJidG4vbm9al', 'AMsySZauS49NcKx3c5-kuNR0LOoz', 'AMsySZbtOZnVBlC7n_71gaFGjD7X', 'AMsySZbrEfvE8b_yoMkVSbFXeKD_', 'AMsySZaugxulTMsApwFfBQko4-i0', 'AMsySZY8VJc7ipjmwerZTpaQ07ne', 'AMsySZb1ip8OyJUQl7_3SkZxi7GV', 'AMsySZbdVmvv0BuLFHG4RaczZAqy', 'AMsySZaPN43Any9D36iUHScLorWa', 'AMsySZZJQFXcof-z9rqMOQgPzJCA', 'AMsySZZleqNZI5XGU2Gi2Gh3YwN-', 'AMsySZbtMI4gJvXAsoX2EAF4n-iI', 'AMsySZZO49_d0WXkJQq6Nlu9uZlZ', 'AMsySZbOFLl4VpycKp-kJ9jlUZmo') and
                          revenue != 0 and
                          quantity != 0 and
-                         activity_time ::date between '2016-01-01' and '2016-07-31' and
+                         activity_time ::date between '2016-01-01' and '2016-07-31'
+--                                          and
                                          --             activity_time:: = '7/1/2016'  AND
                                          advertiser_id != 0 and
                                          --                             order_id not in ( 9830589,9860136,9501268 ) -- unidentified campaigns
                                          --                                          order_id in ( 8441345,9349302,9917294,8063775,9961760,8161352,6146233 )  -- Search
-                                         order_id in
-                                         ( 9999841,8945683,8958859,10121649,9109393,8955169,8493481,8581015,8755908,8837963,8504608,9205780,9639387,9408733,9407915,10094548,9973506,9994694,9923634,9630239,9548151,9739006,9304728,9836967,8441345,9349302,9917294,8063775,9961760,8161352,6146233 ) -- Display and Search
+--                                          order_id in
+--                                          ( 9999841,8945683,8958859,10121649,9109393,8955169,8493481,8581015,8755908,8837963,8504608,9205780,9639387,9408733,9407915,10094548,9973506,9994694,9923634,9630239,9548151,9739006,9304728,9836967,8441345,9349302,9917294,8063775,9961760,8161352,6146233 ) -- Display and Search
 --                                      order_id in (6146233, 9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649, 8063775, 9349302, 8161352, 9917294, 8958859, 9836967, 9961760) -- Display and Search 2016
                                          --          group by user_id,activity_time
                                          and ( activity_type = 'ticke498' and activity_sub_type = 'unite820' )
+                     and user_id != '0'
 
                    ) as a,
                    ( select
@@ -133,10 +135,11 @@ from (
 --                                                   activity_time ::date between '2016-06-01' and '2016-07-31' and
                          --                             order_id not in ( 9830589,9860136,9501268 ) -- unidentified campaigns
                          --                                               order_id in ( 8441345,9349302,9917294,8063775,9961760,8161352,6146233 )  -- Search
-                         order_id in
-                                         ( 9999841,8945683,8958859,10121649,9109393,8955169,8493481,8581015,8755908,8837963,8504608,9205780,9639387,9408733,9407915,10094548,9973506,9994694,9923634,9630239,9548151,9739006,9304728,9836967,8441345,9349302,9917294,8063775,9961760,8161352,6146233 ) -- Display and Search
+--                          order_id in
+--                                          ( 9999841,8945683,8958859,10121649,9109393,8955169,8493481,8581015,8755908,8837963,8504608,9205780,9639387,9408733,9407915,10094548,9973506,9994694,9923634,9630239,9548151,9739006,9304728,9836967,8441345,9349302,9917294,8063775,9961760,8161352,6146233 ) -- Display and Search
 --                                      order_id in (6146233, 9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649, 8063775, 9349302, 8161352, 9917294, 8958859, 9836967, 9961760) -- Display and Search 2016
-                         and ( activity_type = 'unite280' and activity_sub_type = 'unite229' )
+--                          and
+                   ( activity_type = 'unite280' and activity_sub_type = 'unite229' )
                        and user_id != '0'
                    ) as b
                where
