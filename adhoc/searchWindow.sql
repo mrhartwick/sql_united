@@ -1,3 +1,8 @@
+-- 20160831 Search window queries
+-- 1.) query to identify evaluate time-to-search, count users, place them in bins (buckets of ten days)
+-- 2.) query to count all users who purchased a ticket
+
+-- // Finds users who purchased a ticket and THEN performed a subsequent route search; multiple transactions by the same user are counted as long as each is followed by a route search
 select
 --  month(cast(tix_time as date)),
 --  grouped,
@@ -121,3 +126,31 @@ group by
   cvr_window_day
 --  grouped
 ;
+
+-- // =========================================================================================================================================================
+-- // Finds all users who purchased a ticket; multiple transactions by the same user are counted
+select
+  month(cast(t2.act_date as date)) as act_date,
+  count(user_id)                   as users,
+  sum(t2.trans)                    as trans,
+  sum(t2.quantity)                 as quantity
+from (
+       select
+         t1.user_id       as user_id,
+         t1.activity_time as act_date,
+         count(*)         as trans,
+         sum(t1.quantity) as quantity
+       from
+         mec.UnitedUS.dfa_activity as t1
+       where
+         revenue != 0 and
+         quantity != 0 and
+         activity_time ::date between '2016-01-01' and '2016-08-31'
+         and advertiser_id != 0 -- comment out to count users transactions unattributed to media
+         and user_id != '0' -- comment out to count all users, even those with a cookie ID of 0
+         and (activity_type = 'ticke498' and activity_sub_type = 'unite820')
+       group by
+         t1.user_id,
+         t1.activity_time
+     ) as t2
+group by month(cast(t2.act_date as date))
