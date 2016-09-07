@@ -166,15 +166,15 @@ from (
 		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE'))
 			     then ((sum(cast(almost.Impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
 
-		     --           Impression-based cost; subject to viewability; DV source
-		     when (almost.DV_Map = 'Y' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
-		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE'))
-			     then ((sum(cast(DV.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
-
 			 --           Impression-based cost; subject to viewability with flag; MT source
 		     when (almost.DV_Map = 'Y' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
 		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE') and MT.joinKey is not null)
 			     then ((sum(cast(MT.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
+
+		     --           Impression-based cost; subject to viewability; DV source
+		     when (almost.DV_Map = 'Y' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
+		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE'))
+			     then ((sum(cast(DV.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
 
 		     --           Impression-based cost; subject to viewability; MOAT source
 		     when (almost.DV_Map = 'M' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
@@ -188,6 +188,12 @@ from (
 		         -- 		not subject to viewability
 		         when (almost.DV_Map = 'N')
 			         then almost.View_Thru_Revenue
+
+		         -- 		subject to viewability with flag; MT source
+		         when (almost.DV_Map = 'Y' and MT.joinKey is not null)
+			         then (almost.View_Thru_Revenue) *
+			              ((cast(MT.groupm_passed_impressions as decimal) /
+			                cast(MT.total_impressions as decimal)))
 		         -- 		subject to viewability; DV source
 		         when (almost.DV_Map = 'Y')
 			         then (almost.View_Thru_Revenue) *
@@ -211,18 +217,17 @@ from (
 		         -- 		not subject to viewability
 		         when (almost.DV_Map = 'N')
 			         then cast(almost.View_Thru_Revenue * .2 * .15 as decimal(10,2))
+		         -- 		subject to viewability with flag; MT source
+		         when (almost.DV_Map = 'Y' and MT.joinKey is not null)
+			         then cast(((almost.View_Thru_Revenue) *
+			                    ((cast(MT.groupm_passed_impressions as decimal) /
+			                      cast(MT.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
 
 		         -- 		subject to viewability; DV source
 		         when (almost.DV_Map = 'Y')
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(DV.groupm_passed_impressions as decimal) /
 			                      cast(DV.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
-
-		         -- 		subject to viewability with flag; MT source
-		         when (almost.DV_Map = 'Y' and MT.joinKey is not null)
-			         then cast(((almost.View_Thru_Revenue) *
-			                    ((cast(MT.groupm_passed_impressions as decimal) /
-			                      cast(MT.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
 
 		         -- 		subject to viewability; MOAT source
 		         when (almost.DV_Map = 'M')
@@ -810,7 +815,7 @@ group by
 -- 	where final.Site_ID = '1853564' and final.DV_Map = 'Y'
 -- 	where final.CostMethod = 'CPC'
 	-- 	where final.CostMethod = 'Flat'
-	where final.Directory_Site like '%Martini%'
+
 
 group by
 	final.dcmDate
