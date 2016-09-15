@@ -1,4 +1,4 @@
--- Master Query (2016-05-2)
+-- Master Query (2016-9-15)
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 --
@@ -17,7 +17,7 @@ DECLARE @report_st date,
 @report_ed date;
 --
 SET @report_ed = '2016-08-30';
-SET @report_st = '2016-06-01';
+SET @report_st = '2016-08-01';
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
@@ -54,19 +54,76 @@ select
 	final.campaignType                                                                                                                                        as Campaign_Type,
 -- 	final.Directory_Site                                                          AS SITE,
 	case
-	when final.Directory_Site = 'Internet Brands'
-		then 'FlyerTalk'
-	when final.Directory_Site = 'Specific Media - All'
-		then 'Viant'
-	when final.Directory_Site = 'xad.com/advertise'
-		then 'xAd'
-	when final.Directory_Site = 'Condé Nast Digital - Condé Nast Traveler'
-		then 'Conde Nast Traveler'
-	when final.Directory_Site = 'Google - YouTube'
-		then 'YouTube'
-	when final.Directory_Site = 'XAXIS SG/PH'
-		then 'Xaxis'
-	else final.Directory_Site end                                                                                                                             as Directory_Site,
+	when ( final.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or final.Directory_Site like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
+				when ( final.Directory_Site like '[Gg][Dd][Nn]%' or final.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'GDN'
+				when final.Directory_Site like '%[Aa]dara%' then 'Adara'
+				when final.Directory_Site like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
+				when final.Directory_Site like '%[Cc][Nn][Nn]%' then 'CNN'
+				when final.Directory_Site like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
+				when final.Directory_Site like '%[Ff]orbes%' then 'Forbes'
+				when final.Directory_Site like '%[Gg]olf%[Dd]igest%' then 'GolfDigest'
+				when final.Directory_Site like '%[Jj]un%[Gg]roup%' then 'JunGroup'
+				when final.Directory_Site like '%[Mm][Ll][Bb]%' then 'MLB'
+				when final.Directory_Site like '%[Mm]ansueto%' then 'Inc'
+				when final.Directory_Site like '%[Mn][Ss][Nn]%' then 'MSN'
+				when final.Directory_Site like '%[Nn][Bb][Aa]%' then 'NBA'
+				when final.Directory_Site like '%[Nn][Ff][Ll]%' then 'NFL'
+				when final.Directory_Site like '%[Nn]ast_[Tt]raveler%' then 'CN Traveler'
+				when final.Directory_Site like '%[Nn]ew_[Yy]ork_[Tt]imes%' then 'NYTimes'
+				when final.Directory_Site like '%[Nn]ew_[Yy]orker%' then 'New Yorker'
+				when final.Directory_Site like '%[Pp][Gg][Aa]%[Tt][Oo][Uu][Rr]%' then 'PGATour'
+				when final.Directory_Site like '%[Pp]riceline%' then 'Priceline'
+				when final.Directory_Site like '%[Ss]ports_[Ii]llustrated%' then 'Sports Illustrated'
+				when final.Directory_Site like '%[Tt]ap%[Aa]d%' then 'TapAd'
+				when final.Directory_Site like '%[Tt]ime%[Oo]ut%' then 'Time Out New York'
+				when final.Directory_Site like '%[Tt]ravel%[Ll]eisure%' then 'Travel + Leisure'
+				when final.Directory_Site like '%[Ww]all_[Ss]treet_[Jj]ournal%' then 'Wall Street Journal'
+				when final.Directory_Site like '%[Ww]ashington_[Pp]ost%' then 'Washington Post'
+				when final.Directory_Site like '%[Yy]ahoo%' then 'Yahoo'
+				when final.Directory_Site like '%[Yy]ou%[Tt]ube%' then 'YouTube'
+				when final.Directory_Site like '[Aa]d[Pp]rime%' then 'AdPrime'
+				when final.Directory_Site like '[Aa]ds[Mm]ovil%' then 'AdsMovil'
+				when final.Directory_Site like '[Aa]mobee%' then 'Amobee'
+				when final.Directory_Site like '[Cc]ardlytics%' then 'Cardlytics'
+				when final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Google' then 'DART Search_Google'
+				when final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%MSN' then 'DART Search_MSN'
+				when final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Other' then 'DART Search_Other'
+				when final.Directory_Site like '[Ff]acebook%' then 'Facebook'
+				when final.Directory_Site like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
+				when final.Directory_Site like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
+				when final.Directory_Site like '[Gg]um_[Gg]um%' then 'Gum Gum'
+				when final.Directory_Site like '[Hh]ulu%' then 'Hulu'
+				when final.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
+				when final.Directory_Site like '[Ii]mpre%[Mm]edia%' then 'Impre Media'
+				when final.Directory_Site like '[Ii]nternet%[Bb]rands%' then 'FlyerTalk'
+				when final.Directory_Site like '[Ii]ndependent%' then 'Independent'
+				when final.Directory_Site like '[Kk]ayak%' then 'Kayak'
+				when final.Directory_Site like '[Ll]ive%[Ii]ntent%' then 'Live Intent'
+				when final.Directory_Site like '[Mm]artini_[Mm]edia%' then 'Martini Media'
+				when final.Directory_Site like '[Oo]rbitz%' then 'Orbitz'
+				when final.Directory_Site like '[Ss]kyscanner%' then 'Skyscanner'
+				when final.Directory_Site like '[Ss]mart%[Bb]r[ei][ei]f%' then 'SmartBrief'
+				when final.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
+				when final.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
+				when final.Directory_Site like '[Ss]ojern%' then 'Sojern'
+				when final.Directory_Site like '[Ss]pecific_[Mm]edia%' then 'Specific Media'
+				when final.Directory_Site like '[Ss]potify%' then 'Spotify'
+				when final.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
+				when final.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
+				when final.Directory_Site like '[Tt]ravel%[Ss]pike%' then 'Travel Spike'
+				when final.Directory_Site like '[Tt]ravelocity%' then 'Travelocity'
+				when final.Directory_Site like '[Tt]riggit%' then 'Triggit'
+				when final.Directory_Site like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
+				when final.Directory_Site like '[Uu]nited%' then 'United'
+				when final.Directory_Site like '[Vv]erve%[Mm]obile%' then 'Verve Mobile'
+				when final.Directory_Site like '[Vv]istar%[Mm]edia%' then 'Vistar Media'
+				when final.Directory_Site like '[Vv]ox%' then 'Vox'
+				when final.Directory_Site like '[Ww]ired%' then 'Wired'
+				when final.Directory_Site like '[Xx][Aa][Xx][Ii][Ss]%' then 'Xaxis'
+				when final.Directory_Site like '[Xx]ad%' then 'xAd Inc'
+				when final.Directory_Site like '[Yy]ieldbot%' then 'Yieldbot'
+				when final.Directory_Site like '[Yy]u[Mm]e%' then 'YuMe'
+				else final.Directory_Site end                                                                                                                             as Directory_Site,
 	final.Site_ID                                                                                                                                          as Site_ID,
 	final.CostMethod                                                                                                                                          as Cost_Method,
 -- 	final.PlacementNumber                                                         AS PlacementNumber,
@@ -118,7 +175,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-07-30';
--- SET @report_st = '2016-06-01';
+-- SET @report_st = '2016-08-01';
 
 	     select
 		     cast(almost.dcmDate as date)                                               as dcmDate,
@@ -266,7 +323,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-07-30';
--- SET @report_st = '2016-06-01';
+-- SET @report_st = '2016-08-01';
 			     select
 				     dcmReport.dcmDate                                                                                                                      as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as
@@ -397,7 +454,7 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-08-01'' AND ''2016-08-30'')
 -- 								 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 -- 								 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -405,7 +462,7 @@ and quantity != 0
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
 
- and  order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649) -- Display 2016
+ and  order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649, 10090315) -- Display 2016
 
 and (advertiser_id <> 0)
 )
@@ -444,10 +501,10 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
+WHERE cast(impression_time as date) BETWEEN ''2016-08-01'' AND ''2016-08-30''
 
 
- and  order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649) -- Display 2016
+ and  order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649, 10090315) -- Display 2016
 --   and user_id not in (select
 -- user_id from mec.UnitedUS.dfa_activity
 --   where (UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) = ''MIL''
@@ -457,7 +514,7 @@ WHERE cast(impression_time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
 -- AND (Activity_Type = ''ticke498'')
 -- AND (Activity_Sub_Type = ''unite820'')
 -- and (advertiser_id <> 0)
---   and cast(Activity_Time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
+--   and cast(Activity_Time as date) BETWEEN ''2016-08-01'' AND ''2016-08-30''
 -- )
 
 
@@ -490,9 +547,9 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
+WHERE cast(click_time as date) BETWEEN ''2016-08-01'' AND ''2016-08-30''
 
- and  order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649) -- Display 2016
+ and  order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649, 10090315) -- Display 2016
 --  and user_id not in (select
 -- user_id from mec.UnitedUS.dfa_activity
 --   where (UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) = ''MIL''
@@ -502,7 +559,7 @@ WHERE cast(click_time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
 -- AND (Activity_Type = ''ticke498'')
 -- AND (Activity_Sub_Type = ''unite820'')
 -- and (advertiser_id <> 0)
---   and cast(Activity_Time as date) BETWEEN ''2016-06-01'' AND ''2016-08-30''
+--   and cast(Activity_Time as date) BETWEEN ''2016-08-01'' AND ''2016-08-30''
 -- )
 
 ) AS Clicks
@@ -652,6 +709,7 @@ cast(Report.Date AS DATE)
 				when almost.Directory_Site like '[Hh]ulu%' then 'Hulu'
 				when almost.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
 				when almost.Directory_Site like '[Ii]mpre%[Mm]edia%' then 'Impre Media'
+				when almost.Directory_Site like '[Ii]nternet%[Bb]rands%' then 'FlyerTalk'
 				when almost.Directory_Site like '[Ii]ndependent%' then 'Independent'
 				when almost.Directory_Site like '[Kk]ayak%' then 'Kayak'
 				when almost.Directory_Site like '[Ll]ive%[Ii]ntent%' then 'LiveIntent'
@@ -734,6 +792,7 @@ cast(Report.Date AS DATE)
 				when almost.Directory_Site like '[Hh]ulu%' then 'Hulu'
 				when almost.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
 				when almost.Directory_Site like '[Ii]mpre%[Mm]edia%' then 'Impre Media'
+				when almost.Directory_Site like '[Ii]nternet%[Bb]rands%' then 'FlyerTalk'
 				when almost.Directory_Site like '[Ii]ndependent%' then 'Independent'
 				when almost.Directory_Site like '[Kk]ayak%' then 'Kayak'
 				when almost.Directory_Site like '[Ll]ive%[Ii]ntent%' then 'LiveIntent'
