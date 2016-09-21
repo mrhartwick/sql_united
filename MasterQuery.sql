@@ -1,4 +1,4 @@
--- Master Query (2016-9-16)
+-- Master Query (2016-9-15)
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 --
@@ -16,7 +16,7 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-09-07';
+SET @report_ed = '2016-09-20';
 SET @report_st = '2016-01-01';
 
 --
@@ -25,12 +25,9 @@ SET @report_st = '2016-01-01';
 
 select
 	cast(final.dcmDate as date)                                                                                                                               as dcmDate,
-	cast(dateadd(week,datediff(week,0,cast(final.dcmDate as date)),0) as
-	     date)                                                                                                                                                as Week,
-	dateName(month,cast(final.dcmDate as
-	                    date))                                                                                                                                as dcmMonth,
-	'Q' + dateName(quarter,cast(final.dcmDate as date)) + ' ' + dateName(year,cast(final.dcmDate as
-	                                                                               date))                                                                     as dcmQtr,
+	cast(dateadd(week,datediff(week,0,cast(final.dcmDate as date)),0) as date)                                                                                as Week,
+	dateName(month,cast(final.dcmDate as date))                                                                                                               as dcmMonth,
+	'Q' + dateName(quarter,cast(final.dcmDate as date)) + ' ' + dateName(year,cast(final.dcmDate as date))                                                    as dcmQtr,
 -- 	final.dcmMonth                                                                AS dcmMonth,
 	final.diff                                                                                                                                                as diff,
 	final.dvJoinKey                                                                                                                                           as dvJoinKey,
@@ -128,9 +125,9 @@ select
 	final.CostMethod                                                                                                                                          as Cost_Method,
 -- 	final.PlacementNumber                                                         AS PlacementNumber,
 	final.Site_Placement                                                                                                                                      as placement,
-	final.tactic_1                                                                                                                                            as tactic_1,
-	final.tactic_2                                                                                                                                            as tactic_2,
-	final.size                                                                                                                                                as size,
+-- 	final.tactic_1                                                                                                                                            as tactic_1,
+-- 	final.tactic_2                                                                                                                                            as tactic_2,
+-- 	final.size                                                                                                                                                as size,
 	final.page_id                                                                                                                                             as page_id,
 -- 	final.xaxisMarket as xaxisMarket,
 	final.PlacementEnd                                                                                                                                        as PlacementEnd,
@@ -142,8 +139,7 @@ select
 -- 	final.flatCostRemain                                                          AS flatCostRemain,
 -- 	final.impsRemain                                                              AS impsRemain,
 -- 	sum(final.cost)                                                          AS cost,
-	case when final.CostMethod = 'Flat' then final.flatCost / max(final.newCount) else sum(
-		final.cost) end                                      as cost,
+	case when final.CostMethod = 'Flat' then final.flatCost / max(final.newCount) else sum(final.cost) end                                      as cost,
 	sum(final.Impressions)                                   as Impressions,
 	sum(final.dcmImpressions)                                                        AS dcmImpressions,
 -- 	sum(MT.human_impressions)                                      AS MT_Impressions,
@@ -151,8 +147,7 @@ select
 	sum(final.DV_Viewed)                                                          AS DV_Viewed,
 -- 	sum(final.DV_GroupMPayable)                                                   AS DV_GroupMPayable,
 	sum(final.Clicks)                                        as clicks,
-	case when sum(final.Impressions) = 0 then 0 else (sum(cast(final.Clicks as decimal(20,10))) / sum(cast(final.Impressions as decimal(20,10)))) *
-	                                                 100 end as CTR,
+	case when sum(final.Impressions) = 0 then 0 else (sum(cast(final.Clicks as decimal(20,10))) / sum(cast(final.Impressions as decimal(20,10)))) *100 end as CTR,
 -- 	sum(final.View_Thru_Conv)                                                     AS View_Thru_Conv,
 -- 	sum(final.Click_Thru_Conv)                                                    AS Click_Thru_Conv,
 	sum(final.conv)                                          as conv,
@@ -197,9 +192,9 @@ from (
 
 		     almost.PlacementNumber                                                     as PlacementNumber,
 		     almost.Site_Placement                                                      as Site_Placement,
-		     almost.tactic_1                                                            as tactic_1,
-		     almost.tactic_2                                                            as tactic_2,
-		     almost.size                                                                as size,
+-- 		     almost.tactic_1                                                            as tactic_1,
+-- 		     almost.tactic_2                                                            as tactic_2,
+-- 		     almost.size                                                                as size,
 -- 	almost.xaxisMarket as xaxisMarket,
 		     almost.page_id                                                             as page_id,
 		     almost.PlacementEnd                                                        as PlacementEnd,
@@ -349,9 +344,9 @@ from (
 				     dcmReport.Site_ID                                                                                                                      as Site_ID,
 				     dcmReport.PlacementNumber                                                                                                              as PlacementNumber,
 				     dcmReport.Site_Placement                                                                                                               as Site_Placement,
-				     dcmReport.tactic_1                                                                                                                     as tactic_1,
-				     dcmReport.tactic_2                                                                                                                     as tactic_2,
-				     dcmReport.size                                                                                                                         as size,
+-- 				     dcmReport.tactic_1                                                                                                                     as tactic_1,
+-- 				     dcmReport.tactic_2                                                                                                                     as tactic_2,
+-- 				     dcmReport.size                                                                                                                         as size,
 				     dcmReport.page_id                                                                                                                      as page_id,
 				     Prisma.stDate                                                                                                                          as stDate,
 				     Prisma.edDate                                                                                                                          as edDate,
@@ -385,6 +380,7 @@ from (
 -- 					 Live Intent for SFO-SIN campaign is email (not subject to viewab.), but mistakenly labeled with "Y"
 					 when dcmReport.order_id = '9923634' and dcmReport.Site_ID = '1853564'
 					     then 'N'
+
 				     when dcmReport.order_id = '9639387'
 					     then 'Y'
 				     when Prisma.CostMethod = 'dCPM'
@@ -394,6 +390,11 @@ from (
 				     when Prisma.CostMethod = 'CPMV' and
 				          ( dcmReport.Site_Placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or dcmReport.Site_Placement like '%[Vv][Ii][Dd][Ee][Oo]%' or dcmReport.Site_Placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or dcmReport.Site_ID = '1995643' or dcmReport.Site_ID = '1474576' or dcmReport.Site_ID = '2854118')
 					     then 'M'
+
+					 when dcmReport.Site_Placement like '%_NA_%' then 'N'
+					 when dcmReport.Site_Placement like '%_DV_%' then 'Y'
+					 when dcmReport.Site_Placement like '%_MOAT_%' then 'M'
+
 				     when Prisma.CostMethod =
 				          'Flat'
 					     then 'N'
@@ -423,9 +424,9 @@ Report.Site_ID as Site_ID,
 Directory.Directory_Site                    AS Directory_Site,
 	left(Placements.Site_Placement,6) as ''PlacementNumber'',
 Placements.Site_Placement                   AS Site_Placement,
-SPLIT_PART(Placements.Site_Placement, ''_'', 8) as tactic_1,
-SPLIT_PART(Placements.Site_Placement, ''_'', 9) as tactic_2,
-SPLIT_PART(Placements.Site_Placement, ''_'', 11) as size,
+-- SPLIT_PART(Placements.Site_Placement, ''_'', 8) as tactic_1,
+-- SPLIT_PART(Placements.Site_Placement, ''_'', 9) as tactic_2,
+-- SPLIT_PART(Placements.Site_Placement, ''_'', 11) as size,
 Report.page_id                         AS page_id,
 sum(Report.Impressions)                     AS impressions,
 sum(Report.Clicks)                          AS clicks,
@@ -457,7 +458,7 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-09-07'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-09-20'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -465,11 +466,9 @@ and quantity != 0
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
 
- and  order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649, 10090315) -- Display 2016
-
+and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
 and (advertiser_id <> 0)
-)
-as Conversions
+) as Conversions
 
 LEFT JOIN mec.Cross_Client_Resources.EXCHANGE_RATES AS Rates
 ON UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) = UPPER(Rates.Currency)
@@ -504,8 +503,8 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-09-07''
-and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649, 10090315) -- Display 2016
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-09-20''
+and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
 
 
 ) AS Impressions
@@ -537,8 +536,8 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-09-07''
-and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10121649, 10090315) -- Display 2016
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-09-20''
+and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
 
 ) AS Clicks
 
@@ -609,9 +608,9 @@ cast(Report.Date AS DATE)
 			,dcmReport.Site_ID
 			,dcmReport.PlacementNumber
 			,dcmReport.Site_Placement
-			,dcmReport.tactic_1
-			,dcmReport.tactic_2
-			,dcmReport.size
+-- 			,dcmReport.tactic_1
+-- 			,dcmReport.tactic_2
+-- 			,dcmReport.size
 			,dcmReport.page_id
 			,Prisma.PackageCat
 			,Prisma.Rate
@@ -645,10 +644,10 @@ cast(Report.Date AS DATE)
 	          ) as DV
 			on
 			left(almost.Site_Placement,6) + '_' + replace(
-				case
 				when ( almost.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or almost.Directory_Site like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
 				when ( almost.Directory_Site like '[Gg][Dd][Nn]%' or almost.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
 				when almost.Directory_Site like '%[Aa]dara%' then 'Adara'
+				when almost.Directory_Site like '%[Aa]tlantic%' then 'The Atlantic'
 				when almost.Directory_Site like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
 				when almost.Directory_Site like '%[Cc][Nn][Nn]%' then 'CNN'
 				when almost.Directory_Site like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
@@ -683,6 +682,7 @@ cast(Report.Date AS DATE)
 				when almost.Directory_Site like '[Ff]acebook%' then 'Facebook'
 				when almost.Directory_Site like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
 				when almost.Directory_Site like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
+			    when almost.Directory_Site like '[Ff]lipboard%' then 'Flipboard'
 				when almost.Directory_Site like '[Gg]um_[Gg]um%' then 'Gum Gum'
 				when almost.Directory_Site like '[Hh]ulu%' then 'Hulu'
 				when almost.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
@@ -706,6 +706,7 @@ cast(Report.Date AS DATE)
 				when almost.Directory_Site like '[Tt]ravelocity%' then 'Travelocity'
 				when almost.Directory_Site like '[Tt]riggit%' then 'Triggit'
 				when almost.Directory_Site like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
+				when almost.Directory_Site like '[Uu]ndertone%' then 'Undertone'
 				when almost.Directory_Site like '[Uu]nited%' then 'United'
 				when almost.Directory_Site like '[Vv]erve%' then 'VerveMobile'
 				when almost.Directory_Site like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
@@ -732,6 +733,7 @@ cast(Report.Date AS DATE)
 				when ( almost.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or almost.Directory_Site like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
 				when ( almost.Directory_Site like '[Gg][Dd][Nn]%' or almost.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
 				when almost.Directory_Site like '%[Aa]dara%' then 'Adara'
+				when almost.Directory_Site like '%[Aa]tlantic%' then 'The Atlantic'
 				when almost.Directory_Site like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
 				when almost.Directory_Site like '%[Cc][Nn][Nn]%' then 'CNN'
 				when almost.Directory_Site like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
@@ -766,6 +768,7 @@ cast(Report.Date AS DATE)
 				when almost.Directory_Site like '[Ff]acebook%' then 'Facebook'
 				when almost.Directory_Site like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
 				when almost.Directory_Site like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
+			    when almost.Directory_Site like '[Ff]lipboard%' then 'Flipboard'
 				when almost.Directory_Site like '[Gg]um_[Gg]um%' then 'Gum Gum'
 				when almost.Directory_Site like '[Hh]ulu%' then 'Hulu'
 				when almost.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
@@ -789,6 +792,7 @@ cast(Report.Date AS DATE)
 				when almost.Directory_Site like '[Tt]ravelocity%' then 'Travelocity'
 				when almost.Directory_Site like '[Tt]riggit%' then 'Triggit'
 				when almost.Directory_Site like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
+				when almost.Directory_Site like '[Uu]ndertone%' then 'Undertone'
 				when almost.Directory_Site like '[Uu]nited%' then 'United'
 				when almost.Directory_Site like '[Vv]erve%' then 'VerveMobile'
 				when almost.Directory_Site like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
@@ -820,9 +824,9 @@ group by
 	,almost.Planned_Amt
 	,almost.Rate
 	,almost.Site_Placement
-	,almost.tactic_1
-	,almost.tactic_2
-	,almost.size
+-- 	,almost.tactic_1
+-- 	,almost.tactic_2
+-- 	,almost.size
 	,almost.edDate
 	,almost.stDate
 	,almost.campaignShort
@@ -847,8 +851,9 @@ group by
 -- 	where (final.dvJoinKey is null and final.DV_Map = 'Y') or (final.mtJoinKey is NULL and final.DV_Map = 'M')
 -- 		where final.mtJoinKey is NULL and  final.DV_Map = 'M'
 -- 	where final.Directory_Site like '%[Bb]usiness%[Ii]nsider%'
--- 				where final.Directory_Site like '%Martini%'
+-- 				where final.Directory_Site like '%Verve%'
 --     where final.Site_ID ='1995643'
+    -- where final.order_id ='10276123'
 
 -- 	where final.Site_ID = '1853564' and final.DV_Map = 'Y'
 -- 	where final.CostMethod = 'CPC'
@@ -874,9 +879,9 @@ group by
 	,final.Rate
 -- ,final.PlacementNumber
 	,final.Site_Placement
-	,final.tactic_1
-	,final.tactic_2
-	,final.size
+-- 	,final.tactic_1
+-- 	,final.tactic_2
+-- 	,final.size
 -- ,final.xaxisMarket
 	,final.page_id
 	,final.PlacementEnd
