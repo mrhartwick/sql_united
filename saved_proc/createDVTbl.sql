@@ -38,6 +38,7 @@ insert into master.dbo.DVTable
 		               when ( media_property like '%[Cc]hicago%[Tt]ribune%' or media_property like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
 				when ( media_property like '[Gg][Dd][Nn]%' or media_property like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
 				when media_property like '%[Aa]dara%' then 'Adara'
+				when media_property like '%[Aa]tlantic%' then 'The Atlantic'
 				when media_property like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
 				when media_property like '%[Cc][Nn][Nn]%' then 'CNN'
 				when media_property like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
@@ -72,6 +73,7 @@ insert into master.dbo.DVTable
 				when media_property like '[Ff]acebook%' then 'Facebook'
 				when media_property like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
 				when media_property like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
+			    when media_property like '[Ff]lipboard%' then 'Flipboard'
 				when media_property like '[Gg]um_[Gg]um%' then 'Gum Gum'
 				when media_property like '[Hh]ulu%' then 'Hulu'
 				when media_property like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
@@ -95,6 +97,7 @@ insert into master.dbo.DVTable
 				when media_property like '[Tt]ravelocity%' then 'Travelocity'
 				when media_property like '[Tt]riggit%' then 'Triggit'
 				when media_property like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
+			    when media_property like '[Uu]ndertone%' then 'Undertone'
 				when media_property like '[Uu]nited%' then 'United'
 				when media_property like '[Vv]erve%' then 'VerveMobile'
 				when media_property like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
@@ -112,6 +115,7 @@ insert into master.dbo.DVTable
 		       when ( media_property like '%[Cc]hicago%[Tt]ribune%' or media_property like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
 				when ( media_property like '[Gg][Dd][Nn]%' or media_property like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
 				when media_property like '%[Aa]dara%' then 'Adara'
+				when media_property like '%[Aa]tlantic%' then 'The Atlantic'
 				when media_property like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
 				when media_property like '%[Cc][Nn][Nn]%' then 'CNN'
 				when media_property like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
@@ -146,6 +150,7 @@ insert into master.dbo.DVTable
 				when media_property like '[Ff]acebook%' then 'Facebook'
 				when media_property like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
 				when media_property like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
+			    when media_property like '[Ff]lipboard%' then 'Flipboard'
 				when media_property like '[Gg]um_[Gg]um%' then 'Gum Gum'
 				when media_property like '[Hh]ulu%' then 'Hulu'
 				when media_property like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
@@ -169,6 +174,7 @@ insert into master.dbo.DVTable
 				when media_property like '[Tt]ravelocity%' then 'Travelocity'
 				when media_property like '[Tt]riggit%' then 'Triggit'
 				when media_property like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
+			    when media_property like '[Uu]ndertone%' then 'Undertone'
 				when media_property like '[Uu]nited%' then 'United'
 				when media_property like '[Vv]erve%' then 'VerveMobile'
 				when media_property like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
@@ -197,4 +203,4 @@ insert into master.dbo.DVTable
 		DV.campaign_name,
 		DV.placement_code,
 		DV.placement_name
-GO
+go

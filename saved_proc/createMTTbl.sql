@@ -37,6 +37,7 @@ insert into master.dbo.MTTable
 		              when ( site_label like '%[Cc]hicago%[Tt]ribune%' or site_label like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
 				when ( site_label like '[Gg][Dd][Nn]%' or site_label like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
 				when site_label like '%[Aa]dara%' then 'Adara'
+                when site_label like '%[Aa]tlantic%' then 'The Atlantic'
 				when site_label like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
 				when site_label like '%[Cc][Nn][Nn]%' then 'CNN'
 				when site_label like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
@@ -71,6 +72,7 @@ insert into master.dbo.MTTable
 				when site_label like '[Ff]acebook%' then 'Facebook'
 				when site_label like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
 				when site_label like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
+                when site_label like '[Ff]lipboard%' then 'Flipboard'
 				when site_label like '[Gg]um_[Gg]um%' then 'Gum Gum'
 				when site_label like '[Hh]ulu%' then 'Hulu'
 				when site_label like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
@@ -94,6 +96,7 @@ insert into master.dbo.MTTable
 				when site_label like '[Tt]ravelocity%' then 'Travelocity'
 				when site_label like '[Tt]riggit%' then 'Triggit'
 				when site_label like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
+                when site_label like '[Uu]ndertone%' then 'Undertone'
 				when site_label like '[Uu]nited%' then 'United'
 				when site_label like '[Vv]erve%' then 'VerveMobile'
 				when site_label like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
@@ -110,6 +113,7 @@ insert into master.dbo.MTTable
 		      when ( site_label like '%[Cc]hicago%[Tt]ribune%' or site_label like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
 				when ( site_label like '[Gg][Dd][Nn]%' or site_label like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
 				when site_label like '%[Aa]dara%' then 'Adara'
+                when site_label like '%[Aa]tlantic%' then 'The Atlantic'
 				when site_label like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
 				when site_label like '%[Cc][Nn][Nn]%' then 'CNN'
 				when site_label like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
@@ -144,6 +148,7 @@ insert into master.dbo.MTTable
 				when site_label like '[Ff]acebook%' then 'Facebook'
 				when site_label like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
 				when site_label like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
+                when site_label like '[Ff]lipboard%' then 'Flipboard'
 				when site_label like '[Gg]um_[Gg]um%' then 'Gum Gum'
 				when site_label like '[Hh]ulu%' then 'Hulu'
 				when site_label like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
@@ -167,6 +172,7 @@ insert into master.dbo.MTTable
 				when site_label like '[Tt]ravelocity%' then 'Travelocity'
 				when site_label like '[Tt]riggit%' then 'Triggit'
 				when site_label like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
+                when site_label like '[Uu]ndertone%' then 'Undertone'
 				when site_label like '[Uu]nited%' then 'United'
 				when site_label like '[Vv]erve%' then 'VerveMobile'
 				when site_label like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
@@ -194,4 +200,4 @@ insert into master.dbo.MTTable
 		MT.campaign_label,
 		MT.placement_id,
 		MT.placement_label
-GO
+go
