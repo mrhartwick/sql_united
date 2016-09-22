@@ -16,8 +16,8 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-09-15';
-SET @report_st = '2016-07-01';
+SET @report_ed = '2016-09-14';
+SET @report_st = '2016-01-01';
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
@@ -127,17 +127,6 @@ select
 	final.CostMethod                                                                                                                                          as Cost_Method,
 -- 	final.PlacementNumber                                                         AS PlacementNumber,
 	final.Site_Placement                                                                                                                                      as placement,
--- 				  final.ad_id                                                                                                               as ad_id,
--- 					 final.creative_id                                                                                                               as creative_id,
--- 					 final.ad_description                                                                                                               as ad_description,
--- 					 final.creative                                                                                                               as creative,
-				 	-- 	 final.ad_type                                                                                                               as ad_type,
-					 -- final.creative_type                                                                                                               as creative_type,
-					 -- final.creative_sub_type                                                                                                               as creative_sub_type,
--- 				 					 final.browser                                                                                                               as browser,
-					 final.os                                                                                                               as os,
-	-- final.click_url                                                                                                               as click_url,
-
 -- 	final.tactic_1                                                                                                                                            as tactic_1,
 -- 	final.tactic_2                                                                                                                                            as tactic_2,
 -- 	final.size                                                                                                                                                as size,
@@ -183,7 +172,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-07-30';
--- SET @report_st = '2016-07-01';
+-- SET @report_st = '2016-01-01';
 
 	     select
 		     cast(almost.dcmDate as date)                                               as dcmDate,
@@ -199,22 +188,12 @@ from (
 		     almost.campaignType                                                        as campaignType,
 		     almost.Directory_Site                                                      as Directory_Site,
 		     almost.Site_ID                                                             as Site_ID,
-			 -- almost.click_url                                                                                                               as click_url,
 		     almost.CostMethod                                                          as CostMethod,
 		     sum(1) over (partition by almost.Cost_ID,almost.dcmMatchDate    order by
 			     almost.dcmMonth asc range between unbounded preceding and current row) as newCount,
 
 		     almost.PlacementNumber                                                     as PlacementNumber,
 		     almost.Site_Placement                                                      as Site_Placement,
--- 			  almost.ad_id                                                                                                               as ad_id,
--- 					 almost.creative_id                                                                                                               as creative_id,
--- 					 almost.ad_description                                                                                                               as ad_description,
--- 					 almost.creative                                                                                                               as creative,
-			 		--  almost.ad_type                                                                                                               as ad_type,
-					 -- almost.creative_type                                                                                                               as creative_type,
-					 -- almost.creative_sub_type                                                                                                               as creative_sub_type,
--- 			 					 almost.browser                                                                                                               as browser,
-					 almost.os                                                                                                               as os,
 -- 		     almost.tactic_1                                                            as tactic_1,
 -- 		     almost.tactic_2                                                            as tactic_2,
 -- 		     almost.size                                                                as size,
@@ -342,7 +321,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-07-30';
--- SET @report_st = '2016-07-01';
+-- SET @report_st = '2016-01-01';
 			     select
 				     dcmReport.dcmDate                                                                                                                      as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as
@@ -367,16 +346,6 @@ from (
 				     dcmReport.Site_ID                                                                                                                      as Site_ID,
 				     dcmReport.PlacementNumber                                                                                                              as PlacementNumber,
 				     dcmReport.Site_Placement                                                                                                               as Site_Placement,
--- 					 dcmReport.ad_id                                                                                                               as ad_id,
--- 					 dcmReport.creative_id                                                                                                               as creative_id,
--- 					 dcmReport.ad_description                                                                                                               as ad_description,
--- 					 dcmReport.creative                                                                                                               as creative,
-					 -- dcmReport.click_url                                                                                                               as click_url,
-					 -- dcmReport.ad_type                                                                                                               as ad_type,
-					 -- dcmReport.creative_type                                                                                                               as creative_type,
-					 -- dcmReport.creative_sub_type                                                                                                               as creative_sub_type,
--- 					 dcmReport.browser                                                                                                               as browser,
-					 dcmReport.os                                                                                                               as os,
 -- 				     dcmReport.tactic_1                                                                                                                     as tactic_1,
 -- 				     dcmReport.tactic_2                                                                                                                     as tactic_2,
 -- 				     dcmReport.size                                                                                                                         as size,
@@ -449,62 +418,49 @@ from (
 			     SELECT *
 			     FROM openQuery(VerticaGroupM,
 			                    'SELECT
-cast(Report.Date AS DATE)   AS dcmDate,
+cast(Report.Date AS DATE)                   AS dcmDate,
 cast(month(cast(Report.Date as date)) as int) as reportMonth,
-Campaign.Buy   AS Buy,
-Report.order_id   AS order_id,
--- ads.ad_id   AS ad_id,
--- creative.creative_id   AS creative_id,
--- ads.ad_description    AS ad_description,
--- ads.ad_type    AS ad_type,
--- creative.creative    AS creative,
--- creative.creative_type    AS creative_type,
--- creative.creative_sub_type    AS creative_sub_type,
--- assign.click_url    AS click_url,
--- browser.browser as browser,
-os.os as os,
+Campaign.Buy                                AS Buy,
+Report.order_id                               AS order_id,
 Report.Site_ID as Site_ID,
-Directory.Directory_Site    AS Directory_Site,
-left(Placements.Site_Placement,6) as ''PlacementNumber'',
-Placements.Site_Placement    AS Site_Placement,
-Report.page_id    AS page_id,
-sum(Report.Impressions)   AS impressions,
-sum(Report.Clicks)   AS clicks,
-sum(Report.View_Thru_Conv)   AS View_Thru_Conv,
-sum(Report.Click_Thru_Conv)   AS Click_Thru_Conv,
-sum(Report.View_Thru_Tickets)   AS View_Thru_Tickets,
-sum(Report.Click_Thru_Tickets)   AS Click_Thru_Tickets,
-sum(cast(Report.View_Thru_Revenue AS DECIMAL(10, 2)))   AS View_Thru_Revenue,
-sum(cast(Report.Click_Thru_Revenue AS DECIMAL(10, 2)))   AS Click_Thru_Revenue,
+Directory.Directory_Site                    AS Directory_Site,
+	left(Placements.Site_Placement,6) as ''PlacementNumber'',
+Placements.Site_Placement                   AS Site_Placement,
+-- SPLIT_PART(Placements.Site_Placement, ''_'', 8) as tactic_1,
+-- SPLIT_PART(Placements.Site_Placement, ''_'', 9) as tactic_2,
+-- SPLIT_PART(Placements.Site_Placement, ''_'', 11) as size,
+Report.page_id                         AS page_id,
+sum(Report.Impressions)                     AS impressions,
+sum(Report.Clicks)                          AS clicks,
+sum(Report.View_Thru_Conv)                  AS View_Thru_Conv,
+sum(Report.Click_Thru_Conv)                 AS Click_Thru_Conv,
+sum(Report.View_Thru_Tickets)               AS View_Thru_Tickets,
+sum(Report.Click_Thru_Tickets)              AS Click_Thru_Tickets,
+sum(cast(Report.View_Thru_Revenue AS DECIMAL(10, 2)))                   AS View_Thru_Revenue,
+sum(cast(Report.Click_Thru_Revenue AS DECIMAL(10, 2)))                   AS Click_Thru_Revenue,
 sum(cast(Report.Revenue AS DECIMAL(10, 2))) AS revenue
 from (
 SELECT
 
 cast(Conversions.Click_Time as date) as "Date"
-,order_id   as order_id
-,Conversions.site_id   as Site_ID
-,Conversions.page_id   as page_id
--- ,Conversions.ad_id   as ad_id
--- ,Conversions.creative_id   as creative_id
--- ,Conversions.browser_id   as browser_id
-,Conversions.os_id   as os_id
-
-
-,0   as Impressions
-,0   as Clicks
-,sum(Case When Event_ID = 1 THEN 1 ELSE 0 END)   as Click_Thru_Conv
-,sum(Case When Event_ID = 1 Then Conversions.Quantity Else 0 End)   as Click_Thru_Tickets
+,order_id                                                                       as order_id
+,Conversions.site_id                                                                        as Site_ID
+,Conversions.page_id                                                                        as page_id
+,0                                                                                          as Impressions
+,0                                                                                          as Clicks
+,sum(Case When Event_ID = 1 THEN 1 ELSE 0 END)                                              as Click_Thru_Conv
+,sum(Case When Event_ID = 1 Then Conversions.Quantity Else 0 End)                           as Click_Thru_Tickets
 ,sum(Case When Event_ID = 1 Then (Conversions.Revenue) / (Rates.exchange_rate) Else 0 End)  as Click_Thru_Revenue
-,sum(Case When Event_ID = 2 THEN 1 ELSE 0 END)   as View_Thru_Conv
-,sum(Case When Event_ID = 2 Then Conversions.Quantity Else 0 End)   as View_Thru_Tickets
+,sum(Case When Event_ID = 2 THEN 1 ELSE 0 END)                                              as View_Thru_Conv
+,sum(Case When Event_ID = 2 Then Conversions.Quantity Else 0 End)                           as View_Thru_Tickets
 ,sum(Case When Event_ID = 2 Then (Conversions.Revenue) / (Rates.exchange_rate) Else 0 End)  as View_Thru_Revenue
-,sum(Conversions.Revenue/Rates.exchange_rate)   as Revenue
+,sum(Conversions.Revenue/Rates.exchange_rate)                                               as Revenue
 
 from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-07-01'' AND ''2016-09-15'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-09-14'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -521,94 +477,82 @@ ON UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) = UPPER(Rates.
 AND cast(Conversions.Click_Time as date) = Rates.DATE
 
 GROUP BY
+-- Conversions.Click_Time
 cast(Conversions.Click_Time as date)
 ,Conversions.order_id
 ,Conversions.site_id
 ,Conversions.page_id
--- ,Conversions.ad_id
--- ,Conversions.creative_id
--- ,Conversions.browser_id
-,Conversions.os_id
+
 
 UNION ALL
 
 SELECT
+-- Impressions.impression_time as "Date"
 cast(Impressions.impression_time as date) as "Date"
-,Impressions.order_ID    as order_id
-,Impressions.Site_ID    as Site_ID
-,Impressions.Page_ID    as page_id
--- ,Impressions.ad_id    as ad_id
--- ,Impressions.creative_id    as creative_id
--- ,Impressions.browser_id   as browser_id
-,Impressions.os_id   as os_id
+,Impressions.order_ID                 as order_id
+,Impressions.Site_ID                  as Site_ID
+,Impressions.Page_ID                  as page_id
 ,count(*)                             as Impressions
-,0    as Clicks
-,0    as Click_Thru_Conv
-,0    as Click_Thru_Tickets
-,0    as Click_Thru_Revenue
-,0    as View_Thru_Conv
-,0    as View_Thru_Tickets
-,0    as View_Thru_Revenue
-,0    as Revenue
+,0                                    as Clicks
+,0                                    as Click_Thru_Conv
+,0                                    as Click_Thru_Tickets
+,0                                    as Click_Thru_Revenue
+,0                                    as View_Thru_Conv
+,0                                    as View_Thru_Tickets
+,0                                    as View_Thru_Revenue
+,0                                    as Revenue
 
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-07-01'' AND ''2016-09-15''
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-09-14''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
+
 
 ) AS Impressions
 GROUP BY
+-- Impressions.impression_time
 cast(Impressions.impression_time as date)
 ,Impressions.order_ID
 ,Impressions.Site_ID
 ,Impressions.Page_ID
--- ,Impressions.ad_id
--- ,Impressions.creative_id
--- ,Impressions.browser_id
-,Impressions.os_id
 
 UNION ALL
 SELECT
-cast(Clicks.click_time as date)   as "Date"
-,Clicks.order_id    as order_id
-,Clicks.Site_ID    as Site_ID
-,Clicks.Page_ID    as page_id
--- ,Clicks.ad_id    as ad_id
--- ,Clicks.creative_id    as creative_id
--- ,Clicks.browser_id   as browser_id
-,Clicks.os_id   as os_id
-,0    as Impressions
+-- Clicks.click_time       as "Date"
+cast(Clicks.click_time as date)       as "Date"
+,Clicks.order_id                      as order_id
+,Clicks.Site_ID                       as Site_ID
+,Clicks.Page_ID                       as page_id
+,0                                    as Impressions
 ,count(*)                             as Clicks
-,0    as Click_Thru_Conv
-,0    as Click_Thru_Tickets
-,0    as Click_Thru_Revenue
-,0   as View_Thru_Conv
-,0   as View_Thru_Tickets
-,0   as View_Thru_Revenue
-,0   as Revenue
+,0                                    as Click_Thru_Conv
+,0                                    as Click_Thru_Tickets
+,0                                    as Click_Thru_Revenue
+,0                                    as View_Thru_Conv
+,0                                    as View_Thru_Tickets
+,0                                    as View_Thru_Revenue
+,0                                    as Revenue
 
 FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-07-01'' AND ''2016-09-15''
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-09-14''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
 
 ) AS Clicks
 
 GROUP BY
+-- Clicks.Click_time
 cast(Clicks.Click_time as date)
 ,Clicks.order_id
 ,Clicks.Site_ID
 ,Clicks.Page_ID
--- ,Clicks.ad_id
--- ,Clicks.creative_id
--- ,Clicks.browser_id
-,Clicks.os_id
 ) as report
 LEFT JOIN
 (
+-- 			     SELECT *
 select cast(buy as varchar(4000)) as ''buy'', order_id as ''order_id''
 from mec.UnitedUS.dfa_campaign
 ) AS Campaign
@@ -616,79 +560,35 @@ ON Report.order_id = Campaign.order_id
 
 LEFT JOIN
 (
+-- 			     SELECT *
 select  cast(site_placement as varchar(4000)) as ''site_placement'',  max(page_id) as ''page_id'', order_id as ''order_id'', site_id as ''site_id''
 from mec.UnitedUS.dfa_page_name
-group by site_placement, order_id, site_id
+		group by site_placement, order_id, site_id
 ) AS Placements
 ON Report.page_id = Placements.page_id
 AND Report.order_id = Placements.order_id
 and report.site_ID  = placements.site_id
 
--- LEFT JOIN
--- (
--- select  cast(ad_description as varchar(4000)) as ''ad_description'',  max(ad_id) as ''ad_id'', cast(ad_type as varchar(4000)) as ''ad_type''
--- from mec.UnitedUS.dfa_ad
--- group by ad_description, ad_id, ad_type
--- ) AS ads
--- ON Report.ad_id = ads.ad_id
-
--- LEFT JOIN
--- (
--- select  cast(creative as varchar(4000)) as ''creative'',  max(creative_id) as ''creative_id'', cast(creative_type as varchar(4000)) as ''creative_type'', cast(creative_sub_type as varchar(4000)) as ''creative_sub_type''
--- from mec.UnitedUS.dfa_creative
--- group by creative, creative_id, creative_type, creative_sub_type
--- ) AS creative
--- ON Report.creative_id = creative.creative_id
-
 LEFT JOIN
 (
+-- 			     SELECT *
 select cast(directory_site as varchar(4000)) as ''directory_site'', site_id as ''site_id''
 from mec.UnitedUS.dfa_site
 ) AS Directory
 ON Report.Site_ID = Directory.Site_ID
 
--- LEFT JOIN
--- (
--- select  cast(click_url as varchar(4000)) as ''click_url'', ad_id as ''ad_id'', creative_id as ''creative_id''
--- from mec.UnitedUS.dfa_creative_ad_assignments
--- ) AS assign
--- ON Report.ad_id = assign.ad_id
--- and Report.creative_id = assign.creative_id
-
--- LEFT JOIN
--- (
--- select cast(browser as varchar(4000)) as ''browser'', browser_id as ''browser_id''
--- from mec.UnitedUS.dfa_browsers
--- ) AS browser
--- ON Report.browser_id = browser.browser_id
-
-LEFT JOIN
-(
-select cast(os as varchar(4000)) as ''os'', os_id as ''os_id''
-from mec.UnitedUS.dfa_operating_systems
-) AS os
-ON Report.os_id = os.os_id
-
 WHERE NOT REGEXP_LIKE(site_placement,''.do\s*not\s*use.'',''ib'')
 
 GROUP BY
 cast(Report.Date AS DATE)
-,Directory.Directory_Site
+-- , cast(month(cast(Report.Date as date)) as int)
+, Directory.Directory_Site
 ,Report.Site_ID
-,Report.order_id
-,Campaign.Buy
-,Report.page_id
-,Placements.Site_Placement
--- ,ads.ad_id
--- ,assign.click_url
--- ,creative.creative_id
--- ,ads.ad_description
--- ,ads.ad_type
--- ,creative.creative
--- ,creative.creative_type
--- ,creative.creative_sub_type
--- ,browser.browser
-,os.os
+, Report.order_id
+, Campaign.Buy
+, Report.page_id
+, Placements.Site_Placement
+-- , Placements.PlacementNumber
 ')
 
 		     ) AS dcmReport
@@ -710,16 +610,6 @@ cast(Report.Date AS DATE)
 			,dcmReport.Site_ID
 			,dcmReport.PlacementNumber
 			,dcmReport.Site_Placement
--- 			 ,dcmReport.ad_id
--- 			 ,dcmReport.creative_id
--- 			 ,dcmReport.ad_description
--- 			 ,dcmReport.creative
--- 			,dcmReport.click_url
--- 			,dcmReport.ad_type
--- ,dcmReport.creative_type
--- ,dcmReport.creative_sub_type
--- 			,dcmReport.browser
-,dcmReport.os
 -- 			,dcmReport.tactic_1
 -- 			,dcmReport.tactic_2
 -- 			,dcmReport.size
@@ -936,16 +826,6 @@ group by
 	,almost.Planned_Amt
 	,almost.Rate
 	,almost.Site_Placement
--- 	 ,almost.ad_id
--- 	 ,almost.creative_id
--- 	 ,almost.ad_description
--- 	 ,almost.creative
--- 	,almost.click_url
--- 	,almost.ad_type
--- ,almost.creative_type
--- ,almost.creative_sub_type
--- 	,almost.browser
-,almost.os
 -- 	,almost.tactic_1
 -- 	,almost.tactic_2
 -- 	,almost.size
@@ -975,8 +855,8 @@ group by
 -- 	where final.Directory_Site like '%[Bb]usiness%[Ii]nsider%'
 -- 				where final.Directory_Site like '%Verve%' or final.Directory_Site like '%xAd%'
 --     where final.Site_ID ='1995643'
---     where final.order_id ='9994694' or final.order_id ='9739006'
---
+--     where final.order_id ='10276123'
+
 -- 	where final.Site_ID = '1853564' and final.DV_Map = 'Y'
 -- 	where final.CostMethod = 'CPC'
 	-- 	where final.CostMethod = 'Flat'
@@ -1001,21 +881,11 @@ group by
 	,final.Rate
 -- ,final.PlacementNumber
 	,final.Site_Placement
--- 		 ,final.ad_id
--- 	 ,final.creative_id
--- 	 ,final.ad_description
--- 	 ,final.creative
--- 	,final.ad_type
--- ,final.creative_type
--- ,final.creative_sub_type
--- 	,final.browser
-,final.os
 -- 	,final.tactic_1
 -- 	,final.tactic_2
 -- 	,final.size
 -- ,final.xaxisMarket
 	,final.page_id
--- 	,final.click_url
 	,final.PlacementEnd
 	,final.PlacementStart
 	,final.DV_Map
@@ -1029,9 +899,6 @@ group by
 order by
 	final.Cost_ID,
 	final.dcmDate;
-
--- 	final.ad_id;
--- 	final.creative_id;
 
 
 
