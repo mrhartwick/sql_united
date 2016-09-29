@@ -1,5 +1,17 @@
--- Master Query (2016-9-15)
+--  Master Query (2016-9-28)
+/*  This query is a bit of a hack. Non-optimal aspects are necessitated by the particularities of the current tech stack on United.
+	Code is most easily read by starting at the "innermost" block, inside the openQuery call.
 
+	Data must be pulled and reconciled from 1) Prisma, in Datamart, and 2) DFA/DV/Moat in Vertica*.
+
+
+
+	Because of its scale, log-level DFA data (DTF 1.0) must be kept in Vertica to preserve performance. DV and Moat are stored there as well, mostly for convenience.
+	Intermediary summary tables are necessary for this query, so we need to be able to create our own tables and run stored procedures to refresh those tables. But we don't have write access to Vertica, so we can't keep routines and tables there.
+
+	DI could do this, but edits to these routines are frequent (esp. in joinKey fields), so keeping this process in-house is more convenient for all parties.
+
+*/
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 --
 -- EXEC master.dbo.createDVTbl GO    -- create separate DV aggregate table and store it in my instance; joining to the Vertica table in the query
@@ -16,7 +28,7 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-09-14';
+SET @report_ed = '2016-08-31';
 SET @report_st = '2016-01-01';
 
 --
@@ -24,159 +36,184 @@ SET @report_st = '2016-01-01';
 -- SET @report_st = DateAdd(DAY, 1 - DatePart(DAY, @report_ed), @report_ed);
 
 select
-	cast(final.dcmDate as date)                                                                                                                               as dcmDate,
-	cast(dateadd(week,datediff(week,0,cast(final.dcmDate as date)),0) as date)                                                                                as Week,
-	dateName(month,cast(final.dcmDate as date))                                                                                                               as dcmMonth,
-	'Q' + dateName(quarter,cast(final.dcmDate as date)) + ' ' + dateName(year,cast(final.dcmDate as date))                                                    as dcmQtr,
--- 	final.dcmMonth                                                                AS dcmMonth,
-	final.diff                                                                                                                                                as diff,
-	final.dvJoinKey                                                                                                                                           as dvJoinKey,
-	final.mtJoinKey                                                                                                                                           as mtJoinKey,
-	final.PackageCat                                                                                                                                          as PackageCat,
-	final.Cost_ID                                                                                                                                             as Cost_ID,
-	final.Buy                                                                                                                                                 as DCM_Campaign,
-	case when final.order_id = '9973506' then 'SFO-AKL'
-	when final.order_id = '9304728' then 'Trade'
-	when final.order_id = '9407915' then 'Google PDE'
-	when final.order_id = '9548151' then 'Smithsonian'
-	when final.order_id = '9630239' then 'SFO-TLV'
-	when final.order_id = '9639387' then 'Targeted Marketing'
-	when final.order_id = '9739006' then 'Spoke Markets'
-	when final.order_id = '9923634' then 'SFO-SIN'
-    when final.order_id = '10276123' then 'Polaris'
-    when final.order_id = '10094548' then 'Marketing Fund'
-    when final.order_id = '10090315' then 'SME'
-	when final.order_id = '9994694' then 'SFO-China'
-	when final.order_id = '9999841' or final.order_id = '10121649' then 'Olympics' else final.Buy end                                                         as Campaign,
-	final.order_id                                                                                                                                            as Campaign_ID,
-	final.campaignShort                                                                                                                                       as Campaign_Short,
-	final.campaignType                                                                                                                                        as Campaign_Type,
--- 	final.Directory_Site                                                          AS SITE,
-	case
-	when ( final.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or final.Directory_Site like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
-				when ( final.Directory_Site like '[Gg][Dd][Nn]%' or final.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'GDN'
-				when final.Directory_Site like '%[Aa]dara%' then 'Adara'
-				when final.Directory_Site like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
-				when final.Directory_Site like '%[Cc][Nn][Nn]%' then 'CNN'
-				when final.Directory_Site like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
-				when final.Directory_Site like '%[Ff]orbes%' then 'Forbes'
-				when final.Directory_Site like '%[Gg]olf%[Dd]igest%' then 'GolfDigest'
-				when final.Directory_Site like '%[Jj]un%[Gg]roup%' then 'JunGroup'
-				when final.Directory_Site like '%[Mm][Ll][Bb]%' then 'MLB'
-				when final.Directory_Site like '%[Mm]ansueto%' then 'Inc'
-				when final.Directory_Site like '%[Mn][Ss][Nn]%' then 'MSN'
-				when final.Directory_Site like '%[Nn][Bb][Aa]%' then 'NBA'
-				when final.Directory_Site like '%[Nn][Ff][Ll]%' then 'NFL'
-				when final.Directory_Site like '%[Nn]ast_[Tt]raveler%' then 'CN Traveler'
-				when final.Directory_Site like '%[Nn]ew_[Yy]ork_[Tt]imes%' then 'NYTimes'
-				when final.Directory_Site like '%[Nn]ew_[Yy]orker%' then 'New Yorker'
-				when final.Directory_Site like '%[Pp][Gg][Aa]%[Tt][Oo][Uu][Rr]%' then 'PGATour'
-				when final.Directory_Site like '%[Pp]riceline%' then 'Priceline'
-				when final.Directory_Site like '%[Ss]ports_[Ii]llustrated%' then 'Sports Illustrated'
-				when final.Directory_Site like '%[Tt]ap%[Aa]d%' then 'TapAd'
-				when final.Directory_Site like '%[Tt]ime%[Oo]ut%' then 'Time Out New York'
-				when final.Directory_Site like '%[Tt]ravel%[Ll]eisure%' then 'Travel + Leisure'
-				when final.Directory_Site like '%[Ww]all_[Ss]treet_[Jj]ournal%' then 'Wall Street Journal'
-				when final.Directory_Site like '%[Ww]ashington_[Pp]ost%' then 'Washington Post'
-				when final.Directory_Site like '%[Yy]ahoo%' then 'Yahoo'
-				when final.Directory_Site like '%[Yy]ou%[Tt]ube%' then 'YouTube'
-				when final.Directory_Site like '[Aa]d[Pp]rime%' then 'AdPrime'
-				when final.Directory_Site like '[Aa]ds[Mm]ovil%' then 'AdsMovil'
-				when final.Directory_Site like '[Aa]mobee%' then 'Amobee'
-				when final.Directory_Site like '[Cc]ardlytics%' then 'Cardlytics'
-				when final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Google' then 'DART Search_Google'
-				when final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%MSN' then 'DART Search_MSN'
-				when final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Other' then 'DART Search_Other'
-				when final.Directory_Site like '[Ff]acebook%' then 'Facebook'
-				when final.Directory_Site like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
-				when final.Directory_Site like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
-				when final.Directory_Site like '[Gg]um_[Gg]um%' then 'Gum Gum'
-				when final.Directory_Site like '[Hh]ulu%' then 'Hulu'
-				when final.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
-				when final.Directory_Site like '[Ii]mpre%[Mm]edia%' then 'Impre Media'
-				when final.Directory_Site like '[Ii]nternet%[Bb]rands%' then 'FlyerTalk'
-				when final.Directory_Site like '[Ii]ndependent%' then 'Independent'
-				when final.Directory_Site like '[Kk]ayak%' then 'Kayak'
-				when final.Directory_Site like '[Ll]ive%[Ii]ntent%' then 'Live Intent'
-				when final.Directory_Site like '[Mm]artini_[Mm]edia%' then 'Martini Media'
-				when final.Directory_Site like '[Oo]rbitz%' then 'Orbitz'
-				when final.Directory_Site like '[Ss]kyscanner%' then 'Skyscanner'
-				when final.Directory_Site like '[Ss]mart%[Bb]r[ei][ei]f%' then 'SmartBrief'
-				when final.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
-				when final.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
-				when final.Directory_Site like '[Ss]ojern%' then 'Sojern'
-				when final.Directory_Site like '[Ss]pecific_[Mm]edia%' then 'Viant'
-				when final.Directory_Site like '[Ss]potify%' then 'Spotify'
-				when final.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
-				when final.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
-				when final.Directory_Site like '[Tt]ravel%[Ss]pike%' then 'Travel Spike'
-				when final.Directory_Site like '[Tt]ravelocity%' then 'Travelocity'
-				when final.Directory_Site like '[Tt]riggit%' then 'Triggit'
-				when final.Directory_Site like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
-				when final.Directory_Site like '[Uu]nited%' then 'United'
-				when final.Directory_Site like '[Vv]erve%[Mm]obile%' then 'Verve Mobile'
-				when final.Directory_Site like '[Vv]istar%[Mm]edia%' then 'Vistar Media'
-				when final.Directory_Site like '[Vv]ox%' then 'Vox'
-				when final.Directory_Site like '[Ww]ired%' then 'Wired'
-				when final.Directory_Site like '[Xx][Aa][Xx][Ii][Ss]%' then 'Xaxis'
-				when final.Directory_Site like '[Xx]ad%' then 'xAd Inc'
-				when final.Directory_Site like '[Yy]ieldbot%' then 'Yieldbot'
-				when final.Directory_Site like '[Yy]u[Mm]e%' then 'YuMe'
-				else final.Directory_Site end                                                                                                                             as Directory_Site,
-	final.Site_ID                                                                                                                                          as Site_ID,
-	final.CostMethod                                                                                                                                          as Cost_Method,
--- 	final.PlacementNumber                                                         AS PlacementNumber,
-	final.Site_Placement                                                                                                                                      as placement,
--- 	final.tactic_1                                                                                                                                            as tactic_1,
--- 	final.tactic_2                                                                                                                                            as tactic_2,
--- 	final.size                                                                                                                                                as size,
-	final.page_id                                                                                                                                             as page_id,
--- 	final.xaxisMarket as xaxisMarket,
-	final.PlacementEnd                                                                                                                                        as PlacementEnd,
-	final.PlacementStart                                                                                                                                      as PlacementStart,
-	final.DV_Map                                                                                                                                              as DV_Map,
+	-- DCM ad server date
+	cast(final.dcmDate as date)                                                                             as "Date",
+	-- DCM ad server week (from date)
+	cast(dateadd(week,datediff(week,0,cast(final.dcmDate as date)),0) as date)                              as "Week",
+	-- DCM ad server month (from date)
+	dateName(month,cast(final.dcmDate as date))                                                             as "Month",
+	-- DCM ad server quarter + year (from date)
+	'Q' + dateName(quarter,cast(final.dcmDate as date)) + ' ' + dateName(year,cast(final.dcmDate as date))  as "Quarter",
 
-	final.Rate                                                                                                                                                as Rate,
-	final.Planned_Amt                                        as Planned_Amt,
--- 	final.flatCostRemain                                                          AS flatCostRemain,
--- 	final.impsRemain                                                              AS impsRemain,
--- 	sum(final.cost)                                                          AS cost,
-	case when final.CostMethod = 'Flat' then final.flatCost / max(final.newCount) else sum(final.cost) end                                      as cost,
-	sum(final.Impressions)                                   as Impressions,
-	sum(final.dcmImpressions)                                                        AS dcmImpressions,
--- 	sum(MT.human_impressions)                                      AS MT_Impressions,
--- 	sum(final.dv_impressions)                                                     AS DV_Impressions,
-	sum(final.DV_Viewed)                                                          AS DV_Viewed,
--- 	sum(final.DV_GroupMPayable)                                                   AS DV_GroupMPayable,
-	sum(final.Clicks)                                        as clicks,
-	case when sum(final.Impressions) = 0 then 0 else (sum(cast(final.Clicks as decimal(20,10))) / sum(cast(final.Impressions as decimal(20,10)))) *100 end as CTR,
--- 	sum(final.View_Thru_Conv)                                                     AS View_Thru_Conv,
--- 	sum(final.Click_Thru_Conv)                                                    AS Click_Thru_Conv,
-	sum(final.conv)                                          as conv,
--- 	sum(final.View_Thru_Tickets)                                                  AS View_Thru_Tickets,
--- 	sum(final.Click_Thru_Tickets)                                                 AS Click_Thru_Tickets,
-	sum(final.tickets)                                       as tickets,
-	case when sum(final.conv) = 0 then 0 else sum(final.cost) / sum(
-		final.conv) end                                      as cost_trans,
--- 	sum(final.View_Thru_Revenue)                                                  AS View_Thru_Revenue,
--- 	sum(final.Click_Thru_Revenue)                                                 AS Click_Thru_Revenue,
-	sum(final.Revenue)                                       as revenue,
-	sum(final.viewRevenue)                                   as viewRevenue,
-	sum(final.adjsRevenue)                                   as adjsRevenue,
+	final.diff                                                                                              as diff,
+	-- Reference/optional: match key from the DV table; only present when DV data is available.
+	final.dvJoinKey                                                                                         as dvJoinKey,
+	-- Reference/optional: match key from the Moat table; only present when Moat data is available.
+	final.mtJoinKey                                                                                         as mtJoinKey,
+	-- Reference/optional: package category from Prisma (standalone; package; child)
+	final.PackageCat                                                                                        as PackageCat,
+	-- Reference/optional: first six characters of package-level placement name, used to join 1) Prisma table, and 2) flat fee table
+	final.Cost_ID                                                                                           as Cost_ID,
+	-- DCM Campaign name
+	final.Buy                                                                                               as "DCM Campaign",
+	-- Friendly Campaign name
+	case
+	when  final.order_id = '9973506' 						      then 'SFO-AKL'
+	when  final.order_id = '9304728' 							  then 'Trade'
+	when  final.order_id = '9407915' 							  then 'Google PDE'
+	when  final.order_id = '9548151' 							  then 'Smithsonian'
+	when  final.order_id = '9630239' 							  then 'SFO-TLV'
+	when  final.order_id = '9639387' 							  then 'Targeted Marketing'
+	when  final.order_id = '9739006' 							  then 'Spoke Markets'
+	when  final.order_id = '9923634' 							  then 'SFO-SIN'
+	when  final.order_id = '10276123' 							  then 'Polaris'
+	when  final.order_id = '10094548' 							  then 'Marketing Fund'
+	when  final.order_id = '10090315' 							  then 'SME'
+	when  final.order_id = '9994694' 							  then 'SFO-China'
+	when  final.order_id = '9408733' 							  then 'Chile CoOp'
+	when  final.order_id = '9999841' or final.order_id='10121649' then 'Olympics'
+	else  final.Buy end                                                                                     as Campaign,
+	-- DCM campaing ID
+	final.order_id                                                                                          as "Campaign ID",
+
+	final.campaignShort                                                                                     as "Campaign Short Name",
+
+	final.campaignType                                                                                      as "Campaign Type",
+	-- DCM site name
+-- 	final.Directory_Site                                                          							as SITE,
+	-- Preferred, friendly site name; also corresponds to what's used in the joinKey fields across DFA, DV, and Moat.
+	case
+	when (final.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or final.Directory_Site like '[Tt]ribune_[Ii]nteractive%') then 'ChicagoTribune'
+	when (final.Directory_Site like '[Gg][Dd][Nn]%' or final.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%') then 'GDN'
+	when  final.Directory_Site like '%[Aa]dara%' then 'Adara'
+	when  final.Directory_Site like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
+	when  final.Directory_Site like '%[Cc][Nn][Nn]%' then 'CNN'
+	when  final.Directory_Site like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
+	when  final.Directory_Site like '%[Ff]orbes%' then 'Forbes'
+	when  final.Directory_Site like '%[Gg]olf%[Dd]igest%' then 'GolfDigest'
+	when  final.Directory_Site like '%[Jj]un%[Gg]roup%' then 'JunGroup'
+	when  final.Directory_Site like '%[Mm][Ll][Bb]%' then 'MLB'
+	when  final.Directory_Site like '%[Mm]ansueto%' then 'Inc'
+	when  final.Directory_Site like '%[Mn][Ss][Nn]%' then 'MSN'
+	when  final.Directory_Site like '%[Nn][Bb][Aa]%' then 'NBA'
+	when  final.Directory_Site like '%[Nn][Ff][Ll]%' then 'NFL'
+	when  final.Directory_Site like '%[Nn]ast_[Tt]raveler%' then 'CN Traveler'
+	when  final.Directory_Site like '%[Nn]ew_[Yy]ork_[Tt]imes%' then 'NYTimes'
+	when  final.Directory_Site like '%[Nn]ew_[Yy]orker%' then 'New Yorker'
+	when  final.Directory_Site like '%[Pp][Gg][Aa]%[Tt][Oo][Uu][Rr]%' then 'PGATour'
+	when  final.Directory_Site like '%[Pp]riceline%' then 'Priceline'
+	when  final.Directory_Site like '%[Ss]ports_[Ii]llustrated%' then 'Sports Illustrated'
+	when  final.Directory_Site like '%[Tt]ap%[Aa]d%' then 'TapAd'
+	when  final.Directory_Site like '%[Tt]ime%[Oo]ut%' then 'Time Out New York'
+	when  final.Directory_Site like '%[Tt]ravel%[Ll]eisure%' then 'Travel + Leisure'
+	when  final.Directory_Site like '%[Ww]all_[Ss]treet_[Jj]ournal%' then 'Wall Street Journal'
+	when  final.Directory_Site like '%[Ww]ashington_[Pp]ost%' then 'Washington Post'
+	when  final.Directory_Site like '%[Yy]ahoo%' then 'Yahoo'
+	when  final.Directory_Site like '%[Yy]ou%[Tt]ube%' then 'YouTube'
+	when  final.Directory_Site like '[Aa]d[Pp]rime%' then 'AdPrime'
+	when  final.Directory_Site like '[Aa]ds[Mm]ovil%' then 'AdsMovil'
+	when  final.Directory_Site like '[Aa]mobee%' then 'Amobee'
+	when  final.Directory_Site like '[Cc]ardlytics%' then 'Cardlytics'
+	when  final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Google' then 'DART Search_Google'
+	when  final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%MSN' then 'DART Search_MSN'
+	when  final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Other' then 'DART Search_Other'
+	when  final.Directory_Site like '[Ff]acebook%' then 'Facebook'
+	when  final.Directory_Site like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
+	when  final.Directory_Site like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
+	when  final.Directory_Site like '[Gg]um_[Gg]um%' then 'Gum Gum'
+	when  final.Directory_Site like '[Hh]ulu%' then 'Hulu'
+	when  final.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
+	when  final.Directory_Site like '[Ii]mpre%[Mm]edia%' then 'Impre Media'
+	when  final.Directory_Site like '[Ii]nternet%[Bb]rands%' then 'FlyerTalk'
+	when  final.Directory_Site like '[Ii]ndependent%' then 'Independent'
+	when  final.Directory_Site like '[Kk]ayak%' then 'Kayak'
+	when  final.Directory_Site like '[Ll]ive%[Ii]ntent%' then 'Live Intent'
+	when  final.Directory_Site like '[Mm]artini_[Mm]edia%' then 'Martini Media'
+	when  final.Directory_Site like '[Oo]rbitz%' then 'Orbitz'
+	when  final.Directory_Site like '[Ss]kyscanner%' then 'Skyscanner'
+	when  final.Directory_Site like '[Ss]mart%[Bb]r[ei][ei]f%' then 'SmartBrief'
+	when  final.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
+	when  final.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
+	when  final.Directory_Site like '[Ss]ojern%' then 'Sojern'
+	when  final.Directory_Site like '[Ss]pecific_[Mm]edia%' then 'Viant'
+	when  final.Directory_Site like '[Ss]potify%' then 'Spotify'
+	when  final.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
+	when  final.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
+	when  final.Directory_Site like '[Tt]ravel%[Ss]pike%' then 'Travel Spike'
+	when  final.Directory_Site like '[Tt]ravelocity%' then 'Travelocity'
+	when  final.Directory_Site like '[Tt]riggit%' then 'Triggit'
+	when  final.Directory_Site like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
+	when  final.Directory_Site like '[Uu]nited%' then 'United'
+	when  final.Directory_Site like '[Vv]erve%[Mm]obile%' then 'Verve Mobile'
+	when  final.Directory_Site like '[Vv]istar%[Mm]edia%' then 'Vistar Media'
+	when  final.Directory_Site like '[Vv]ox%' then 'Vox'
+	when  final.Directory_Site like '[Ww]ired%' then 'Wired'
+	when  final.Directory_Site like '[Xx][Aa][Xx][Ii][Ss]%' then 'Xaxis'
+	when  final.Directory_Site like '[Xx]ad%' then 'xAd Inc'
+	when  final.Directory_Site like '[Yy]ieldbot%' then 'Yieldbot'
+	when  final.Directory_Site like '[Yy]u[Mm]e%' then 'YuMe'
+		else  final.Directory_Site end                                                                      as Site,
+	-- DCM site ID
+	final.Site_ID                                                                                           as "Site ID",
+	-- Reference/optional: package cost/pricing model, from Prisma; attributed to all placements within package.
+	final.CostMethod                                                                                        as "Cost Method",
+	-- Reference/optional: first six characters of placement name. Used for matching across datasets when no common placement ID is available, e.g. DFA-DV.
+-- 	final.PlacementNumber                                                         							as PlacementNumber,
+	-- DCM placement name
+	final.Site_Placement                                                                                    as Placement,
+	-- DCM placement ID
+	final.page_id                                                                                           as page_id,
+	-- Reference/optional: planned package end date, from Prisma; attributed to all placements within package.
+	final.PlacementEnd                                                                                      as "Placement End",
+	final.PlacementStart                                                                                    as "Placement Start",
+	final.DV_Map                                                                                            as "DV Map",
+	final.Rate                                                                                              as Rate,
+	final.Planned_Amt                                                                                       as "Planned Amt",
+-- 	final.flatCostRemain                                                          							as flatCostRemain,
+-- 	final.impsRemain                                                              							as impsRemain,
+-- 	sum(final.cost)                                                          								as cost,
+	case when final.CostMethod='Flat' then final.flatCost/max(final.newCount)
+	else sum(final.cost) end                                                                            	as "Media Cost ($)",
+	sum(final.dlvrImps)                                                                                     as "Delivered Impressions",
+	sum(final.billImps)                                                                                     as "Billable Impressions",
+	sum(final.cnslImps)                                                                                     as "DFA Impressions",
+-- 	sum(MT.human_impressions)                                      											as MT_Impressions,
+-- 	sum(final.dv_impressions)                                                     							as DV_Impressions,
+	sum(final.DV_Viewed)                                                                                    as DV_Viewed,
+-- 	sum(final.DV_GroupMPayable)                                                   							as DV_GroupMPayable,
+	sum(final.Clicks)                                                                                       as clicks,
+	case when sum(final.dlvrImps) = 0 then 0
+	else (sum(cast(final.Clicks as decimal(20,10)))/sum(cast(final.dlvrImps as decimal(20,10))))*100 end as "CTR (%)",
+-- 	sum(final.View_Thru_Conv)                                                    							as View_Thru_Conv,
+-- 	sum(final.Click_Thru_Conv)                                                   							as Click_Thru_Conv,
+	sum(final.conv)                                                                                         as Transactions,
+-- 	sum(final.View_Thru_Tickets)                                                  							as View_Thru_Tickets,
+-- 	sum(final.Click_Thru_Tickets)                                                 							as Click_Thru_Tickets,
+	sum(final.tickets)                                                                                      as Tickets,
+	case when sum(final.conv) = 0 then 0
+	else sum(final.cost)/sum(final.conv) end                                                            	as "Cost/Transaction",
+-- 	sum(final.View_Thru_Revenue)                                                  							as View_Thru_Revenue,
+-- 	sum(final.Click_Thru_Revenue)                                                 							as Click_Thru_Revenue,
+	sum(final.Revenue)                                                                                      as Revenue,
+	sum(final.viewRevenue)                                                                                  as "Billable Revenue",
+	sum(final.adjsRevenue)                                                                                  as "Adjusted (Final) Revenue",
 	case when sum(final.cost) = 0 then 0
-	else ((sum(adjsRevenue) - sum(final.cost)) / sum(final.cost)) end *
-	100                                                      as aROAS
+	else ((sum(adjsRevenue)-sum(final.cost))/sum(final.cost)) end * 100                                 	as aROAS
 from (
 
--- 	DECLARE @report_st date,
+-- for running the code here instead of at "final," above
+-- DECLARE @report_st date,
 -- @report_ed date;
 -- --
--- SET @report_ed = '2016-07-30';
+-- SET @report_ed = '2016-08-31';
 -- SET @report_st = '2016-01-01';
 
 	     select
+		 	 -- DCM ad server date
 		     cast(almost.dcmDate as date)                                               as dcmDate,
+			 -- DCM ad server week (from date)
 		     almost.dcmMonth                                                            as dcmMonth,
+
 		     almost.diff                                                                as diff,
 		     DV.JoinKey                                                                 as dvJoinKey,
 		     MT.joinKey as mtJoinKey,
@@ -189,15 +226,10 @@ from (
 		     almost.Directory_Site                                                      as Directory_Site,
 		     almost.Site_ID                                                             as Site_ID,
 		     almost.CostMethod                                                          as CostMethod,
-		     sum(1) over (partition by almost.Cost_ID,almost.dcmMatchDate    order by
+		     sum(1) over (partition by almost.Cost_ID,almost.dcmMatchDate order by
 			     almost.dcmMonth asc range between unbounded preceding and current row) as newCount,
-
 		     almost.PlacementNumber                                                     as PlacementNumber,
 		     almost.Site_Placement                                                      as Site_Placement,
--- 		     almost.tactic_1                                                            as tactic_1,
--- 		     almost.tactic_2                                                            as tactic_2,
--- 		     almost.size                                                                as size,
--- 	almost.xaxisMarket as xaxisMarket,
 		     almost.page_id                                                             as page_id,
 		     almost.PlacementEnd                                                        as PlacementEnd,
 		     almost.PlacementStart                                                      as PlacementStart,
@@ -210,30 +242,30 @@ from (
 		     when ((almost.DV_Map = 'N' or almost.DV_Map = 'Y') and (almost.edDate - almost.dcmMatchDate < 0 or almost.dcmMatchDate - almost.stDate < 0)
 		           and (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE' or almost.CostMethod = 'CPC' or
 		                almost.CostMethod = 'CPCV'))
-			     then 0
+			       then 0
 		     when ((almost.DV_Map = 'Y' or almost.DV_Map = 'N') and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0)
 		           and (almost.CostMethod = 'CPC' or almost.CostMethod = 'CPCV'))
-			     then (sum(cast(almost.Clicks as decimal(10,2))) * cast(almost.Rate as decimal(10,2)))
+			       then (sum(cast(almost.Clicks as decimal(10,2))) * cast(almost.Rate as decimal(10,2)))
 
 		     --           Impression-based cost; not subject to viewability
 		     when (almost.DV_Map = 'N' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
 		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE'))
-			     then ((sum(cast(almost.Impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
+			       then ((sum(cast(almost.Impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
 
 			 --           Impression-based cost; subject to viewability with flag; MT source
 		     when (almost.DV_Map = 'Y' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
 		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE') and MT.joinKey is not null)
-			     then ((sum(cast(MT.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
+			       then ((sum(cast(MT.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
 
 		     --           Impression-based cost; subject to viewability; DV source
 		     when (almost.DV_Map = 'Y' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
 		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE'))
-			     then ((sum(cast(DV.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
+			       then ((sum(cast(DV.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
 
 		     --           Impression-based cost; subject to viewability; MOAT source
 		     when (almost.DV_Map = 'M' and (almost.edDate - almost.dcmMatchDate >= 0 or almost.dcmMatchDate - almost.stDate >= 0) and
 		           (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE'))
-			     then ((sum(cast(MT.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
+			       then ((sum(cast(MT.groupm_billable_impressions as decimal(10,2))) * cast(almost.Rate as decimal(10,2)) / 1000))
 
 		     else 0 end                                                                 as Cost,
 		     almost.Rate                                                                as Rate,
@@ -268,34 +300,42 @@ from (
 		         else 0 end)                                                            as viewRevenue,
 
 		     sum(case
-		         -- 		not subject to viewability
+-- 				 not subject to viewability
 		         when (almost.DV_Map = 'N')
 			         then cast(almost.View_Thru_Revenue * .2 * .15 as decimal(10,2))
-		         -- 		subject to viewability with flag; MT source
+-- 				 subject to viewability with flag; MT source
 		         when (almost.DV_Map = 'Y' and MT.joinKey is not null)
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(MT.groupm_passed_impressions as decimal) /
 			                      cast(MT.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
-
-		         -- 		subject to viewability; DV source
+-- 				 subject to viewability; DV source
 		         when (almost.DV_Map = 'Y')
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(DV.groupm_passed_impressions as decimal) /
 			                      cast(DV.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
-
-		         -- 		subject to viewability; MOAT source
+-- 				 subject to viewability; MOAT source
 		         when (almost.DV_Map = 'M')
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(MT.groupm_passed_impressions as decimal) /
 			                      cast(MT.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
 		         else 0 end)                                                            as adjsRevenue,
+
+-- 			 Total impressions as reported by 1.) DCM for "N," 2.) DV for "Y," or MOAT for "M"
 		     sum(case
 				 when almost.DV_Map = 'Y' and MT.joinKey is not null then MT.total_impressions
 				 when almost.DV_Map = 'Y' then DV.total_impressions
 		         when almost.DV_Map = 'M' then MT.total_impressions
-		         else almost.Impressions end)                                           as Impressions,
-		     sum(almost.Impressions)                                                    as dcmImpressions,
--- 	sum(MT.human_impressions)                                      AS MT_Impressions,
+		         else almost.Impressions end)                                           as dlvrImps,
+
+-- 			 Billable impressions as reported by 1.) DCM for "N," 2.) DV for "Y," or MOAT for "M"
+		     sum(case
+				 when almost.DV_Map = 'Y' and MT.joinKey is not null then MT.groupm_billable_impressions
+				 when almost.DV_Map = 'Y' then DV.groupm_billable_impressions
+		         when almost.DV_Map = 'M' then MT.groupm_billable_impressions
+		         else almost.Impressions end)                                           as billImps,
+
+-- 			 DCM Impressions (for comparison (QA) to DCM console)
+		     sum(almost.Impressions)                                                    as cnslImps,
 		     sum(cast(DV.total_impressions as int))                                     as DV_Impressions,
 		     sum(DV.groupm_passed_impressions)                                          as DV_Viewed,
 		     sum(cast(DV.groupm_billable_impressions as decimal(10,2)))                 as DV_GroupMPayable,
@@ -346,9 +386,6 @@ from (
 				     dcmReport.Site_ID                                                                                                                      as Site_ID,
 				     dcmReport.PlacementNumber                                                                                                              as PlacementNumber,
 				     dcmReport.Site_Placement                                                                                                               as Site_Placement,
--- 				     dcmReport.tactic_1                                                                                                                     as tactic_1,
--- 				     dcmReport.tactic_2                                                                                                                     as tactic_2,
--- 				     dcmReport.size                                                                                                                         as size,
 				     dcmReport.page_id                                                                                                                      as page_id,
 				     Prisma.stDate                                                                                                                          as stDate,
 				     Prisma.edDate                                                                                                                          as edDate,
@@ -361,28 +398,32 @@ from (
 
 --  			Flat.flatCostRemain                                                               AS flatCostRemain,
 --  			Flat.impsRemain                                                                   AS impsRemain,
-				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / cast(Prisma.Planned_Amt as decimal(10,2)) ) * cast(Prisma.Rate as
-				                                                                                                             decimal(10,2)))                as incrFlatCost,
-				     cast(Prisma.Rate as
-				          decimal(10,2))                                                                                                                    as Rate,
+					 --
+				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / cast(Prisma.Planned_Amt as decimal(10,2)) ) * cast(Prisma.Rate as decimal(10,2))) as incrFlatCost,
+					 -- Rate at the package level, pulled from Prisma. In Prisma, CPM/CPC packages types have the per-Impression/Click rate; flat fees have the total planned cost.
+				     cast(Prisma.Rate as decimal(10,2))                                                                                                     as Rate,
 				     sum(dcmReport.Impressions)                                                                                                             as impressions,
 				     sum(dcmReport.Clicks)                                                                                                                  as clicks,
+					 -- Since we're limiting the Activity table to ticket confirmations, "conversions" are all "transactions."
+					 sum(dcmReport.View_Thru_Conv) + sum(dcmReport.Click_Thru_Conv)                                                                         as conv,
+					 sum(dcmReport.View_Thru_Tickets) + sum(dcmReport.Click_Thru_Tickets)                                                                   as tickets,
+
+					 -- Breaking out view vs. click transactions/tickets/revenue in the final report has become less important over time. Fields are left here in case they're useful. View-Thru revenue is still needed to calculate adjusted revenue.
 				     sum(dcmReport.View_Thru_Conv)                                                                                                          as View_Thru_Conv,
 				     sum(dcmReport.Click_Thru_Conv)                                                                                                         as Click_Thru_Conv,
-				     sum(dcmReport.View_Thru_Conv) + sum(dcmReport.Click_Thru_Conv)                                                                                                         as conv,
 				     sum(dcmReport.View_Thru_Tickets)                                                                                                       as View_Thru_Tickets,
 				     sum(dcmReport.Click_Thru_Tickets)                                                                                                      as Click_Thru_Tickets,
-				     sum(dcmReport.View_Thru_Tickets) + sum(dcmReport.Click_Thru_Tickets)                                                                                                      as tickets,
-				     sum(cast(dcmReport.View_Thru_Revenue as decimal(10,2))) as View_Thru_Revenue,
-				     sum(cast(dcmReport.Click_Thru_Revenue as decimal(10,2))) as Click_Thru_Revenue,
-				     sum(cast(dcmReport.Revenue as decimal(10,2))) as revenue,
-				     case when cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) <= 0 then 0
-				     else cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) end as diff,
-				     case
--- 					 Live Intent for SFO-SIN campaign is email (not subject to viewab.), but mistakenly labeled with "Y"
-					 when dcmReport.order_id = '9923634' and dcmReport.Site_ID = '1853564'
-					     then 'N'
+				     sum(cast(dcmReport.View_Thru_Revenue as decimal(10,2))) 																				as View_Thru_Revenue,
+				     sum(cast(dcmReport.Click_Thru_Revenue as decimal(10,2))) 																				as Click_Thru_Revenue,
 
+				     sum(cast(dcmReport.Revenue as decimal(10,2))) 																							as revenue,
+					 -- Reference/optional: difference, in months, between placement end date and report date. A similar calculation is used deterministically with dcmMatchDate above.
+					 case when cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) <= 0 then 0
+				     else cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) end as diff,
+					 -- Viewability status of placement, pulled from Prisma. The case statement takes care of mistakes and exceptions.
+					 case
+					 when dcmReport.order_id = '9923634' and dcmReport.Site_ID = '1853564' --Live Intent for SFO-SIN campaign is email (not subject to viewab.), but mistakenly labeled with "Y"
+					     then 'N'
 				     when dcmReport.order_id = '9639387'
 					     then 'Y'
 				     when Prisma.CostMethod = 'dCPM'
@@ -392,29 +433,22 @@ from (
 				     when Prisma.CostMethod = 'CPMV' and
 				          ( dcmReport.Site_Placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or dcmReport.Site_Placement like '%[Vv][Ii][Dd][Ee][Oo]%' or dcmReport.Site_Placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or dcmReport.Site_ID = '1995643' or dcmReport.Site_ID = '1474576' or dcmReport.Site_ID = '2854118')
 					     then 'M'
-
 					 when dcmReport.Site_Placement like '%_NA_%' then 'N'
 					 when dcmReport.Site_Placement like '%_DV_%' then 'Y'
 					 when dcmReport.Site_Placement like '%_MOAT_%' then 'M'
-
-				     when Prisma.CostMethod =
-				          'Flat'
-					     then 'N'
+				     when Prisma.CostMethod = 'Flat' then 'N'
 				     else Prisma.DV_Map end                                                                                                                 as DV_Map,
-				     SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),
-				               3)                                                                                                                           as campaignShort,
-				     case when SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),3) =
-				               'TMK'
-					     then 'Acquisition'
+					 -- Reference/optional: three-character designation, sometimes descriptive, from placement name.
+				     SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ), 3)                                            as campaignShort,
+					 -- Designation specified by Planning/Investment in 2016. Targeted Marketing is "Acquisition;" everything else is "Non-Acquisition"
+				     case when SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),3) = 'TMK' then 'Acquisition'
 				     else 'Non-Acquisition' end                                                                                                             as campaignType
 
 
 -- ==========================================================================================================================================================
 
---              openQuery text must not exceed 8,000 characters
-
+-- openQuery call must not exceed 8,000 characters; no room for comments inside the function
 		FROM (
-
 			     SELECT *
 			     FROM openQuery(VerticaGroupM,
 			                    'SELECT
@@ -460,7 +494,7 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-09-14'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-08-31'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -505,7 +539,7 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-09-14''
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-08-31''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
 
 
@@ -538,7 +572,7 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-09-14''
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-08-31''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
 
 ) AS Clicks
@@ -610,9 +644,6 @@ cast(Report.Date AS DATE)
 			,dcmReport.Site_ID
 			,dcmReport.PlacementNumber
 			,dcmReport.Site_Placement
--- 			,dcmReport.tactic_1
--- 			,dcmReport.tactic_2
--- 			,dcmReport.size
 			,dcmReport.page_id
 			,Prisma.PackageCat
 			,Prisma.Rate
@@ -809,7 +840,7 @@ cast(Report.Date AS DATE)
 			+ cast(almost.dcmDate as varchar(10)) = MT.joinKey
 
 -- 	where almost.CostMethod = 'Flat'
-
+--     where almost.Site_ID ='1853562'
 group by
 
 	almost.Buy
@@ -826,9 +857,6 @@ group by
 	,almost.Planned_Amt
 	,almost.Rate
 	,almost.Site_Placement
--- 	,almost.tactic_1
--- 	,almost.tactic_2
--- 	,almost.size
 	,almost.edDate
 	,almost.stDate
 	,almost.campaignShort
@@ -845,7 +873,6 @@ group by
 	,Flat.flatCostRemain
 	,Flat.impsRemain
 	,Flat.flatCost
--- 	,almost.xaxisMarket
 
      ) as final
 
@@ -854,7 +881,7 @@ group by
 -- 		where final.mtJoinKey is NULL and  final.DV_Map = 'M'
 -- 	where final.Directory_Site like '%[Bb]usiness%[Ii]nsider%'
 -- 				where final.Directory_Site like '%Verve%' or final.Directory_Site like '%xAd%'
---     where final.Site_ID ='1995643'
+--     where final.Site_ID ='1853562'
 --     where final.order_id ='10276123'
 
 -- 	where final.Site_ID = '1853564' and final.DV_Map = 'Y'
@@ -881,10 +908,6 @@ group by
 	,final.Rate
 -- ,final.PlacementNumber
 	,final.Site_Placement
--- 	,final.tactic_1
--- 	,final.tactic_2
--- 	,final.size
--- ,final.xaxisMarket
 	,final.page_id
 	,final.PlacementEnd
 	,final.PlacementStart
@@ -899,7 +922,3 @@ group by
 order by
 	final.Cost_ID,
 	final.dcmDate;
-
-
-
-
