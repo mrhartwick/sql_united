@@ -29,7 +29,7 @@ DECLARE @report_st date,
 @report_ed date;
 --
 SET @report_ed = '2016-08-31';
-SET @report_st = '2016-01-01';
+SET @report_st = '2016-07-01';
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
@@ -44,7 +44,7 @@ select
 	dateName(month,cast(final.dcmDate as date))                                                             as "Month",
 	-- DCM ad server quarter + year (from date)
 	'Q' + dateName(quarter,cast(final.dcmDate as date)) + ' ' + dateName(year,cast(final.dcmDate as date))  as "Quarter",
-
+	-- Reference/optional: difference, in months, between placement end date and report date. Field is used deterministically below.
 	final.diff                                                                                              as diff,
 	-- Reference/optional: match key from the DV table; only present when DV data is available.
 	final.dvJoinKey                                                                                         as dvJoinKey,
@@ -75,9 +75,9 @@ select
 	else  final.Buy end                                                                                     as Campaign,
 	-- DCM campaing ID
 	final.order_id                                                                                          as "Campaign ID",
-
+	-- Reference/optional: three-character designation, sometimes descriptive, from placement name.
 	final.campaignShort                                                                                     as "Campaign Short Name",
-
+	-- Designation specified by Planning/Investment in 2016.
 	final.campaignType                                                                                      as "Campaign Type",
 	-- DCM site name
 -- 	final.Directory_Site                                                          							as SITE,
@@ -173,7 +173,7 @@ select
 -- 	final.impsRemain                                                              							as impsRemain,
 -- 	sum(final.cost)                                                          								as cost,
 	case when final.CostMethod='Flat' then final.flatCost/max(final.newCount)
-	else sum(final.cost) end                                                                            	as "Media Cost ($)",
+	else sum(final.cost) end                                                                            	as cost,
 	sum(final.dlvrImps)                                                                                     as "Delivered Impressions",
 	sum(final.billImps)                                                                                     as "Billable Impressions",
 	sum(final.cnslImps)                                                                                     as "DFA Impressions",
@@ -183,7 +183,7 @@ select
 -- 	sum(final.DV_GroupMPayable)                                                   							as DV_GroupMPayable,
 	sum(final.Clicks)                                                                                       as clicks,
 	case when sum(final.dlvrImps) = 0 then 0
-	else (sum(cast(final.Clicks as decimal(20,10)))/sum(cast(final.dlvrImps as decimal(20,10))))*100 end as "CTR (%)",
+	else (sum(cast(final.Clicks as decimal(20,10)))/sum(cast(final.dlvrImps as decimal(20,10))))*100 end as CTR,
 -- 	sum(final.View_Thru_Conv)                                                    							as View_Thru_Conv,
 -- 	sum(final.Click_Thru_Conv)                                                   							as Click_Thru_Conv,
 	sum(final.conv)                                                                                         as Transactions,
@@ -206,7 +206,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-08-31';
--- SET @report_st = '2016-01-01';
+-- SET @report_st = '2016-07-01';
 
 	     select
 		 	 -- DCM ad server date
@@ -299,20 +299,25 @@ from (
 			                cast(MT.total_impressions as decimal)))
 		         else 0 end)                                                            as viewRevenue,
 
+
 		     sum(case
+
 -- 				 not subject to viewability
 		         when (almost.DV_Map = 'N')
 			         then cast(almost.View_Thru_Revenue * .2 * .15 as decimal(10,2))
+
 -- 				 subject to viewability with flag; MT source
 		         when (almost.DV_Map = 'Y' and MT.joinKey is not null)
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(MT.groupm_passed_impressions as decimal) /
 			                      cast(MT.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
+
 -- 				 subject to viewability; DV source
 		         when (almost.DV_Map = 'Y')
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(DV.groupm_passed_impressions as decimal) /
 			                      cast(DV.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
+
 -- 				 subject to viewability; MOAT source
 		         when (almost.DV_Map = 'M')
 			         then cast(((almost.View_Thru_Revenue) *
@@ -361,7 +366,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-07-30';
--- SET @report_st = '2016-01-01';
+-- SET @report_st = '2016-07-01';
 			     select
 				     dcmReport.dcmDate                                                                                                                      as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as
@@ -398,32 +403,28 @@ from (
 
 --  			Flat.flatCostRemain                                                               AS flatCostRemain,
 --  			Flat.impsRemain                                                                   AS impsRemain,
-					 --
-				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / cast(Prisma.Planned_Amt as decimal(10,2)) ) * cast(Prisma.Rate as decimal(10,2))) as incrFlatCost,
-					 -- Rate at the package level, pulled from Prisma. In Prisma, CPM/CPC packages types have the per-Impression/Click rate; flat fees have the total planned cost.
-				     cast(Prisma.Rate as decimal(10,2))                                                                                                     as Rate,
+				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / cast(Prisma.Planned_Amt as decimal(10,2)) ) * cast(Prisma.Rate as
+				                                                                                                             decimal(10,2)))                as incrFlatCost,
+				     cast(Prisma.Rate as
+				          decimal(10,2))                                                                                                                    as Rate,
 				     sum(dcmReport.Impressions)                                                                                                             as impressions,
 				     sum(dcmReport.Clicks)                                                                                                                  as clicks,
-					 -- Since we're limiting the Activity table to ticket confirmations, "conversions" are all "transactions."
-					 sum(dcmReport.View_Thru_Conv) + sum(dcmReport.Click_Thru_Conv)                                                                         as conv,
-					 sum(dcmReport.View_Thru_Tickets) + sum(dcmReport.Click_Thru_Tickets)                                                                   as tickets,
-
-					 -- Breaking out view vs. click transactions/tickets/revenue in the final report has become less important over time. Fields are left here in case they're useful. View-Thru revenue is still needed to calculate adjusted revenue.
 				     sum(dcmReport.View_Thru_Conv)                                                                                                          as View_Thru_Conv,
 				     sum(dcmReport.Click_Thru_Conv)                                                                                                         as Click_Thru_Conv,
+				     sum(dcmReport.View_Thru_Conv) + sum(dcmReport.Click_Thru_Conv)                                                                         as conv,
 				     sum(dcmReport.View_Thru_Tickets)                                                                                                       as View_Thru_Tickets,
 				     sum(dcmReport.Click_Thru_Tickets)                                                                                                      as Click_Thru_Tickets,
-				     sum(cast(dcmReport.View_Thru_Revenue as decimal(10,2))) 																				as View_Thru_Revenue,
-				     sum(cast(dcmReport.Click_Thru_Revenue as decimal(10,2))) 																				as Click_Thru_Revenue,
-
-				     sum(cast(dcmReport.Revenue as decimal(10,2))) 																							as revenue,
-					 -- Reference/optional: difference, in months, between placement end date and report date. A similar calculation is used deterministically with dcmMatchDate above.
-					 case when cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) <= 0 then 0
+				     sum(dcmReport.View_Thru_Tickets) + sum(dcmReport.Click_Thru_Tickets)                                                                   as tickets,
+				     sum(cast(dcmReport.View_Thru_Revenue as decimal(10,2))) as View_Thru_Revenue,
+				     sum(cast(dcmReport.Click_Thru_Revenue as decimal(10,2))) as Click_Thru_Revenue,
+				     sum(cast(dcmReport.Revenue as decimal(10,2))) as revenue,
+				     case when cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) <= 0 then 0
 				     else cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) end as diff,
-					 -- Viewability status of placement, pulled from Prisma. The case statement takes care of mistakes and exceptions.
-					 case
-					 when dcmReport.order_id = '9923634' and dcmReport.Site_ID = '1853564' --Live Intent for SFO-SIN campaign is email (not subject to viewab.), but mistakenly labeled with "Y"
+				     case
+-- 					 Live Intent for SFO-SIN campaign is email (not subject to viewab.), but mistakenly labeled with "Y"
+					 when dcmReport.order_id = '9923634' and dcmReport.Site_ID = '1853564'
 					     then 'N'
+
 				     when dcmReport.order_id = '9639387'
 					     then 'Y'
 				     when Prisma.CostMethod = 'dCPM'
@@ -433,15 +434,20 @@ from (
 				     when Prisma.CostMethod = 'CPMV' and
 				          ( dcmReport.Site_Placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or dcmReport.Site_Placement like '%[Vv][Ii][Dd][Ee][Oo]%' or dcmReport.Site_Placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or dcmReport.Site_ID = '1995643' or dcmReport.Site_ID = '1474576' or dcmReport.Site_ID = '2854118')
 					     then 'M'
+
 					 when dcmReport.Site_Placement like '%_NA_%' then 'N'
 					 when dcmReport.Site_Placement like '%_DV_%' then 'Y'
 					 when dcmReport.Site_Placement like '%_MOAT_%' then 'M'
-				     when Prisma.CostMethod = 'Flat' then 'N'
+
+				     when Prisma.CostMethod =
+				          'Flat'
+					     then 'N'
 				     else Prisma.DV_Map end                                                                                                                 as DV_Map,
-					 -- Reference/optional: three-character designation, sometimes descriptive, from placement name.
-				     SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ), 3)                                            as campaignShort,
-					 -- Designation specified by Planning/Investment in 2016. Targeted Marketing is "Acquisition;" everything else is "Non-Acquisition"
-				     case when SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),3) = 'TMK' then 'Acquisition'
+				     SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),
+				               3)                                                                                                                           as campaignShort,
+				     case when SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),3) =
+				               'TMK'
+					     then 'Acquisition'
 				     else 'Non-Acquisition' end                                                                                                             as campaignType
 
 
@@ -464,6 +470,8 @@ Placements.Site_Placement                   AS Site_Placement,
 -- SPLIT_PART(Placements.Site_Placement, ''_'', 9) as tactic_2,
 -- SPLIT_PART(Placements.Site_Placement, ''_'', 11) as size,
 Report.page_id                         AS page_id,
+oss.os as os,
+Report.os_id as os_id,
 sum(Report.Impressions)                     AS impressions,
 sum(Report.Clicks)                          AS clicks,
 sum(Report.View_Thru_Conv)                  AS View_Thru_Conv,
@@ -480,6 +488,7 @@ cast(Conversions.Click_Time as date) as "Date"
 ,order_id                                                                       as order_id
 ,Conversions.site_id                                                                        as Site_ID
 ,Conversions.page_id                                                                        as page_id
+,Conversions.os_id                                                                          as os_id
 ,0                                                                                          as Impressions
 ,0                                                                                          as Clicks
 ,sum(Case When Event_ID = 1 THEN 1 ELSE 0 END)                                              as Click_Thru_Conv
@@ -494,15 +503,15 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-08-31'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-07-01'' AND ''2016-08-31'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
 and quantity != 0
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
-
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
+-- and order_id in (9999841,10121649) -- Olympics 2016
 and (advertiser_id <> 0)
 ) as Conversions
 
@@ -513,6 +522,7 @@ AND cast(Conversions.Click_Time as date) = Rates.DATE
 GROUP BY
 -- Conversions.Click_Time
 cast(Conversions.Click_Time as date)
+,Conversions.os_id
 ,Conversions.order_id
 ,Conversions.site_id
 ,Conversions.page_id
@@ -521,11 +531,11 @@ cast(Conversions.Click_Time as date)
 UNION ALL
 
 SELECT
--- Impressions.impression_time as "Date"
 cast(Impressions.impression_time as date) as "Date"
 ,Impressions.order_ID                 as order_id
 ,Impressions.Site_ID                  as Site_ID
 ,Impressions.Page_ID                  as page_id
+,Impressions.os_id                    as os_id
 ,count(*)                             as Impressions
 ,0                                    as Clicks
 ,0                                    as Click_Thru_Conv
@@ -539,25 +549,26 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-08-31''
+WHERE cast(impression_time as date) BETWEEN ''2016-07-01'' AND ''2016-08-31''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
+-- and order_id in (9999841,10121649) -- Olympics 2016
 
 
 ) AS Impressions
 GROUP BY
--- Impressions.impression_time
 cast(Impressions.impression_time as date)
 ,Impressions.order_ID
 ,Impressions.Site_ID
+,Impressions.os_id
 ,Impressions.Page_ID
 
 UNION ALL
 SELECT
--- Clicks.click_time       as "Date"
 cast(Clicks.click_time as date)       as "Date"
 ,Clicks.order_id                      as order_id
 ,Clicks.Site_ID                       as Site_ID
 ,Clicks.Page_ID                       as page_id
+,Clicks.os_id                         as os_id
 ,0                                    as Impressions
 ,count(*)                             as Clicks
 ,0                                    as Click_Thru_Conv
@@ -572,21 +583,22 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-08-31''
+WHERE cast(click_time as date) BETWEEN ''2016-07-01'' AND ''2016-08-31''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
+-- and order_id in (9999841,10121649) -- Olympics 2016
 
 ) AS Clicks
 
 GROUP BY
--- Clicks.Click_time
 cast(Clicks.Click_time as date)
 ,Clicks.order_id
+,Clicks.os_id
 ,Clicks.Site_ID
 ,Clicks.Page_ID
 ) as report
+
 LEFT JOIN
 (
--- 			     SELECT *
 select cast(buy as varchar(4000)) as ''buy'', order_id as ''order_id''
 from mec.UnitedUS.dfa_campaign
 ) AS Campaign
@@ -594,7 +606,13 @@ ON Report.order_id = Campaign.order_id
 
 LEFT JOIN
 (
--- 			     SELECT *
+select cast(os as varchar(4000)) as ''os'', os_id as ''os_id''
+from mec.UnitedUS.dfa_operating_systems
+) AS oss
+ON Report.os_id = oss.os_id
+
+LEFT JOIN
+(
 select  cast(site_placement as varchar(4000)) as ''site_placement'',  max(page_id) as ''page_id'', order_id as ''order_id'', site_id as ''site_id''
 from mec.UnitedUS.dfa_page_name
 		group by site_placement, order_id, site_id
@@ -605,7 +623,6 @@ and report.site_ID  = placements.site_id
 
 LEFT JOIN
 (
--- 			     SELECT *
 select cast(directory_site as varchar(4000)) as ''directory_site'', site_id as ''site_id''
 from mec.UnitedUS.dfa_site
 ) AS Directory
@@ -615,14 +632,14 @@ WHERE NOT REGEXP_LIKE(site_placement,''.do\s*not\s*use.'',''ib'')
 
 GROUP BY
 cast(Report.Date AS DATE)
--- , cast(month(cast(Report.Date as date)) as int)
 , Directory.Directory_Site
 ,Report.Site_ID
+,oss.os
+,Report.os_id
 , Report.order_id
 , Campaign.Buy
 , Report.page_id
 , Placements.Site_Placement
--- , Placements.PlacementNumber
 ')
 
 		     ) AS dcmReport
