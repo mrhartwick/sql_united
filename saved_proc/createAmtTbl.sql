@@ -47,7 +47,7 @@ insert into dbo.plannedAmtTable
 			      [dbo].[DFID037724_PrismaPlacementsMonthlyDelivery_Extracted] t2
 		      where t2.ParentId = t1.ParentId)
 	     ) as final
-
+where final.PlannedCost + final.PlannedUnits > 0
 	group by
 		final.ParentId
 		,final.SupplierCode
