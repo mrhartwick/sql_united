@@ -1,6 +1,6 @@
 ALTER PROCEDURE dbo.createflatTblDay
 AS
-IF OBJECT_ID('master.dbo.flatTableFull',N'U') IS NOT NULL
+IF OBJECT_ID('master.dbo.flatTableDay',N'U') IS NOT NULL
 	DROP TABLE master.dbo.flatTableDay;
 
 
@@ -58,15 +58,15 @@ INSERT INTO master.dbo.flatTableDay
 		CASE WHEN f2.flatCostRemain IS NULL THEN cast(0 AS decimal(20,10)) ELSE f2.flatCostRemain END AS flatCostRemain,
 		f2.Imps                                                                                       AS Imps,
 		f2.impsRunTot                                                                                 AS impsRunTot,
-		f2.impsRemain                                                                                 AS impsRemain,
-		f2.Planned_Amt                                                                                AS Planned_Amt
+        CASE WHEN f2.impsRemain IS NULL THEN cast(0 AS int) ELSE f2.impsRemain END AS impsRemain,
+            CASE WHEN f2.Planned_Amt IS NULL THEN cast(0 AS int) ELSE f2.Planned_Amt END AS Planned_Amt
 
 	FROM (
 		     SELECT
 			     f1.stDate                                                                                AS stDate,
 			     f1.edDate                                                                                AS edDate,
 			     f1.dcmDate                                                                               AS dcmDate,
-			   f1.Cost_ID                                                                               AS Cost_ID,
+			  f1.Cost_ID                                                                               AS Cost_ID,
 			     f1.dcmYrMo                                                                               AS dcmYrMo,
 			     f1.prsCostMethod                                                                         AS prsCostMethod,
 			     f1.PackageCat                                                                            AS PackageCat,
@@ -404,9 +404,9 @@ cast(Report.Date AS DATE)
 							     FROM [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.[dbo].summaryTable
 						     ) AS Prisma
 							     ON dcmReport.Placement_ID = Prisma.AdserverPlacementId
-					     WHERE Prisma.CostMethod = 'Flat' 
+					     WHERE Prisma.CostMethod = 'Flat'
 
-					     
+
 -- =========================================================================================================================
 					     GROUP BY
 						     cast(dcmReport.dcmDate AS date)
