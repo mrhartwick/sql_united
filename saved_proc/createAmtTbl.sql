@@ -27,12 +27,8 @@ insert into dbo.plannedAmtTable
               cast(t1.ParentId as int)                   as ParentId,
               cast(t1.AdserverSupplierCode as int)       as SupplierCode,
               cast(t1.AdserverCampaignId as int)         as AdserverCampaignId,
-              case when cast(t1.PlannedAmount as decimal) is null
-                  then 0
-              else cast(t1.PlannedAmount as decimal) end as PlannedCost,
-              case when cast(t1.PlannedUnits as int) is null
-                  then 0
-              else cast(t1.PlannedUnits as int) end      as PlannedUnits,
+              isnull(cast(t1.PlannedAmount as decimal), 0) as PlannedCost,
+              isnull(cast(t1.PlannedUnits as int), 0) as PlannedUnits,
               cast(t1.PlacementStartDate as date)        as PlacementStartDate,
               convert(int,cast(year(cast(t1.PlacementStartDate as date)) as varchar(4))+
                           SUBSTRING((convert(varchar(10),cast(t1.PlacementStartDate as date))),

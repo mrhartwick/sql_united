@@ -47,7 +47,7 @@ INSERT INTO dbo.summaryTable
 		final.stDate                                                                                            AS stDate,
 		final.edDate                                                                                            AS edDate,
 		final.DV_Map                                                                                            AS DV_Map,
-		CASE WHEN final.Rate IS NULL THEN cast(0 AS decimal(20,10)) ELSE cast(final.Rate AS decimal(20,10)) END AS Rate,
+		isNull(final.Rate, cast(0 AS decimal(20,10))) AS Rate,
 		final.PackageName                                                                                       AS PackageName,
 		final.Cost_ID                                                                                           AS Cost_ID,
 		final.CostMethod                                                                                        AS CostMethod
@@ -115,7 +115,7 @@ INSERT INTO dbo.summaryTable
 				          CAST(MONTH(CAST(t1.PlacementEndDate AS date)) AS varchar(2)) AS int)
 			     END                                                                                               AS edYrMo,
 			     vew.CustomColumnValue                                                                             AS DV_Map,
-			     CASE WHEN t2.Rate IS NULL THEN cast(0 AS decimal(20,10)) ELSE cast(t2.Rate AS decimal(20,10)) END AS Rate,
+			     isNull(t2.Rate, cast(0 AS decimal(20,10)))  AS Rate,
 			     pak.PackageName,
 			     pak.Cost_ID,
 			     t2.CostMethod
@@ -136,7 +136,7 @@ INSERT INTO dbo.summaryTable
 				                 SELECT DISTINCT
 					                 PlacementId,
 					                 ParentId,
-					                 CASE WHEN Rate IS NULL THEN 0 ELSE Rate END AS Rate,
+					                 isNull(cast(Rate AS decimal(20,10)), 0) 							 AS Rate,
 					                 CostMethod,
 					                 CampaignName,
 					                 PackageType                                 AS PackageCat
