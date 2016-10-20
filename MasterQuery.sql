@@ -13,7 +13,7 @@
 
 */
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
---
+
 -- EXEC master.dbo.createDVTbl GO    -- create separate DV aggregate table and store it in my instance; joining to the Vertica table in the query
 -- EXEC master.dbo.createMTTbl GO    -- create separate MOAT aggregate table and store it in my instance; joining to the Vertica table in the query
 -- -- --
@@ -28,7 +28,7 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-08-31';
+SET @report_ed = '2016-10-20';
 SET @report_st = '2016-07-01';
 
 --
@@ -205,7 +205,7 @@ from (
 -- DECLARE @report_st date,
 -- @report_ed date;
 -- --
--- SET @report_ed = '2016-08-31';
+-- SET @report_ed = '2016-10-20';
 -- SET @report_st = '2016-07-01';
 
 	     select
@@ -424,7 +424,9 @@ from (
 -- 					 Live Intent for SFO-SIN campaign is email (not subject to viewab.), but mistakenly labeled with "Y"
 					 when dcmReport.order_id = '9923634' and dcmReport.Site_ID = '1853564'
 					     then 'N'
-
+-- 					 designates all Xaxis placements as "Y." Not always true.
+-- 					  when dcmReport.Site_ID = '1592652'
+-- 					     then 'Y'
 				     when dcmReport.order_id = '9639387'
 					     then 'Y'
 				     when Prisma.CostMethod = 'dCPM'
@@ -432,7 +434,9 @@ from (
 				     when dcmReport.order_id = '9973506'
 					     then 'Y'
 				     when Prisma.CostMethod = 'CPMV' and
-				          ( dcmReport.Site_Placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or dcmReport.Site_Placement like '%[Vv][Ii][Dd][Ee][Oo]%' or dcmReport.Site_Placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or dcmReport.Site_ID = '1995643' or dcmReport.Site_ID = '1474576' or dcmReport.Site_ID = '2854118')
+				          ( dcmReport.Site_Placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or dcmReport.Site_Placement like '%[Vv][Ii][Dd][Ee][Oo]%' or dcmReport.Site_Placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or dcmReport.Site_ID = '1995643'
+-- 							or dcmReport.Site_ID = '1474576'
+							or dcmReport.Site_ID = '2854118')
 					     then 'M'
 
 					 when dcmReport.Site_Placement like '%_NA_%' then 'N'
@@ -470,8 +474,6 @@ Placements.Site_Placement                   AS Site_Placement,
 -- SPLIT_PART(Placements.Site_Placement, ''_'', 9) as tactic_2,
 -- SPLIT_PART(Placements.Site_Placement, ''_'', 11) as size,
 Report.page_id                         AS page_id,
-oss.os as os,
-Report.os_id as os_id,
 sum(Report.Impressions)                     AS impressions,
 sum(Report.Clicks)                          AS clicks,
 sum(Report.View_Thru_Conv)                  AS View_Thru_Conv,
@@ -488,7 +490,6 @@ cast(Conversions.Click_Time as date) as "Date"
 ,order_id                                                                       as order_id
 ,Conversions.site_id                                                                        as Site_ID
 ,Conversions.page_id                                                                        as page_id
-,Conversions.os_id                                                                          as os_id
 ,0                                                                                          as Impressions
 ,0                                                                                          as Clicks
 ,sum(Case When Event_ID = 1 THEN 1 ELSE 0 END)                                              as Click_Thru_Conv
@@ -503,15 +504,15 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-07-01'' AND ''2016-08-31'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-07-01'' AND ''2016-10-20'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
 and quantity != 0
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
-and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
--- and order_id in (9999841,10121649) -- Olympics 2016
+
+and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315) -- Display 2016
 and (advertiser_id <> 0)
 ) as Conversions
 
@@ -522,7 +523,6 @@ AND cast(Conversions.Click_Time as date) = Rates.DATE
 GROUP BY
 -- Conversions.Click_Time
 cast(Conversions.Click_Time as date)
-,Conversions.os_id
 ,Conversions.order_id
 ,Conversions.site_id
 ,Conversions.page_id
@@ -531,11 +531,11 @@ cast(Conversions.Click_Time as date)
 UNION ALL
 
 SELECT
+-- Impressions.impression_time as "Date"
 cast(Impressions.impression_time as date) as "Date"
 ,Impressions.order_ID                 as order_id
 ,Impressions.Site_ID                  as Site_ID
 ,Impressions.Page_ID                  as page_id
-,Impressions.os_id                    as os_id
 ,count(*)                             as Impressions
 ,0                                    as Clicks
 ,0                                    as Click_Thru_Conv
@@ -549,26 +549,25 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-07-01'' AND ''2016-08-31''
-and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
--- and order_id in (9999841,10121649) -- Olympics 2016
+WHERE cast(impression_time as date) BETWEEN ''2016-07-01'' AND ''2016-10-20''
+and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315) -- Display 2016
 
 
 ) AS Impressions
 GROUP BY
+-- Impressions.impression_time
 cast(Impressions.impression_time as date)
 ,Impressions.order_ID
 ,Impressions.Site_ID
-,Impressions.os_id
 ,Impressions.Page_ID
 
 UNION ALL
 SELECT
+-- Clicks.click_time       as "Date"
 cast(Clicks.click_time as date)       as "Date"
 ,Clicks.order_id                      as order_id
 ,Clicks.Site_ID                       as Site_ID
 ,Clicks.Page_ID                       as page_id
-,Clicks.os_id                         as os_id
 ,0                                    as Impressions
 ,count(*)                             as Clicks
 ,0                                    as Click_Thru_Conv
@@ -583,22 +582,21 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-07-01'' AND ''2016-08-31''
-and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10090315) -- Display 2016
--- and order_id in (9999841,10121649) -- Olympics 2016
+WHERE cast(click_time as date) BETWEEN ''2016-07-01'' AND ''2016-10-20''
+and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315) -- Display 2016
 
 ) AS Clicks
 
 GROUP BY
+-- Clicks.Click_time
 cast(Clicks.Click_time as date)
 ,Clicks.order_id
-,Clicks.os_id
 ,Clicks.Site_ID
 ,Clicks.Page_ID
 ) as report
-
 LEFT JOIN
 (
+-- 			     SELECT *
 select cast(buy as varchar(4000)) as ''buy'', order_id as ''order_id''
 from mec.UnitedUS.dfa_campaign
 ) AS Campaign
@@ -606,13 +604,7 @@ ON Report.order_id = Campaign.order_id
 
 LEFT JOIN
 (
-select cast(os as varchar(4000)) as ''os'', os_id as ''os_id''
-from mec.UnitedUS.dfa_operating_systems
-) AS oss
-ON Report.os_id = oss.os_id
-
-LEFT JOIN
-(
+-- 			     SELECT *
 select  cast(site_placement as varchar(4000)) as ''site_placement'',  max(page_id) as ''page_id'', order_id as ''order_id'', site_id as ''site_id''
 from mec.UnitedUS.dfa_page_name
 		group by site_placement, order_id, site_id
@@ -623,6 +615,7 @@ and report.site_ID  = placements.site_id
 
 LEFT JOIN
 (
+-- 			     SELECT *
 select cast(directory_site as varchar(4000)) as ''directory_site'', site_id as ''site_id''
 from mec.UnitedUS.dfa_site
 ) AS Directory
@@ -632,14 +625,14 @@ WHERE NOT REGEXP_LIKE(site_placement,''.do\s*not\s*use.'',''ib'')
 
 GROUP BY
 cast(Report.Date AS DATE)
+-- , cast(month(cast(Report.Date as date)) as int)
 , Directory.Directory_Site
 ,Report.Site_ID
-,oss.os
-,Report.os_id
 , Report.order_id
 , Campaign.Buy
 , Report.page_id
 , Placements.Site_Placement
+-- , Placements.PlacementNumber
 ')
 
 		     ) AS dcmReport
