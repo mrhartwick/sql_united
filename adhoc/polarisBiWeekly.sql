@@ -1,8 +1,9 @@
---  Polaris Query (2016-10-12)
+--  Master Query (2016-9-28)
 /*  This query is a bit of a hack. Non-optimal aspects are necessitated by the particularities of the current tech stack on United.
 	Code is most easily read by starting at the "innermost" block, inside the openQuery call.
 
 	Data must be pulled and reconciled from 1) Prisma, in Datamart, and 2) DFA/DV/Moat in Vertica*.
+
 
 
 	Because of its scale, log-level DFA data (DTF 1.0) must be kept in Vertica to preserve performance. DV and Moat are stored there as well, mostly for convenience.
@@ -27,7 +28,7 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-10-12';
+SET @report_ed = '2016-10-15';
 SET @report_st = '2016-09-12';
 
 --
@@ -134,7 +135,7 @@ select
 	when  final.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
 	when  final.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
 	when  final.Directory_Site like '[Ss]ojern%' then 'Sojern'
-	when  final.Directory_Site like '[Ss]pecific_[Mm]edia%' then 'Viant'
+	when  final.Directory_Site like '[Ss]pecific_[Mm]edia%' or final.Directory_Site like '[Vv]iant%' then 'Viant'
 	when  final.Directory_Site like '[Ss]potify%' then 'Spotify'
 	when  final.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
 	when  final.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
@@ -204,7 +205,7 @@ from (
 -- DECLARE @report_st date,
 -- @report_ed date;
 -- --
--- SET @report_ed = '2016-10-12';
+-- SET @report_ed = '2016-10-15';
 -- SET @report_st = '2016-09-12';
 
 	     select
@@ -426,6 +427,9 @@ from (
 -- 					 designates all Xaxis placements as "Y." Not always true.
 -- 					  when dcmReport.Site_ID = '1592652'
 -- 					     then 'Y'
+-- 					 FlipBoard unable to implement MOAT tags; must bill off of DFA Impressions
+					 when dcmReport.Site_ID = '2937979'
+					     then 'N'
 				     when dcmReport.order_id = '9639387'
 					     then 'Y'
 				     when Prisma.CostMethod = 'dCPM'
@@ -503,7 +507,7 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-09-12'' AND ''2016-10-12'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-09-12'' AND ''2016-10-15'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -549,9 +553,10 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-09-12'' AND ''2016-10-12''
+WHERE cast(impression_time as date) BETWEEN ''2016-09-12'' AND ''2016-10-15''
 -- and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315) -- Display 2016
 and order_id = 10276123 -- Polaris 2016
+
 
 ) AS Impressions
 GROUP BY
@@ -582,7 +587,7 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-09-12'' AND ''2016-10-12''
+WHERE cast(click_time as date) BETWEEN ''2016-09-12'' AND ''2016-10-15''
 -- and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315) -- Display 2016
 and order_id = 10276123 -- Polaris 2016
 
@@ -742,7 +747,7 @@ cast(Report.Date AS DATE)
 				when almost.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
 				when almost.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
 				when almost.Directory_Site like '[Ss]ojern%' then 'Sojern'
-				when almost.Directory_Site like '[Ss]pecific_[Mm]edia%' then 'Viant'
+				when almost.Directory_Site like '[Ss]pecific_[Mm]edia%' or almost.Directory_Site like '[Vv]iant%' then 'Viant'
 				when almost.Directory_Site like '[Ss]potify%' then 'Spotify'
 				when almost.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
 				when almost.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
@@ -828,7 +833,7 @@ cast(Report.Date AS DATE)
 				when almost.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
 				when almost.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
 				when almost.Directory_Site like '[Ss]ojern%' then 'Sojern'
-				when almost.Directory_Site like '[Ss]pecific_[Mm]edia%' then 'Viant'
+				when almost.Directory_Site like '[Ss]pecific_[Mm]edia%' or almost.Directory_Site like '[Vv]iant%' then 'Viant'
 				when almost.Directory_Site like '[Ss]potify%' then 'Spotify'
 				when almost.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
 				when almost.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
