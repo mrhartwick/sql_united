@@ -25,6 +25,7 @@ insert into master.dbo.MTTable
 		MT.campaign_label                  as campaign_name,
 		MT.placement_id                    as placement_code,
 		MT.placement_label                 as placement_name,
+-- 		PL.site_placement as DCM_placement,
 		sum(MT.human_impressions)          as total_impressions,
 		sum(MT.half_duration_impressions)  as groupm_passed_impressions,
 		sum(MT.groupm_payable_impressions) as groupm_billable_impressions
@@ -191,8 +192,20 @@ insert into master.dbo.MTTable
 
 	      from VerticaGroupM.mec.UnitedUS.moat_impression) as MT
 
+-- 		  LEFT JOIN
+-- (
+-- -- 			     SELECT *
+-- select  cast(site_placement as varchar(4000)) as 'site_placement',  max(page_id) as 'page_id'
+-- from VerticaGroupM.mec.UnitedUS.dfa_page_name
+--   group by site_placement, page_id
+-- ) AS PL
+-- ON MT.placement_id = cast(PL.page_id as varchar)
+
+
+
 	where MT.placement_label not like '%[Dd][Oo]%[Nn][Oo][Tt]%[Uu][Ss][Ee]%'
 	      and MT.placement_label not like '%[Nn]o%[Tt]racking%'
+		and MT.placement_id != 'undefined'
 	group by
 		MT.joinKey,
 		MT.mtDate,
@@ -200,4 +213,5 @@ insert into master.dbo.MTTable
 		MT.campaign_label,
 		MT.placement_id,
 		MT.placement_label
+-- 		PL.site_placement
 go
