@@ -1,4 +1,4 @@
---  Master Query (2016-9-28)
+--  International Pacing (2016-9-28)
 /*  This query is a bit of a hack. Non-optimal aspects are necessitated by the particularities of the current tech stack on United.
 	Code is most easily read by starting at the "innermost" block, inside the openQuery call.
 
@@ -29,7 +29,7 @@ DECLARE @report_st date,
 @report_ed date;
 --
 SET @report_ed = '2016-10-15';
-SET @report_st = '2016-09-12';
+SET @report_st = '2016-01-01';
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
@@ -206,7 +206,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-10-15';
--- SET @report_st = '2016-09-12';
+-- SET @report_st = '2016-01-01';
 
 	     select
 		 	 -- DCM ad server date
@@ -366,7 +366,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-10-15';
--- SET @report_st = '2016-09-12';
+-- SET @report_st = '2016-01-01';
 			     select
 				     dcmReport.dcmDate                                                                                                                      as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as
@@ -508,7 +508,7 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-09-12'' AND ''2016-10-15'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-10-15'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -553,7 +553,7 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-09-12'' AND ''2016-10-15''
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-10-15''
 and order_id in (10307468, 9973506, 9923634, 9994694) -- Intl 2016
 
 
@@ -586,7 +586,7 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-09-12'' AND ''2016-10-15''
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-10-15''
 and order_id in (10307468, 9973506, 9923634, 9994694) -- Intl 2016
 
 ) AS Clicks

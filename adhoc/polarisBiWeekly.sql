@@ -1,4 +1,4 @@
---  Master Query (2016-9-28)
+--  Polaris Pacing Query (2016-9-28)
 /*  This query is a bit of a hack. Non-optimal aspects are necessitated by the particularities of the current tech stack on United.
 	Code is most easily read by starting at the "innermost" block, inside the openQuery call.
 
