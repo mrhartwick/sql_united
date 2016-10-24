@@ -442,9 +442,9 @@ from (
 							or dcmReport.Site_ID = '2854118')
 					     then 'M'
 
-					 when dcmReport.Site_Placement like '%_NA_%' then 'N'
 					 when dcmReport.Site_Placement like '%_DV_%' then 'Y'
 					 when dcmReport.Site_Placement like '%_MOAT_%' then 'M'
+					 when dcmReport.Site_Placement like '%_NA_%' then 'N'
 
 				     when Prisma.CostMethod =
 				          'Flat'

@@ -365,7 +365,7 @@ from (
 -- DECLARE @report_st date,
 -- @report_ed date;
 -- --
--- SET @report_ed = '2016-07-30';
+-- SET @report_ed = '2016-10-15';
 -- SET @report_st = '2016-09-12';
 			     select
 				     dcmReport.dcmDate                                                                                                                      as dcmDate,
@@ -442,9 +442,10 @@ from (
 							or dcmReport.Site_ID = '2854118')
 					     then 'M'
 
-					 when dcmReport.Site_Placement like '%_NA_%' then 'N'
+
 					 when dcmReport.Site_Placement like '%_DV_%' then 'Y'
 					 when dcmReport.Site_Placement like '%_MOAT_%' then 'M'
+						 when dcmReport.Site_Placement like '%_NA_%' then 'N'
 
 				     when Prisma.CostMethod =
 				          'Flat'
