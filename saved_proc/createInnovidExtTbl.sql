@@ -1,11 +1,13 @@
 ALTER procedure dbo.createInnovidExtTbl
 as
+
+
 if OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.innovidExtTable',N'U') is not null
     drop table dbo.innovidExtTable;
 create table dbo.innovidExtTable
 (
     joinKey                 varchar(255),
-    date                    date,
+    ivDate                  date,
     campaign_name           varchar(1000),
     campaign_id             int,
     publisher               varchar(1000),
@@ -105,7 +107,7 @@ insert into dbo.innovidExtTable
                 when publisher like '[Yy]u[Mm]e%' then 'YuMe'
                 else publisher end
                 +'_'+cast(date as varchar(10)),' ','') as joinKey,
-        date,
+        date                                           as ivDate,
         campaign_name,
         campaign_id,
         case when (publisher like '%[Cc]hicago%[Tt]ribune%' or publisher like '[Tt]ribune_[Ii]nteractive%') then 'ChicagoTribune'
@@ -185,19 +187,19 @@ insert into dbo.innovidExtTable
         publisher_id,
         case when placement_name='United 360 - Polaris 2016 - Q4 - Amobee' then 'PBKB76_UAC_BRA_016_Content_AMOBEE_Video360_InViewPackage_Fixed Placement_Other_P25-54_Standard_Innovid_PUB PAID'
         else placement_name end                        as placement_name,
-        impressions,
-        click_thrus,
-        engagement_events,
-        twfive_completion,
-        fifty_completion,
-        svfive_completion,
-        all_completion,
-        time_earned,
-        pctad_viewed,
-        slate_open_by_click,
-        slate_open_by_rollover,
-        total_slate_open_events,
-        in_unit_clicks
+        sum(impressions),
+        sum(click_thrus),
+        sum(engagement_events),
+        sum(twfive_completion),
+        sum(fifty_completion),
+        sum(svfive_completion),
+        sum(all_completion),
+        sum(time_earned),
+        sum(pctad_viewed),
+        sum(slate_open_by_click),
+        sum(slate_open_by_rollover),
+        sum(total_slate_open_events),
+        sum(in_unit_clicks)
     from DM_1161_UnitedAirlinesUSA.dbo.innovidTable
 
     group by
@@ -206,18 +208,5 @@ insert into dbo.innovidExtTable
         campaign_id,
         publisher,
         publisher_id,
-        placement_name,
-        impressions,
-        click_thrus,
-        engagement_events,
-        twfive_completion,
-        fifty_completion,
-        svfive_completion,
-        all_completion,
-        time_earned,
-        pctad_viewed,
-        slate_open_by_click,
-        slate_open_by_rollover,
-        total_slate_open_events,
-        in_unit_clicks
+        placement_name
 go
