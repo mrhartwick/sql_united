@@ -13,7 +13,7 @@
 
 */
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
-
+--
 -- EXEC master.dbo.createDVTbl GO    -- create separate DV aggregate table and store it in my instance; joining to the Vertica table in the query
 -- EXEC master.dbo.createMTTbl GO    -- create separate MOAT aggregate table and store it in my instance; joining to the Vertica table in the query
 -- EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createInnovidExtTbl GO
@@ -51,6 +51,8 @@ select
 	final.dvJoinKey                                                                                         as dvJoinKey,
 	-- Reference/optional: match key from the Moat table; only present when Moat data is available.
 	final.mtJoinKey                                                                                         as mtJoinKey,
+	-- Reference/optional: match key from the Innovid table; only present when Innovid data is available.
+    final.ivJoinKey 																                        as ivJoinKey,
 	-- Reference/optional: package category from Prisma (standalone; package; child)
 	final.PackageCat                                                                                        as PackageCat,
 	-- Reference/optional: first six characters of package-level placement name, used to join 1) Prisma table, and 2) flat fee table
@@ -207,11 +209,11 @@ from (
 
 -- for running the code here instead of at "final," above
 
--- DECLARE @report_st date,
--- @report_ed date;
--- --
--- SET @report_ed = '2016-10-21';
--- SET @report_st = '2016-10-01';
+DECLARE @report_st date,
+@report_ed date;
+--
+SET @report_ed = '2016-10-21';
+SET @report_st = '2016-10-01';
 
 	     select
 		 	 -- DCM ad server date
@@ -285,7 +287,7 @@ from (
 
 		     else 0 end                                                                 as Cost,
 		     almost.Rate                                                                as Rate,
--- 		     sum(almost.incrFlatCost)                                                   as incrFlatCost,
+		     sum(almost.incrFlatCost)                                                   as incrFlatCost,
 		     sum(case
 		         -- 		not subject to viewability
 		         when (almost.DV_Map = 'N')
@@ -295,24 +297,24 @@ from (
 		         when (almost.DV_Map = 'Y' and (len(ISNULL(MT.joinKey,''))>0))
 			         then (almost.View_Thru_Revenue) *
 			              ((cast(MT.groupm_passed_impressions as decimal) /
-			                cast(MT.total_impressions as decimal)))
+			                nullif(cast(MT.total_impressions as decimal),0)))
 		         -- 		subject to viewability; DV source
 		         when (almost.DV_Map = 'Y')
 			         then (almost.View_Thru_Revenue) *
 			              ((cast(DV.groupm_passed_impressions as decimal) /
-			                cast(DV.total_impressions as decimal)))
+			                nullif(cast(DV.total_impressions as decimal),0)))
 
 		         -- 		subject to viewability with flag; MT source
 		         when (almost.DV_Map = 'Y' and (len(ISNULL(MT.joinKey,''))>0))
 			         then (almost.View_Thru_Revenue) *
 			              ((cast(MT.groupm_passed_impressions as decimal) /
-			                cast(MT.total_impressions as decimal)))
+			                nullif(cast(MT.total_impressions as decimal),0)))
 
 		         -- 		subject to viewability; MOAT source
 		         when (almost.DV_Map = 'M')
 			         then (almost.View_Thru_Revenue) *
 			              ((cast(MT.groupm_passed_impressions as decimal) /
-			                cast(MT.total_impressions as decimal)))
+			                nullif(cast(MT.total_impressions as decimal),0)))
 		         else 0 end)                                                            as viewRevenue,
 
 
@@ -326,19 +328,19 @@ from (
 		         when (almost.DV_Map = 'Y' and (len(ISNULL(MT.joinKey,''))>0))
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(MT.groupm_passed_impressions as decimal) /
-			                      cast(MT.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
+			                      nullif(cast(MT.total_impressions as decimal),0)))) * .2 * .15 as decimal(10,2))
 
 -- 				 subject to viewability; DV source
 		         when (almost.DV_Map = 'Y')
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(DV.groupm_passed_impressions as decimal) /
-			                      cast(DV.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
+			                      nullif(cast(DV.total_impressions as decimal),0)))) * .2 * .15 as decimal(10,2))
 
 -- 				 subject to viewability; MOAT source
 		         when (almost.DV_Map = 'M')
 			         then cast(((almost.View_Thru_Revenue) *
 			                    ((cast(MT.groupm_passed_impressions as decimal) /
-			                      cast(MT.total_impressions as decimal)))) * .2 * .15 as decimal(10,2))
+			                      nullif(cast(MT.total_impressions as decimal),0)))) * .2 * .15 as decimal(10,2))
 		         else 0 end)                                                            as adjsRevenue,
 
 -- 			 Total impressions as reported by 1.) DCM for "N," 2.) DV for "Y," or MOAT for "M"
@@ -388,62 +390,62 @@ from (
 -- DECLARE @report_st date,
 -- @report_ed date;
 -- --
--- SET @report_ed = '2016-07-30';
+-- SET @report_ed = '2016-10-21';
 -- SET @report_st = '2016-01-01';
-			     select
-				     dcmReport.dcmDate                                                                                                                      as dcmDate,
-				     cast(month(cast(dcmReport.dcmDate as date)) as
-				          int)                                                                                                                              as dcmMonth,
+			     			     select
+				     dcmReport.dcmDate as dcmDate,
+				     cast(month(cast(dcmReport.dcmDate as date)) as int) as dcmmonth,
 				     case
-				     when len(cast(MONTH(cast(dcmReport.dcmDate as date)) as varchar(2))) = 1
-					     then CONVERT(int,
-					                  CAST(YEAR(CAST(dcmReport.dcmDate as date)) as varchar(4)) +
+				     when len(cast(month(cast(dcmReport.dcmDate as date)) as varchar(2))) = 1
+					     then convert(int,
+					                  cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
 					                  cast(0 as varchar(1)) +
-					                  CAST(MONTH(CAST(dcmReport.dcmDate as date)) as varchar(2)) +
-					                  RIGHT(CAST(CAST(dcmReport.dcmDate as date) as varchar(10)),2)
+					                  cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
+					                  right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
 					     )
 				     else
-					     CONVERT(int,CAST(YEAR(CAST(dcmReport.dcmDate as date)) as varchar(4)) +
-					                 CAST(MONTH(CAST(dcmReport.dcmDate as date)) as varchar(2)) +
-					                 RIGHT(CAST(CAST(dcmReport.dcmDate as date) as varchar(10)),2)
+					     convert(int,cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
+					                 cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
+					                 right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
 					     )
-				     end                                                                                                                                    as dcmMatchDate,
-				     dcmReport.Buy                                                                                                                          as Buy,
-				     dcmReport.order_id                                                                                                                     as order_id,
-				     dcmReport.Directory_Site                                                                                                               as Directory_Site,
-				     dcmReport.Site_ID                                                                                                                      as Site_ID,
-				     dcmReport.PlacementNumber                                                                                                              as PlacementNumber,
-				     dcmReport.Site_Placement                                                                                                               as Site_Placement,
-				     dcmReport.page_id                                                                                                                      as page_id,
-				     Prisma.stDate                                                                                                                          as stDate,
-				     Prisma.edDate                                                                                                                          as edDate,
-				     Prisma.PackageCat                                                                                                                      as PackageCat,
-				     Prisma.CostMethod                                                                                                                      as CostMethod,
-				     Prisma.Cost_ID                                                                                                                         as Cost_ID,
-				     Prisma.Planned_Amt                                                                                                                     as Planned_Amt,
-				     Prisma.PlacementStart                                                                                                                  as PlacementStart,
-				     Prisma.PlacementEnd                                                                                                                    as PlacementEnd,
+					 end                       as dcmMatchDate,
+					 dcmReport.Buy             as Buy,
+					 dcmReport.order_id        as order_id,
+					 dcmReport.Directory_Site  as Directory_Site,
+					 dcmReport.Site_ID         as Site_ID,
+					 dcmReport.PlacementNumber as PlacementNumber,
+					 dcmReport.Site_Placement  as Site_Placement,
+					 dcmReport.page_id         as page_id,
+					 Prisma.stDate             as stDate,
+					 Prisma.edDate             as edDate,
+					 Prisma.PackageCat         as PackageCat,
+					 Prisma.CostMethod         as CostMethod,
+					 Prisma.Cost_ID            as Cost_ID,
+					 Prisma.Planned_Amt        as Planned_Amt,
+					 Prisma.PlacementStart     as PlacementStart,
+					 Prisma.PlacementEnd       as PlacementEnd,
 
 --  			Flat.flatCostRemain                                                               AS flatCostRemain,
 --  			Flat.impsRemain                                                                   AS impsRemain,
--- 				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / cast(Prisma.Planned_Amt as decimal(10,2)) ) * cast(Prisma.Rate as
--- 				                                                                                                             decimal(10,2)))                as incrFlatCost,
-				     cast(Prisma.Rate as
-				          decimal(10,2))                                                                                                                    as Rate,
-				     sum(dcmReport.Impressions)                                                                                                             as impressions,
-				     sum(dcmReport.Clicks)                                                                                                                  as clicks,
-				     sum(dcmReport.View_Thru_Conv)                                                                                                          as View_Thru_Conv,
-				     sum(dcmReport.Click_Thru_Conv)                                                                                                         as Click_Thru_Conv,
-				     sum(dcmReport.View_Thru_Conv) + sum(dcmReport.Click_Thru_Conv)                                                                         as conv,
-				     sum(dcmReport.View_Thru_Tickets)                                                                                                       as View_Thru_Tickets,
-				     sum(dcmReport.Click_Thru_Tickets)                                                                                                      as Click_Thru_Tickets,
-				     sum(dcmReport.View_Thru_Tickets) + sum(dcmReport.Click_Thru_Tickets)                                                                   as tickets,
-				     sum(cast(dcmReport.View_Thru_Revenue as decimal(10,2))) as View_Thru_Revenue,
-				     sum(cast(dcmReport.Click_Thru_Revenue as decimal(10,2))) as Click_Thru_Revenue,
-				     sum(cast(dcmReport.Revenue as decimal(10,2))) as revenue,
+				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / nullif(cast(Prisma.Planned_Amt as decimal(10,2)),0) ) * cast(Prisma.Rate as
+				                                                                                                             decimal(10,2)))                as incrFlatCost,
+					 cast(Prisma.Rate as decimal(10,2))                                   as Rate,
+					 sum(dcmReport.Impressions)                                           as impressions,
+					 sum(dcmReport.Clicks)                                                as clicks,
+					 sum(dcmReport.View_Thru_Conv)                                        as View_Thru_Conv,
+					 sum(dcmReport.Click_Thru_Conv)                                       as Click_Thru_Conv,
+					 sum(dcmReport.View_Thru_Conv) + sum(dcmReport.Click_Thru_Conv)       as conv,
+					 sum(dcmReport.View_Thru_Tickets)                                     as View_Thru_Tickets,
+					 sum(dcmReport.Click_Thru_Tickets)                                    as Click_Thru_Tickets,
+					 sum(dcmReport.View_Thru_Tickets) + sum(dcmReport.Click_Thru_Tickets) as tickets,
+					 sum(cast(dcmReport.View_Thru_Revenue as decimal(10,2)))              as View_Thru_Revenue,
+					 sum(cast(dcmReport.Click_Thru_Revenue as decimal(10,2)))             as Click_Thru_Revenue,
+					 sum(cast(dcmReport.Revenue as decimal(10,2)))                        as revenue,
 				     case when cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) <= 0 then 0
 				     else cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) end as diff,
 				     case
+					 when Prisma.CostMethod = 'Flat' or Prisma.CostMethod = 'CPC' or Prisma.CostMethod = 'CPCV' or Prisma.CostMethod = 'dCPM'
+						 then 'N'
 -- 					 Live Intent for SFO-SIN campaign is email (not subject to viewab.), but mistakenly labeled with "Y"
 					 when dcmReport.order_id = '9923634' and dcmReport.Site_ID = '1853564'
 					     then 'N'
@@ -458,8 +460,6 @@ from (
 					     then 'N'
 				     when dcmReport.order_id = '9639387'
 					     then 'Y'
-				     when Prisma.CostMethod = 'dCPM'
-					     then 'N'
 				     when dcmReport.order_id = '9973506'
 					     then 'Y'
 				     when Prisma.CostMethod = 'CPMV' and
@@ -471,17 +471,13 @@ from (
 				 	 when dcmReport.Site_Placement like '%_DV_%' then 'Y'
 					 when dcmReport.Site_Placement like '%_MOAT_%' then 'M'
 					 when dcmReport.Site_Placement like '%_NA_%' then 'N'
-
-				     when Prisma.CostMethod =
-				          'Flat'
-					     then 'N'
-				     else Prisma.DV_Map end                                                                                                                 as DV_Map,
+				     else Prisma.DV_Map end as DV_Map,
 				     SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),
 				               3)                                                                                                                           as campaignShort,
 				     case when SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),3) =
 				               'TMK'
 					     then 'Acquisition'
-				     else 'Non-Acquisition' end                                                                                                             as campaignType
+				     else 'Non-Acquisition' end as campaignType
 
 
 -- ==========================================================================================================================================================
