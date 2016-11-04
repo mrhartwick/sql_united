@@ -67,7 +67,7 @@ INSERT INTO master.dbo.flatTableDay
 			     f1.edDate                                                                                as edDate,
 			     f1.dcmDate                                                                               as dcmDate,
 			  	 f1.Cost_ID                                                                               as Cost_ID,
-			     f1.dcmYrMo                                                                               as dcmYrMo,
+			     f1.dcmYrMo         as dcmYrMo,
 			     f1.prsCostMethod                                                                         as prsCostMethod,
 			     f1.PackageCat                                                                            as PackageCat,
 			     f1.prsRate                                                                               as prsRate,
@@ -75,17 +75,17 @@ INSERT INTO master.dbo.flatTableDay
 			     f1.prsEdYrMo                                                                             as prsEdYrMo,
 			     isNull(f1.diff,cast(0 as decimal(20,10)))                                                as diff,
 			     CASE WHEN f1.flatCost IS NULL THEN cast(0 as decimal(20,10))
-			     WHEN f1.diff > 0 AND f1.Imps > f1.Planned_Amt THEN f1.flatCost - f1.lagCost
-			     ELSE f1.flatCost END                                                                     as flatCost,
-			     f1.lagCost                                                                               as lagCost,
-			     lag(f1.flatCostRemain,1,0) OVER (PARTITION BY f1.Cost_ID ORDER BY
+			     WHEN f1.diff > 0 AND f1.Imps > f1.Planned_Amt THEN isNull(f1.flatCost,cast(0 as decimal(20,10))) - isNull(f1.lagCost,cast(0 as decimal(20,10)))
+			     ELSE  isNull(f1.flatCost,cast(0 as decimal(20,10))) END                                                                     as flatCost,
+			     isNull(f1.lagCost,cast(0 as decimal(20,10)))                                             as lagCost,
+			     lag(isNull(f1.flatCostRemain,cast(0 as decimal(20,10))),1,0) OVER (PARTITION BY f1.Cost_ID ORDER BY
 				     f1.dcmYrMo)                                                                          as lagRemain,
-			     f1.flatCostRunTot                                                                        as flatCostRunTot,
+			     isNull(f1.flatCostRunTot, cast(0 as decimal(20,10)))                                                                        as flatCostRunTot,
 			     isNull(f1.flatCostRemain, cast(0 as decimal(20,10))) 									  as flatCostRemain,
-			     f1.Imps                                                                                  as Imps,
-			     f1.impsRunTot                                                                            as impsRunTot,
-			     f1.impsRemain                                                                            as impsRemain,
-			     f1.Planned_Amt                                                                           as Planned_Amt
+			     isNull(f1.Imps, 		cast(0 as int))                                                   as Imps,
+			     isNull(f1.impsRunTot, 	cast(0 as int))                                                   as impsRunTot,
+			     isNull(f1.impsRemain, 	cast(0 as int))                                                   as impsRemain,
+			     isNull(f1.Planned_Amt, cast(0 as int))                                            as Planned_Amt
 		     FROM (
 			          SELECT
 				          almost.stDate                                                                       as stDate,
@@ -238,7 +238,7 @@ INSERT INTO master.dbo.flatTableDay
 			                    '
 SELECT
 
-cast(Report.Date as DATE)                   as dcmDate,
+cast(Report.Date as DATE)         as dcmDate,
 cast(month(cast(Report.Date as date)) as int) as reportMonth,
 Campaign.Buy                                as Buy,
 Report.Buy_ID                               as Buy_ID,

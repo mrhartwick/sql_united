@@ -13,7 +13,7 @@
 
 */
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
-
+--
 -- EXEC master.dbo.createDVTbl GO    -- create separate DV aggregate table and store it in my instance; joining to the Vertica table in the query
 -- EXEC master.dbo.createMTTbl GO    -- create separate MOAT aggregate table and store it in my instance; joining to the Vertica table in the query
 -- EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createInnovidExtTbl GO
@@ -29,7 +29,7 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-10-21';
+SET @report_ed = '2016-10-28';
 SET @report_st = '2016-01-01';
 
 --
@@ -168,6 +168,7 @@ select
 -- 	final.PlacementNumber                                                         							as PlacementNumber,
 	-- DCM placement name
 	final.Site_Placement                                                                                    as Placement,
+	case when final.Site_Placement like '%Vid%' then 'Video' else 'Standard'  end      as "Asset Type",
 	-- DCM placement ID
 	final.page_id                                                                                           as page_id,
 	-- Reference/optional: planned package end date, from Prisma; attributed to all placements within package.
@@ -184,6 +185,7 @@ select
 	sum(final.billImps)                                                                                     as "Billable Impressions",
 	sum(final.cnslImps)                                                                                     as "DFA Impressions",
 	sum(final.IV_Impressions)                                                                               as "Innovid Impressions",
+	sum(final.IV_Vid_Completes)																				as "Video Completes",
 -- 	sum(MT.human_impressions)                                      											as MT_Impressions,
 -- 	sum(final.dv_impressions)                                                     							as DV_Impressions,
 -- 	sum(final.DV_Viewed)                                                                                    as DV_Viewed,
@@ -213,7 +215,7 @@ from (
 -- DECLARE @report_st date,
 -- @report_ed date;
 -- --
--- SET @report_ed = '2016-10-21';
+-- SET @report_ed = '2016-10-28';
 -- SET @report_st = '2016-10-01';
 
 	     select
@@ -364,6 +366,7 @@ from (
 		     sum(almost.Impressions)                                                    as cnslImps,
 			 sum(IV.impressions)														as IV_Impressions,
 			 sum(IV.click_thrus)														as IV_Clicks,
+			 sum(IV.all_completion)														as IV_Vid_Completes,
 		     sum(cast(DV.total_impressions as int))                                     as DV_Impressions,
 		     sum(DV.groupm_passed_impressions)                                          as DV_Viewed,
 		     sum(cast(DV.groupm_billable_impressions as decimal(10,2)))                 as DV_GroupMPayable,
@@ -391,7 +394,7 @@ from (
 -- DECLARE @report_st date,
 -- @report_ed date;
 -- --
--- SET @report_ed = '2016-10-21';
+-- SET @report_ed = '2016-10-28';
 -- SET @report_st = '2016-01-01';
 			     select
 				     dcmReport.dcmDate as dcmDate,
@@ -531,7 +534,7 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-10-21'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-10-28'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -576,7 +579,7 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-10-21''
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-10-28''
 and order_id = 10276123 -- Polaris 2016
 
 and (advertiser_id <> 0)
@@ -609,7 +612,7 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-10-21''
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-10-28''
 and order_id = 10276123 -- Polaris 2016
 
 and (advertiser_id <> 0)
