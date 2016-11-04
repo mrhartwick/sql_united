@@ -51,8 +51,6 @@ select
 	final.dvJoinKey                                                                                         as dvJoinKey,
 	-- Reference/optional: match key from the Moat table; only present when Moat data is available.
 	final.mtJoinKey                                                                                         as mtJoinKey,
-	-- Reference/optional: match key from the Innovid table; only present when Innovid data is available.
-    final.ivJoinKey 																                        as ivJoinKey,
 	-- Reference/optional: package category from Prisma (standalone; package; child)
 	final.PackageCat                                                                                        as PackageCat,
 	-- Reference/optional: first six characters of package-level placement name, used to join 1) Prisma table, and 2) flat fee table
@@ -175,6 +173,8 @@ select
 	final.DV_Map                                                                                            as "DV Map",
 	final.Rate                                                                                              as Rate,
 	final.Planned_Amt                                                                                       as "Planned Amt",
+	final.Planned_Cost                                                                                       as "Planned Cost",
+    	final.Planned_Cost/final.newCount                                                                                      as "Planned Cost 2",
 -- 	final.flatCostRemain                                                          							as flatCostRemain,
 -- 	final.impsRemain                                                              							as impsRemain,
 -- 	sum(final.cost)                                                          								as cost,
@@ -209,11 +209,11 @@ from (
 
 -- for running the code here instead of at "final," above
 
-DECLARE @report_st date,
-@report_ed date;
---
-SET @report_ed = '2016-10-21';
-SET @report_st = '2016-10-01';
+-- DECLARE @report_st date,
+-- @report_ed date;
+-- --
+-- SET @report_ed = '2016-10-21';
+-- SET @report_st = '2016-10-01';
 
 	     select
 		 	 -- DCM ad server date
@@ -243,6 +243,7 @@ SET @report_st = '2016-10-01';
 		     almost.PlacementStart                                                      as PlacementStart,
 		     almost.DV_Map                                                              as DV_Map,
 		     almost.Planned_Amt                                                         as Planned_Amt,
+			 almost.Planned_Cost                                                        as Planned_Cost,
 		     flat.flatcost                                                              as flatcost,
 --  Logic excludes flat fees
 		     case
@@ -422,6 +423,7 @@ SET @report_st = '2016-10-01';
 					 Prisma.CostMethod         as CostMethod,
 					 Prisma.Cost_ID            as Cost_ID,
 					 Prisma.Planned_Amt        as Planned_Amt,
+					 Prisma.Planned_Cost       as Planned_Cost,
 					 Prisma.PlacementStart     as PlacementStart,
 					 Prisma.PlacementEnd       as PlacementEnd,
 
@@ -685,6 +687,7 @@ cast(Report.Date AS DATE)
 			,Prisma.CostMethod
 			,Prisma.Cost_ID
 			,Prisma.Planned_Amt
+			,Prisma.Planned_Cost
 			,Prisma.PlacementEnd
 			,Prisma.PlacementStart
 			,Prisma.stDate
@@ -979,6 +982,7 @@ group by
 	,almost.PlacementNumber
 	,almost.page_id
 	,almost.Planned_Amt
+	,almost.Planned_Cost
 	,almost.Rate
 	,almost.Site_Placement
 	,almost.edDate
@@ -1038,6 +1042,7 @@ group by
 	,final.PlacementStart
 	,final.DV_Map
 	,final.Planned_Amt
+	,final.Planned_Cost
 -- ,final.flatCostRemain
 -- ,final.impsRemain
 
