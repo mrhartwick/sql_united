@@ -1,20 +1,18 @@
 select
 
 final.month as "month"
-,final.campaign                                               as campaign
+-- ,final.campaign                                               as campaign
 -- ,final.campaign_id                                            as campaign_id
--- ,final.site                                                   as site
+,final.site                                                   as site
 -- ,LEFT(Placements.Site_Placement, 6)                           as ParentID
 -- ,final.placement                                              as placement
 -- ,final.placement_id                                           as placement_id
 -- ,case when length(final.route) > 10 then 'round-trip' else  final.flighttype end as flighttype
 -- ,final.flighttype
 ,final.route
-,final.route_1
-,final.route_2
 -- ,final.other_data
--- ,cast(final.date as date)                                     as purch_date
--- ,cast(final.traveldate_1                                      as date) as travel_date
+,cast(final.date as date)                                     as purch_date
+,cast(final.traveldate_1                                      as date) as travel_date
 -- ,datediff(day, cast(final.date as date), cast(final.traveldate_1 as date) ) as adv_purch_win
 -- ,sum(final.view_thru_conv)                                    as "view-through transactions"
 -- ,sum(final.click_thru_conv)                                   as "click-through transactions"
@@ -146,13 +144,14 @@ from (
 
                         select *
                         from mec.unitedus.dfa_activity
-                        where cast(Click_Time as date) between '2016-01-01' and '2016-10-31'
+                        where cast(Click_Time as date) between '2016-04-18' and '2016-10-21'
 
                               and activity_type = 'ticke498'
                               and activity_sub_type = 'unite820'
                             and revenue != 0
                         and quantity != 0
-                              and order_id in (10307468, 9973506, 9923634, 9994694) -- Intl 2016
+                              and order_id in (9639387) -- TMK 2016
+
 
                               and advertiser_id <> 0
 
@@ -246,7 +245,7 @@ final.month
 -- ,final.flighttype
 ,final.route
 -- ,final.traveldate_1
-,final.route_1
-,final.route_2
+-- ,final.route_1
+-- ,final.route_2
 -- ,final.other_data
 -- ,final.thisField

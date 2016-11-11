@@ -180,24 +180,27 @@ insert into master.dbo.MTTable
 
              select
 -- MT.joinKey as joinKey,
-                 MT.mtDate                          as mtDate,
--- 		MT.site_label                      as media_property,
--- 		pl.directory_site                      as media_property2,
+  MT.mtDate                          as mtDate,
+		MT.site_label                      as media_property,
+		pl.directory_site                      as media_property2,
                  case when (LEN(ISNULL(MT.site_label,''))=0) then pl.directory_site
                  else MT.site_label end             as media_property,
                  MT.campaign_label                  as campaign_name,
+	mt.campaign_id as campaign_id,
+	PL.order_id as campaign_id2,
+                 PL.buy as campaign2,
                  MT.placement_id                    as placement_code,
--- 		MT.placement_label as placement_name,
--- 		PL.site_placement                 as placement_name2,
+		MT.placement_label as placement_name,
+		PL.site_placement                 as placement_name2,
                  case when (LEN(ISNULL(MT.placement_label,''))=0) then pl.site_placement
                  else MT.placement_label end        as placement_name,
--- PL.site_placement as site_placement,
                  sum(MT.human_impressions)          as total_impressions,
                  sum(MT.half_duration_impressions)  as groupm_passed_impressions,
                  sum(MT.groupm_payable_impressions) as groupm_billable_impressions
              from (select distinct
                        cast(date as date)         as mtDate,
                        campaign_label             as campaign_label,
+                       campaign_id                as campaign_id,
                        site_label                 as site_label,
                        site_id                    as site_id,
                        placement_id               as placement_id,
@@ -213,11 +216,12 @@ insert into master.dbo.MTTable
                      SELECT *
                      FROM openQuery(VerticaGroupM,
                                     '
-                                    select pg.site_placement, pg.page_id, pg.site_id, st.directory_site
+                                    select pg.site_placement, pg.page_id, pg.site_id, pg.order_id, st.directory_site, cp.buy
                                     from (
-                                    select  cast(site_placement as varchar(4000)) as "site_placement",  max( page_id) as "page_id", site_id as "site_id"
+
+                                    select  cast(site_placement as varchar(4000)) as "site_placement",  max( page_id) as "page_id", site_id as "site_id", order_id as "order_id"
                                     from mec.UnitedUS.dfa_page_name
-                                           group by site_placement, page_id,site_id
+                                           group by site_placement, page_id,site_id, order_id
                                          ) as pg
 
                                     left join (select
@@ -226,7 +230,13 @@ insert into master.dbo.MTTable
                                     ) as st
                                     on pg.site_id = st.site_id
 
-                                      group by pg.site_placement, pg.page_id,pg.site_id, st.directory_site'
+                                    left join (select
+                                    cast(buy as varchar(4000)) as "buy", order_id as "order_id"
+                                            from mec.UnitedUS.dfa_campaign
+                                    ) as cp
+                                    on pg.order_id = cp.order_id
+
+                                      group by pg.site_placement, pg.page_id,pg.site_id, st.directory_site, pg.order_id, cp.buy'
                      )) as PL
 -- 				  on cast(mt.placement_id) = pl.page_id
                      on cast(mt.placement_id as int)=pl.page_id
@@ -242,8 +252,11 @@ insert into master.dbo.MTTable
                  MT.placement_id,
                  MT.site_id,
                  pl.directory_site,
+				 mt.campaign_id,
+				 PL.order_id,
                  pl.site_id,
                  MT.placement_label,
+				  PL.buy,
                  PL.site_placement
 
          ) as t1
