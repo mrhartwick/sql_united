@@ -72,6 +72,7 @@ select
 	when  final.order_id = '10090315' 							  then 'SME'
 	when  final.order_id = '9994694' 							  then 'SFO-China'
 	when  final.order_id = '9408733' 							  then 'Chile CoOp'
+	when  final.order_id = '10307468' 							  then 'SFO-HGH/XIY'
 	when  final.order_id = '9999841' or final.order_id='10121649' then 'Olympics'
 	else  final.Buy end                                                                                     as Campaign,
 	-- DCM campaing ID
