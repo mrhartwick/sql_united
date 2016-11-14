@@ -29,7 +29,7 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-10-21';
+SET @report_ed = '2016-11-04';
 SET @report_st = '2016-01-01';
 
 --
@@ -45,13 +45,13 @@ select
 	dateName(month,cast(final.dcmDate as date))                                                             as "Month",
 	-- DCM ad server quarter + year (from date)
 	'Q' + dateName(quarter,cast(final.dcmDate as date)) + ' ' + dateName(year,cast(final.dcmDate as date))  as "Quarter",
-	-- Reference/optional: difference, in months, between placement end date and report date. Field is used deterministically below.
-	final.diff                                                                                              as diff,
+	-- Reference/optional: difference, in months, between placement end date and report date. Field is used deterministically in other fields below.
+-- 	final.diff                                                                                              as diff,
 	-- Reference/optional: match key from the DV table; only present when DV data is available.
 	final.dvJoinKey                                                                                         as dvJoinKey,
 	-- Reference/optional: match key from the Moat table; only present when Moat data is available.
 	final.mtJoinKey                                                                                         as mtJoinKey,
-	-- Reference/optional: package category from Prisma (standalone; package; child)
+	-- Reference/optional: package category from Prisma (standalone; package; child). Useful for exchanging info with Planning/Investment
 	final.PackageCat                                                                                        as PackageCat,
 	-- Reference/optional: first six characters of package-level placement name, used to join 1) Prisma table, and 2) flat fee table
 	final.Cost_ID                                                                                           as Cost_ID,
@@ -77,12 +77,12 @@ select
 	-- DCM campaing ID
 	final.order_id                                                                                          as "Campaign ID",
 	-- Reference/optional: three-character designation, sometimes descriptive, from placement name.
-	final.campaignShort                                                                                     as "Campaign Short Name",
+-- 	final.campaignShort                                                                                     as "Campaign Short Name",
 	-- Designation specified by Planning/Investment in 2016.
-	final.campaignType                                                                                      as "Campaign Type",
+-- 	final.campaignType                                                                                      as "Campaign Type",
 	-- DCM site name
 -- 	final.Directory_Site                                                          							as SITE,
-	-- Preferred, friendly site name; also corresponds to what's used in the joinKey fields across DFA, DV, and Moat.
+-- Preferred, friendly site name; also corresponds to what's used in the joinKey fields across DFA, DV, and Moat.
 	case	when ( final.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or final.Directory_Site like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
 				when ( final.Directory_Site like '[Gg][Dd][Nn]%' or final.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
 				when final.Directory_Site like '%[Aa]dara%' then 'Adara'
@@ -173,8 +173,8 @@ select
 	final.DV_Map                                                                                            as "DV Map",
 	final.Rate                                                                                              as Rate,
 	final.Planned_Amt                                                                                       as "Planned Amt",
-	final.Planned_Cost                                                                                       as "Planned Cost",
-    	final.Planned_Cost/final.newCount                                                                                      as "Planned Cost 2",
+-- 	final.Planned_Cost                                                                                       as "Planned Cost",
+--     	final.Planned_Cost/final.newCount                                                                                      as "Planned Cost 2",
 -- 	final.flatCostRemain                                                          							as flatCostRemain,
 -- 	final.impsRemain                                                              							as impsRemain,
 -- 	sum(final.cost)                                                          								as cost,
@@ -243,7 +243,7 @@ from (
 		     almost.PlacementStart                                                      as PlacementStart,
 		     almost.DV_Map                                                              as DV_Map,
 		     almost.Planned_Amt                                                         as Planned_Amt,
-			 almost.Planned_Cost                                                        as Planned_Cost,
+-- 			 almost.Planned_Cost                                                        as Planned_Cost,
 		     flat.flatcost                                                              as flatcost,
 --  Logic excludes flat fees
 		     case
@@ -392,7 +392,7 @@ from (
 -- @report_ed date;
 -- --
 -- SET @report_ed = '2016-10-21';
--- SET @report_st = '2016-01-01';
+-- SET @report_st = '2016-10-10';
 			     			     select
 				     dcmReport.dcmDate as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as int) as dcmmonth,
@@ -423,7 +423,7 @@ from (
 					 Prisma.CostMethod         as CostMethod,
 					 Prisma.Cost_ID            as Cost_ID,
 					 Prisma.Planned_Amt        as Planned_Amt,
-					 Prisma.Planned_Cost       as Planned_Cost,
+-- 					 Prisma.Planned_Cost       as Planned_Cost,
 					 Prisma.PlacementStart     as PlacementStart,
 					 Prisma.PlacementEnd       as PlacementEnd,
 
@@ -445,35 +445,52 @@ from (
 					 sum(cast(dcmReport.Revenue as decimal(10,2)))                        as revenue,
 				     case when cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) <= 0 then 0
 				     else cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) end as diff,
-				     case
+
+
+					 case
 					 when Prisma.CostMethod = 'Flat' or Prisma.CostMethod = 'CPC' or Prisma.CostMethod = 'CPCV' or Prisma.CostMethod = 'dCPM'
 						 then 'N'
+
 -- 					 Live Intent for SFO-SIN campaign is email (not subject to viewab.), but mistakenly labeled with "Y"
-					 when dcmReport.order_id = '9923634' and dcmReport.Site_ID = '1853564'
+					 when
+						 	 dcmReport.order_id = '9923634' -- SFO-SIN
+						 and dcmReport.Site_ID = '1853564' -- Live Intent
 					     then 'N'
+
 -- 					 Corrections to SME placements
 					 when dcmReport.order_id = '10090315' and (dcmReport.Site_ID = '1513807' or dcmReport.Site_ID = '1592652')
 						 then 'Y'
+
+-- 					 Corrections to SFO-SIN placements
+					 when dcmReport.order_id = '9923634'
+					 and dcmReport.Site_ID = '1534879'	-- Business Insider
+					 and Prisma.CostMethod = 'CPM'
+						 then 'N'
 -- 					 designates all Xaxis placements as "Y." Not always true.
--- 					  when dcmReport.Site_ID = '1592652'
--- 					     then 'Y'
+-- 					  when dcmReport.Site_ID = '1592652' then 'Y'
+
 -- 					 FlipBoard unable to implement MOAT tags; must bill off of DFA Impressions
-					 when dcmReport.Site_ID = '2937979'
-					     then 'N'
-				     when dcmReport.order_id = '9639387'
-					     then 'Y'
-				     when dcmReport.order_id = '9973506'
-					     then 'Y'
+					 when dcmReport.Site_ID = '2937979' then 'N'
+-- 					 All Targeted Marketing subject
+					 when dcmReport.order_id = '9639387' then 'Y'
+
+-- 					 Designates all SFO-AKL placements as "Y." Not always true. Apparently.
+-- 				     when dcmReport.order_id = '9973506' then 'Y'
+
 				     when Prisma.CostMethod = 'CPMV' and
 				          ( dcmReport.Site_Placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or dcmReport.Site_Placement like '%[Vv][Ii][Dd][Ee][Oo]%' or dcmReport.Site_Placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or dcmReport.Site_ID = '1995643'
 -- 							or dcmReport.Site_ID = '1474576'
 							or dcmReport.Site_ID = '2854118')
 					     then 'M'
-
-				 	 when dcmReport.Site_Placement like '%_DV_%' then 'Y'
-					 when dcmReport.Site_Placement like '%_MOAT_%' then 'M'
-					 when dcmReport.Site_Placement like '%_NA_%' then 'N'
+-- 					 Look for viewability flags Investment began including in placement names 6/16.
+				 	 when dcmReport.Site_Placement like '%[_]DV[_]%' then 'Y'
+					 when dcmReport.Site_Placement like '%[_]MOAT[_]%' then 'M'
+					 when dcmReport.Site_Placement like '%[_]NA[_]%' then 'N'
+--
+					 when Prisma.CostMethod = 'CPMV' and Prisma.DV_Map = 'N' then 'Y'
 				     else Prisma.DV_Map end as DV_Map,
+
+-- 					 Prisma.DV_Map as DV_Map,
 				     SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),
 				               3)                                                                                                                           as campaignShort,
 				     case when SUBSTRING(dcmReport.Site_Placement,( CHARINDEX(dcmReport.Site_Placement,'_UAC_') + 12 ),3) =
