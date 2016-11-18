@@ -29,7 +29,7 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-11-04';
+SET @report_ed = '2016-11-14';
 SET @report_st = '2016-01-01';
 
 --
@@ -547,15 +547,21 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-11-04'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-11-14'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
 and quantity != 0
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
-
-and order_id in (10307468, 9973506, 9923634, 9994694, 10505745) -- Intl 2016
+-- Intl 2016
+and order_id in (
+9923634,   	-- SFO-SIN
+9973506,   	-- SFO-AKL
+9994694,	-- SFO-China
+10307468	-- SFO-HGH/XIY
+10505745 	-- Brussels
+)
 and (advertiser_id <> 0)
 ) as Conversions
 
@@ -592,8 +598,15 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-04''
-and order_id in (10307468, 9973506, 9923634, 9994694, 10505745) -- Intl 2016
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-14''
+-- Intl 2016
+and order_id in (
+9923634,   	-- SFO-SIN
+9973506,   	-- SFO-AKL
+9994694,	-- SFO-China
+10307468	-- SFO-HGH/XIY
+10505745 	-- Brussels
+)
 
 and (advertiser_id <> 0)
 ) AS Impressions
@@ -625,8 +638,15 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-04''
-and order_id in (10307468, 9973506, 9923634, 9994694, 10505745) -- Intl 2016
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-14''
+-- Intl 2016
+and order_id in (
+9923634,   	-- SFO-SIN
+9973506,   	-- SFO-AKL
+9994694,	-- SFO-China
+10307468	-- SFO-HGH/XIY
+10505745 	-- Brussels
+)
 
 and (advertiser_id <> 0)
 ) AS Clicks

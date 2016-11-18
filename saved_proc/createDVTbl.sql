@@ -185,8 +185,8 @@ insert into master.dbo.DVTable
 				when media_property like '[Yy]ieldbot%' then 'Yieldbot'
 				when media_property like '[Yy]u[Mm]e%' then 'YuMe'
 				else media_property end                           as media_property,
-		       placement_code                                    as placement_code,
-		       placement_name                                    as placement_name,
+		       case when placement_code in ('137412510', '137412401', '137412609') then '137412609' else placement_code end   as placement_code,
+    case when placement_name like 'PBKB7J%' or placement_name like 'PBKB7H%' or placement_name like 'PBKB7K%' or placement_name ='United 360 - Polaris 2016 - Q4 - Amobee'        then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID' else  placement_name end     as placement_name,
 		       total_impressions                                 as total_impressions,
 		       groupm_passed_impressions                         as groupm_passed_impressions,
 		       groupm_billable_impressions                       as groupm_billable_impressions
