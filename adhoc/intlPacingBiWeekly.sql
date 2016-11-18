@@ -72,7 +72,6 @@ select
 	when  final.order_id = '10090315' 							  then 'SME'
 	when  final.order_id = '9994694' 							  then 'SFO-China'
 	when  final.order_id = '9408733' 							  then 'Chile CoOp'
-	when  final.order_id = '10307468' 							  then 'SFO-HGH/XIY'
 	when  final.order_id = '9999841' or final.order_id='10121649' then 'Olympics'
 	else  final.Buy end                                                                                     as Campaign,
 	-- DCM campaing ID
@@ -463,9 +462,7 @@ from (
 						 then 'Y'
 
 -- 					 Corrections to SFO-SIN placements
-					 when dcmReport.order_id = '9923634'
-					 and dcmReport.Site_ID = '1534879'	-- Business Insider
-					 and Prisma.CostMethod = 'CPM'
+					 when dcmReport.order_id = '9923634' and dcmReport.Site_ID = '1534879' and Prisma.CostMethod = 'CPM'
 						 then 'N'
 -- 					 designates all Xaxis placements as "Y." Not always true.
 -- 					  when dcmReport.Site_ID = '1592652' then 'Y'
@@ -558,7 +555,7 @@ and quantity != 0
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
 
-and order_id in (10307468, 9973506, 9923634, 9994694) -- Intl 2016
+and order_id in (10307468, 9973506, 9923634, 9994694, 10505745) -- Intl 2016
 and (advertiser_id <> 0)
 ) as Conversions
 
@@ -596,7 +593,7 @@ FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
 WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-04''
-and order_id in (10307468, 9973506, 9923634, 9994694) -- Intl 2016
+and order_id in (10307468, 9973506, 9923634, 9994694, 10505745) -- Intl 2016
 
 and (advertiser_id <> 0)
 ) AS Impressions
@@ -629,7 +626,7 @@ FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_click
 WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-04''
-and order_id in (10307468, 9973506, 9923634, 9994694) -- Intl 2016
+and order_id in (10307468, 9973506, 9923634, 9994694, 10505745) -- Intl 2016
 
 and (advertiser_id <> 0)
 ) AS Clicks
