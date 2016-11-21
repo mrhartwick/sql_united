@@ -68,72 +68,72 @@ from (
                    ,conversions.other_data
 
 --                    , cast(subString(conversions.other_data,( INSTR(conversions.other_data,'u9=') + 3 ),10) as date) as traveldate_1
-                     ,case when REGEXP_LIKE(conversions.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;','') then
-                     subString(REGEXP_SUBSTR(conversions.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;',1,1,'', 2),5,2) || '-' || subString(REGEXP_SUBSTR(conversions.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;',1,1,'', 2),7,2) || '-' || subString(REGEXP_SUBSTR(conversions.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;',1,1,'', 2),1,4)
-                     when REGEXP_LIKE(conversions.other_data,'(u9=)(\d\d[/.\-]\d\d[/.\-]\d\d\d\d)\;','') then
-                     REGEXP_SUBSTR(conversions.other_data,'(u9=)(\d\d[/.\-]\d\d[/.\-]\d\d\d\d)\;',1,1,'', 2) end as traveldate_1
+                     ,case when regexp_like(conversions.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;','')
+                           then subString(regexp_substr(conversions.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;',1,1,'', 2),5,2) || '-' || subString(regexp_substr(conversions.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;',1,1,'', 2),7,2) || '-' || subString(regexp_substr(conversions.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;',1,1,'', 2),1,4)
+                           when regexp_like(conversions.other_data,'(u9=)(\d\d[/.\-]\d\d[/.\-]\d\d\d\d)\;','')
+                           then regexp_substr(conversions.other_data,'(u9=)(\d\d[/.\-]\d\d[/.\-]\d\d\d\d)\;',1,1,'', 2) end as traveldate_1
 
 --                   Break out each origin/destination into separate fields so that we can use them deterministically later
-                     ,case when REGEXP_LIKE(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then REGEXP_SUBSTR(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
-                           when REGEXP_LIKE(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;','ib') then REGEXP_SUBSTR(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) end as rt_1_orig
-                     ,case when REGEXP_LIKE(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then REGEXP_SUBSTR(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
-                           when REGEXP_LIKE(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;','ib') then REGEXP_SUBSTR(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) end as rt_1_dest
+                     ,case when regexp_like(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then regexp_substr(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
+                           when regexp_like(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) end as rt_1_orig
+                     ,case when regexp_like(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then regexp_substr(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
+                           when regexp_like(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) end as rt_1_dest
 
-                     ,case when REGEXP_LIKE(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then REGEXP_SUBSTR(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
-                           when REGEXP_LIKE(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') then REGEXP_SUBSTR(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) end as rt_2_orig
-                     ,case when REGEXP_LIKE(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then REGEXP_SUBSTR(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
-                           when REGEXP_LIKE(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib') then REGEXP_SUBSTR(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) end as rt_2_dest
+                     ,case when regexp_like(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then regexp_substr(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
+                           when regexp_like(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) end as rt_2_orig
+                     ,case when regexp_like(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then regexp_substr(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
+                           when regexp_like(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) end as rt_2_dest
 
 --                   Route 1
 --                   when both (first) routes have parenthesis
-                     , case when  REGEXP_LIKE(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
-                                  REGEXP_LIKE(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
-                     then REGEXP_SUBSTR(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3) ||' to '|| REGEXP_SUBSTR(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
+                     ,case when regexp_like(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
+                           and regexp_like(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
+                           then regexp_substr(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3) ||' to '|| regexp_substr(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
 
---                   when neither (first) routes have parenthesis
-                     when REGEXP_LIKE(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;','ib') and
-                                  REGEXP_LIKE(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;','ib')
-                     then REGEXP_SUBSTR(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) ||' to '|| REGEXP_SUBSTR(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2)
+      --                   when neither (first) routes have parenthesis
+                           when regexp_like(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;','ib')
+                           and regexp_like(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;','ib')
+                           then regexp_substr(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) ||' to '|| regexp_substr(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2)
 
---                   when "():" origin yes, destination no
-                     when  REGEXP_LIKE(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
-                                   REGEXP_LIKE(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;','ib')
-                     then REGEXP_SUBSTR(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3) ||' to '|| REGEXP_SUBSTR(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 3)
+      --                   when "():" origin yes, destination no
+                           when regexp_like(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
+                           and regexp_like(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;','ib')
+                           then regexp_substr(conversions.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3) ||' to '|| regexp_substr(conversions.other_data,'(u7=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 3)
 
---                   when "():" origin no, destination yes
-                     when  REGEXP_LIKE(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;','ib') and
-                                  REGEXP_LIKE(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
-                     then REGEXP_SUBSTR(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) ||' to '|| REGEXP_SUBSTR(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
+      --                   when "():" origin no, destination yes
+                           when regexp_like(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;','ib')
+                           and regexp_like(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
+                           then regexp_substr(conversions.other_data,'(u5=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) ||' to '|| regexp_substr(conversions.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
 
-                     end                                     as route_1
+                           end                                     as route_1
 
 --                   Route 2
 --                   when both (second) routes have parenthesis
-                     , case when  REGEXP_LIKE(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
-                                  REGEXP_LIKE(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
-                     then REGEXP_SUBSTR(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3) ||' to '|| REGEXP_SUBSTR(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
+                     , case when  regexp_like(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
+                                  regexp_like(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
+                     then regexp_substr(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3) ||' to '|| regexp_substr(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
 
 --                   when neither (second) routes have parenthesis
-                     when REGEXP_LIKE(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') and
-                                  REGEXP_LIKE(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib')
-                     then REGEXP_SUBSTR(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) ||' to '|| REGEXP_SUBSTR(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2)
+                     when regexp_like(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') and
+                                  regexp_like(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib')
+                     then regexp_substr(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) ||' to '|| regexp_substr(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2)
 
 --                   when "():" origin yes, destination no
-                     when  REGEXP_LIKE(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
-                                   REGEXP_LIKE(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib')
-                     then REGEXP_SUBSTR(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3) ||' to '|| REGEXP_SUBSTR(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 3)
+                     when  regexp_like(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
+                                   regexp_like(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib')
+                     then regexp_substr(conversions.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3) ||' to '|| regexp_substr(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 3)
 
 --                   when "():" origin no, destination yes
-                     when  REGEXP_LIKE(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') and
-                                  REGEXP_LIKE(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
-                     then REGEXP_SUBSTR(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) ||' to '|| REGEXP_SUBSTR(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
+                     when  regexp_like(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') and
+                                  regexp_like(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
+                     then regexp_substr(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib', 2) ||' to '|| regexp_substr(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib', 3)
 
                      end                                     as route_2
 
 
---                    , case when (REGEXP_SUBSTR(conversions.other_data,'(u5=).+?\;',1,1,'ib', 3) = REGEXP_SUBSTR(conversions.other_data,'(u8=).+?\;',1,1,'ib', 3) and
---                    REGEXP_SUBSTR(conversions.other_data,'(u7=).+?\;',1,1,'ib', 3) = REGEXP_SUBSTR(conversions.other_data,'(u6=).+?\;',1,1,'ib', 3))
--- --                                or REGEXP_LIKE(conversions.other_data,'(u6=)\-\-\;','')
+--                    , case when (regexp_substr(conversions.other_data,'(u5=).+?\;',1,1,'ib', 3) = regexp_substr(conversions.other_data,'(u8=).+?\;',1,1,'ib', 3) and
+--                    regexp_substr(conversions.other_data,'(u7=).+?\;',1,1,'ib', 3) = regexp_substr(conversions.other_data,'(u6=).+?\;',1,1,'ib', 3))
+-- --                                or regexp_like(conversions.other_data,'(u6=)\-\-\;','')
 --                    then 'round-trip'
 --                      else 'one-way' end                           as flighttype
 
