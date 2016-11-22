@@ -218,26 +218,25 @@ cast(to_timestamp(a1.interaction_time/1000000) as date)
 
 
 
-
-
-
 -- DT 2.0 Clicks
 
 select
-        DATE(c.click_time) as 'Date',
-        count(*)              as 'Clicks'
-from mec.UnitedUS.dfa_click as c
+        cast(to_timestamp(t1.event_time/1000000) as date) as  "date",
+        count (*) as "Clicks"
+from mec.doubleclickv2_UnitedUS.dfa_click AS t1
 where
-        DATE(c.click_time) between '2016-07-01' and '2016-10-31'             -- Start Date and End Date
-        and ADVERTISER_ID != 0                                               -- omit records not attributed to media
-        and order_id = '9639387'                                             -- campaign filter
-group by DATE(c.click_time)
-order by "date"
+        cast(to_timestamp(t1.event_time/1000000) as date) between '2016-09-01' AND '2016-11-14'
+        and (advertiser_id != 0)
+        and order_id = '9639387'
+group by
+        cast(to_timestamp(t1.event_time/1000000) as date)
+order by
+        cast(to_timestamp(t1.event_time/1000000) as date) asc
 
 
 
 -- DT 2.0 Impressions
-select -- cast(new_time(t1.md_event_time, 'UTC', 'EDT') as date) as "date",     -- this is great until daylight savings starts/ends, so not reliable
+select
         cast(to_timestamp(t1.event_time / 1000000) as date) as "date",          -- to_timestamp converts the integer into a timestamp in the local timezone
         count(*) as "Impressions"
 from mec.doubleclickv2_UnitedUS.dfa_impression as t1
