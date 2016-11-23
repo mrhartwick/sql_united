@@ -80,9 +80,6 @@ AS
 				when @site_name like '[Yy]ieldbot%' then 'Yieldbot'
 				when @site_name like '[Yy]u[Mm]e%' then 'YuMe'
 				else @site_name end;
-
-
-
 RETURN @finalSiteName
 end
 go
