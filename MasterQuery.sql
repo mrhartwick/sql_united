@@ -14,9 +14,9 @@
 */
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 --
-EXEC master.dbo.createDVTbl GO    -- create separate DV aggregate table and store it in my instance; joining to the Vertica table in the query
-EXEC master.dbo.createMTTbl GO    -- create separate MOAT aggregate table and store it in my instance; joining to the Vertica table in the query
-EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createInnovidExtTbl GO
+-- EXEC master.dbo.createDVTbl GO    -- create separate DV aggregate table and store it in my instance; joining to the Vertica table in the query
+-- EXEC master.dbo.createMTTbl GO    -- create separate MOAT aggregate table and store it in my instance; joining to the Vertica table in the query
+-- EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createInnovidExtTbl GO
 -- EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createViewTbl GO
 -- EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createAmtTbl GO
 -- EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createPackTbl GO
@@ -322,20 +322,7 @@ from (
 			     			     select
 				     dcmReport.dcmDate as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as int) as dcmmonth,
-				     case
-				     when len(cast(month(cast(dcmReport.dcmDate as date)) as varchar(2))) = 1
-					     then convert(int,
-					                  cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
-					                  cast(0 as varchar(1)) +
-					                  cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
-					                  right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
-					     )
-				     else
-					     convert(int,cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
-					                 cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
-					                 right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
-					     )
-					 end                       as dcmMatchDate,
+				     [dbo].udf_dateToInt(dcmReport.dcmDate) as dcmMatchDate,
 					 dcmReport.Buy             as Buy,
 					 dcmReport.order_id        as order_id,
 					 dcmReport.Directory_Site  as Directory_Site,
@@ -355,8 +342,7 @@ from (
 
 --  			Flat.flatCostRemain                                                               AS flatCostRemain,
 --  			Flat.impsRemain                                                                   AS impsRemain,
-				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / nullif(cast(Prisma.Planned_Amt as decimal(10,2)),0) ) * cast(Prisma.Rate as
-				                                                                                                             decimal(10,2)))                as incrFlatCost,
+				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / nullif(cast(Prisma.Planned_Amt as decimal(10,2)),0) ) * cast(Prisma.Rate as decimal(10,2)))                as incrFlatCost,
 					 cast(Prisma.Rate as decimal(10,2))                                   as Rate,
 					 sum(dcmReport.Impressions)                                           as impressions,
 					 sum(dcmReport.Clicks)                                                as clicks,
