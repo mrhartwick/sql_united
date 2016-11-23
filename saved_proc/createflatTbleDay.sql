@@ -68,7 +68,7 @@ INSERT INTO master.dbo.flatTableDay
 			     f1.dcmDate                                                                               as dcmDate,
 			  	 f1.Cost_ID                                                                               as Cost_ID,
 			     f1.dcmYrMo         as dcmYrMo,
-			     f1.prsCostMethod                                                                         as prsCostMethod,
+			     f1.prsCostMethod                                                as prsCostMethod,
 			     f1.PackageCat                                                                            as PackageCat,
 			     f1.prsRate                                                                               as prsRate,
 			     f1.prsStYrMo                                                                             as prsStYrMo,
@@ -109,7 +109,7 @@ INSERT INTO master.dbo.flatTableDay
 				                      sum(almost.flatCost) OVER (PARTITION BY almost.Cost_ID    ORDER BY
 					                      almost.dcmDate ASC) ) <=
 				                    0 THEN 0 ELSE ( cast(almost.Rate as decimal) - sum(
-					          almost.flatCost) OVER (PARTITION BY almost.Cost_ID    ORDER BY
+					   almost.flatCost) OVER (PARTITION BY almost.Cost_ID    ORDER BY
 					          almost.dcmDate ASC) ) END                                                       as flatCostRemain,
 				          sum(
 					          almost.impressions) OVER (PARTITION BY almost.Cost_ID,almost.dcmDate)           as Imps,
@@ -179,20 +179,7 @@ INSERT INTO master.dbo.flatTableDay
 									                      CAST(MONTH(CAST(dcmReport.dcmDate as date)) as varchar(2)))
 								          END                                    as dcmYrMo,
 
-								          CASE
-								          WHEN len(cast(MONTH(cast(dcmReport.dcmDate as date)) as varchar(2))) = 1
-									          THEN CONVERT(int,
-									                       CAST(YEAR(CAST(dcmReport.dcmDate as date)) as varchar(4)) +
-									                       cast(0 as varchar(1)) +
-									                       CAST(MONTH(CAST(dcmReport.dcmDate as date)) as varchar(2)) +
-									                       RIGHT(CAST(CAST(dcmReport.dcmDate as date) as varchar(10)),2)
-									          )
-								          ELSE
-									          CONVERT(int,CAST(YEAR(CAST(dcmReport.dcmDate as date)) as varchar(4)) +
-									                      CAST(MONTH(CAST(dcmReport.dcmDate as date)) as varchar(2)) +
-									                      RIGHT(CAST(CAST(dcmReport.dcmDate as date) as varchar(10)),2)
-									          )
-								          END               as dcmDate,
+								          [dbo].udf_dateToInt(dcmReport.dcmDate)               as dcmDate,
 
 								          dcmReport.directory_site,
 								          Prisma.CostMethod                      as Cost_Method,
@@ -201,31 +188,8 @@ INSERT INTO master.dbo.flatTableDay
 								          Prisma.PackageCat                      as PackageCat,
 								          Prisma.stYrMo                          as stYrMo,
 								          Prisma.edYrMo                          as edYrMo,
-								          CASE WHEN len(cast(month(cast(Prisma.PlacementStart as date)) as varchar(2))) = 1
-									          THEN cast(CAST(year(CAST(Prisma.PlacementStart as date)) as varchar(4)) + cast(0 as varchar(1)) +
-									                    CAST(MONTH(CAST(Prisma.PlacementStart as date)) as varchar(2)) +
-									                    RIGHT(CAST(CAST(Prisma.PlacementStart as date) as varchar(10)),2)
-									                    as
-									                    int)
-								          ELSE
-									          cast(CAST(YEAR(CAST(Prisma.PlacementStart as date)) as varchar(4)) +
-									               CAST(MONTH(CAST(Prisma.PlacementStart as date)) as varchar(2)) +
-									               RIGHT(CAST(CAST(Prisma.PlacementStart as date) as varchar(10)),2)
-									               as int)
-								          END                                    as stDate,
-								          CASE WHEN len(cast(month(cast(Prisma.PlacementEnd as date)) as varchar(2))) = 1
-									          THEN cast(CAST(year(CAST(Prisma.PlacementEnd as date)) as varchar(4)) + cast(0 as varchar(1)) +
-									                    CAST(MONTH(CAST(Prisma.PlacementEnd as date)) as varchar(2)) +
-									                    RIGHT(CAST(CAST(Prisma.PlacementEnd as date) as varchar(10)),2)
-									                    as
-									                    int)
-								          ELSE
-									          cast(CAST(YEAR(CAST(Prisma.PlacementEnd as date)) as varchar(4)) +
-									               CAST(MONTH(CAST(Prisma.PlacementEnd as date)) as varchar(2)) +
-									               RIGHT(CAST(CAST(Prisma.PlacementEnd as date) as varchar(10)),2)
-									               as int)
-								          END                                    as edDate,
-
+                                          [dbo].udf_dateToInt(Prisma.PlacementStart) as stDate,
+                                          [dbo].udf_dateToInt(Prisma.PlacementEnd) as edDate,
 								      SUM(dcmReport.Impressions)             as impressions,
 								          SUM(dcmReport.clicks)                  as clicks,
 								          SUM(dcmReport.tickets)                 as tickets,
@@ -414,6 +378,7 @@ cast(Report.Date as DATE)
 						                                        CONVERT(varchar(10),cast(dcmReport.dcmDate as date))) +
 						                              1 ),2))
 						     ,Prisma.CostMethod
+                             ,[dbo].udf_dateToInt(dcmReport.dcmDate)
 						     ,Prisma.stYrMo
 						     ,Prisma.edYrMo
 						     ,Prisma.PlacementStart

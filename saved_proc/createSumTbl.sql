@@ -69,31 +69,8 @@ INSERT INTO dbo.summaryTable
 			     cast(t1.PlacementEndDate AS
 			          date)                                                                                        AS PlacementEnd,
 
-			     CASE WHEN len(cast(month(cast(t1.PlacementStartDate AS date)) AS varchar(2))) = 1
-				     THEN cast(CAST(year(CAST(t1.PlacementStartDate AS date)) AS varchar(4)) + cast(0 AS varchar(1)) +
-				               CAST(MONTH(CAST(t1.PlacementStartDate AS date)) AS varchar(2)) +
-				               RIGHT(CAST(CAST(t1.PlacementStartDate AS date) AS varchar(10)),2)
-				               AS
-				               int)
-			     ELSE
-				     cast(CAST(YEAR(CAST(t1.PlacementStartDate AS date)) AS varchar(4)) +
-				          CAST(MONTH(CAST(t1.PlacementStartDate AS date)) AS varchar(2)) +
-				          RIGHT(CAST(CAST(t1.PlacementStartDate AS date) AS varchar(10)),2)
-				          AS int)
-			     END                                                                                               AS stDate,
-
-			     CASE WHEN len(cast(month(cast(t1.PlacementEndDate AS date)) AS varchar(2))) = 1
-				     THEN cast(CAST(year(CAST(t1.PlacementEndDate AS date)) AS varchar(4)) + cast(0 AS varchar(1)) +
-				               CAST(MONTH(CAST(t1.PlacementEndDate AS date)) AS varchar(2)) +
-				               RIGHT(CAST(CAST(t1.PlacementEndDate AS date) AS varchar(10)),2)
-				               AS
-				               int)
-			     ELSE
-				     cast(CAST(YEAR(CAST(t1.PlacementEndDate AS date)) AS varchar(4)) +
-				          CAST(MONTH(CAST(t1.PlacementEndDate AS date)) AS varchar(2)) +
-				          RIGHT(CAST(CAST(t1.PlacementEndDate AS date) AS varchar(10)),2)
-				          AS int)
-			     END                                                                                               AS edDate,
+			    [dbo].udf_dateToInt(t1.PlacementStartDate) AS stDate,
+                [dbo].udf_dateToInt(t1.PlacementEndDate) AS edDate,
 
 -- 			Horrible code to turn start and end dates of placements into integers, ready for absolute value comparison with other, similarly transformed dates in queries.
 			     CASE
@@ -136,7 +113,7 @@ INSERT INTO dbo.summaryTable
 				                 SELECT DISTINCT
 					                 PlacementId,
 					                 ParentId,
-					                 isNull(cast(Rate AS decimal(20,10)), 0) 							 AS Rate,
+					                isNull(cast(Rate AS decimal(20,10)), 0) 							 AS Rate,
 					                 CostMethod,
 					                 CampaignName,
 					                 PackageType                                 AS PackageCat
