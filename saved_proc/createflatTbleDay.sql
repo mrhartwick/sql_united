@@ -1,3 +1,5 @@
+-- Calculates flat-fee cost for each package by day. All cost/impressions calculations
+
 ALTER PROCEDURE dbo.createflatTblDay
 as
 IF OBJECT_ID('master.dbo.flatTableDay',N'U') IS NOT NULL
@@ -32,97 +34,104 @@ CREATE TABLE master.dbo.flatTableDay
 INSERT INTO master.dbo.flatTableDay
 
 
-	SELECT
+    select
 
-		f2.Cost_ID                                                                                    as Cost_ID,
-		f2.dcmDate                                                                                    as dcmDate,
-		f2.dcmYrMo                                                                                    as dcmYrMo,
-		f2.prsCostMethod                                                                              as prsCostMethod,
-		f2.PackageCat                                                                                 as PackageCat,
-		f2.prsRate                                                                                    as prsRate,
-		f2.prsStYrMo                                                                                  as prsStYrMo,
-		f2.prsEdYrMo                                                                                  as prsEdYrMo,
-		f2.stDate                                                                                     as prsStDate,
-		f2.edDate                                                                                     as prsEdDate,
-		isNull(f2.diff,  cast(0 as int))                             								  as diff,
-		CASE WHEN f2.dcmDate = f2.stDate AND f2.stDate = f2.edDate THEN f2.flatCost
-		WHEN f2.diff > 0 AND f2.flatCost < f2.prsRate AND f2.impsRunTot < f2.Planned_Amt THEN f2.flatCost
-		WHEN f2.diff > 0 AND f2.lagCost = 0 AND f2.lagRemain = 0 THEN f2.flatCost
-		WHEN f2.diff > 0 AND f2.flatCostRemain = 0 AND f2.lagRemain > 0 THEN f2.lagRemain
-		WHEN f2.flatCost = 0 THEN 0
-		WHEN f2.flatCost > f2.lagRemain THEN f2.lagRemain
-		ELSE f2.flatCost - f2.lagRemain END                                                           as flatCost,
-		isNull(f2.lagCost,  cast(0 as decimal(20,10))) 			       								  as lagCost,
-		isNull(f2.lagRemain,  cast(0 as decimal(20,10))) 		     								  as lagRemain,
-		isNull(f2.flatCostRunTot,  cast(0 as decimal(20,10))) 										  as flatCostRunTot,
-		isNull(f2.flatCostRemain,  cast(0 as decimal(20,10))) 										  as flatCostRemain,
-		f2.Imps                                                                                       as Imps,
-		f2.impsRunTot                                                                                 as impsRunTot,
-        isNull(f2.impsRemain,  cast(0 as int))  													  as impsRemain,
-        isNull(f2.Planned_Amt,  cast(0 as int)) 													  as Planned_Amt
+        f2.Cost_ID                                          as Cost_ID,
+        f2.dcmDate                                          as dcmDate,
+        f2.dcmYrMo                                          as dcmYrMo,
+        f2.prsCostMethod                                    as prsCostMethod,
+        f2.PackageCat                                       as PackageCat,
+        f2.prsRate                                          as prsRate,
+        f2.prsStYrMo                                        as prsStYrMo,
+        f2.prsEdYrMo                                        as prsEdYrMo,
+        f2.stDate                                           as prsStDate,
+        f2.edDate                                           as prsEdDate,
+        isNull(f2.diff,cast(0 as int))                      as diff,
+        case
+        when f2.dcmDate = f2.stDate and f2.stDate = f2.edDate then f2.flatCost
+        when f2.diff > 0 and f2.flatCost < f2.prsRate and f2.impsRunTot < f2.Planned_Amt then f2.flatCost
+        when f2.diff > 0 and f2.lagCost = 0 and f2.lagRemain = 0 then f2.flatCost
+        when f2.diff > 0 and f2.flatCostRemain = 0 and f2.lagRemain > 0 then f2.lagRemain
+        when f2.flatCost = 0 then 0
+        when f2.flatCost > f2.lagRemain then f2.lagRemain
+        else f2.flatCost - f2.lagRemain end                 as flatCost,
+        isNull(f2.lagCost,cast(0 as decimal(20,10)))        as lagCost,
+        isNull(f2.lagRemain,cast(0 as decimal(20,10)))      as lagRemain,
+        isNull(f2.flatCostRunTot,cast(0 as decimal(20,10))) as flatCostRunTot,
+        isNull(f2.flatCostRemain,cast(0 as decimal(20,10))) as flatCostRemain,
+        f2.Imps                                             as Imps,
+        f2.impsRunTot                                       as impsRunTot,
+        isNull(f2.impsRemain,cast(0 as int))                as impsRemain,
+        isNull(f2.Planned_Amt,cast(0 as int))               as Planned_Amt
 
-	FROM (
-		     SELECT
-			     f1.stDate                                                                                as stDate,
-			     f1.edDate                                                                                as edDate,
-			     f1.dcmDate                                                                               as dcmDate,
-			  	 f1.Cost_ID                                                                               as Cost_ID,
-			     f1.dcmYrMo         as dcmYrMo,
-			     f1.prsCostMethod                                                as prsCostMethod,
-			     f1.PackageCat                                                                            as PackageCat,
-			     f1.prsRate                                                                               as prsRate,
-			     f1.prsStYrMo                                                                             as prsStYrMo,
-			     f1.prsEdYrMo                                                                             as prsEdYrMo,
-			     isNull(f1.diff,cast(0 as decimal(20,10)))                                                as diff,
-			     CASE WHEN f1.flatCost IS NULL THEN cast(0 as decimal(20,10))
-			     WHEN f1.diff > 0 AND f1.Imps > f1.Planned_Amt THEN isNull(f1.flatCost,cast(0 as decimal(20,10))) - isNull(f1.lagCost,cast(0 as decimal(20,10)))
-			     ELSE  isNull(f1.flatCost,cast(0 as decimal(20,10))) END                                                                     as flatCost,
-			     isNull(f1.lagCost,cast(0 as decimal(20,10)))                                             as lagCost,
-			     lag(isNull(f1.flatCostRemain,cast(0 as decimal(20,10))),1,0) OVER (PARTITION BY f1.Cost_ID ORDER BY
-				     f1.dcmYrMo)                                                                          as lagRemain,
-			     isNull(f1.flatCostRunTot, cast(0 as decimal(20,10)))                                                                        as flatCostRunTot,
-			     isNull(f1.flatCostRemain, cast(0 as decimal(20,10))) 									  as flatCostRemain,
-			     isNull(f1.Imps, 		cast(0 as int))                                                   as Imps,
-			     isNull(f1.impsRunTot, 	cast(0 as int))                                                   as impsRunTot,
-			     isNull(f1.impsRemain, 	cast(0 as int))                                                   as impsRemain,
-			     isNull(f1.Planned_Amt, cast(0 as int))                                            as Planned_Amt
-		     FROM (
-			          SELECT
-				          almost.stDate                                                                       as stDate,
-				          almost.edDate                                                                       as edDate,
-				          almost.dcmDate                                                                      as dcmDate,
-				          almost.Cost_ID                                                                      as Cost_ID,
-				          almost.dcmYrMo                                                                      as dcmYrMo,
-				          almost.Cost_Method                                                                  as prsCostMethod,
-				          almost.PackageCat                                                                   as PackageCat,
-				          almost.Rate                                                                         as prsRate,
-				          almost.stYrMo                                                                       as prsStYrMo,
-				          almost.edYrMo                                                                       as prsEdYrMo,
-						  isNull(almost.ed_diff, cast(0 as decimal(20,10)))   								  as diff,
-				          sum(
-					          almost.flatCost) OVER (PARTITION BY almost.Cost_ID,almost.dcmDate)              as flatCost,
-				          lag(almost.flatcost,1,0) OVER (PARTITION BY almost.Cost_ID ORDER BY
-					          almost.dcmDate)                                                                 as lagCost,
-				          sum(almost.flatCost) OVER (PARTITION BY almost.Cost_ID ORDER BY
-					          almost.dcmDate ASC RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)           as flatCostRunTot,
-				          CASE WHEN ( cast(almost.Rate as decimal) -
-				                      sum(almost.flatCost) OVER (PARTITION BY almost.Cost_ID    ORDER BY
-					                      almost.dcmDate ASC) ) <=
-				                    0 THEN 0 ELSE ( cast(almost.Rate as decimal) - sum(
-					   almost.flatCost) OVER (PARTITION BY almost.Cost_ID    ORDER BY
-					          almost.dcmDate ASC) ) END                                                       as flatCostRemain,
-				          sum(
-					          almost.impressions) OVER (PARTITION BY almost.Cost_ID,almost.dcmDate)           as Imps,
-				          sum(almost.impressions) OVER (PARTITION BY almost.Cost_ID    ORDER BY
-					          almost.dcmDate ASC RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)           as impsRunTot,
-				          CASE WHEN ( cast(almost.Planned_Amt as decimal) -
-				                      sum(almost.impressions) OVER (PARTITION BY almost.Cost_ID ORDER BY
-					                      almost.dcmDate ASC RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) ) <=
-				                    0 THEN 0 ELSE (
-					          cast(almost.Planned_Amt as decimal) -
-					          sum(almost.impressions) OVER (PARTITION BY almost.Cost_ID ORDER BY
-						          almost.dcmDate ASC RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) ) END as impsRemain,
-				          almost.Planned_Amt                                                                  as Planned_Amt
+    from (
+             select
+                 f1.stDate                                              as stDate,
+                 f1.edDate                                              as edDate,
+                 f1.dcmDate                                             as dcmDate,
+                 f1.Cost_ID                                             as Cost_ID,
+                 f1.dcmYrMo                                             as dcmYrMo,
+                 f1.prsCostMethod                                       as prsCostMethod,
+                 f1.PackageCat                                          as PackageCat,
+                 f1.prsRate                                             as prsRate,
+                 f1.prsStYrMo                                           as prsStYrMo,
+                 f1.prsEdYrMo                                           as prsEdYrMo,
+                 isNull(f1.diff,cast(0 as decimal(20,10)))              as diff,
+                 case when f1.flatCost is null then cast(0 as decimal(20,10))
+                 when f1.diff > 0 and f1.Imps > f1.Planned_Amt then isNull(f1.flatCost,cast(0 as decimal(20,10))) -
+                     isNull(f1.lagCost,cast(0 as decimal(20,10)))
+                 else isNull(f1.flatCost,cast(0 as decimal(20,10))) end as flatCost,
+                 isNull(f1.lagCost,cast(0 as decimal(20,10)))           as lagCost,
+--               remaining flat fee from previous day
+				 lag(isNull(f1.flatCostRemain,cast(0 as decimal(20,10))),1,0) over (partition by f1.Cost_ID
+                     order by
+                         f1.dcmYrMo)                                    as lagRemain,
+                 isNull(f1.flatCostRunTot,cast(0 as decimal(20,10)))    as flatCostRunTot,
+                 isNull(f1.flatCostRemain,cast(0 as decimal(20,10)))    as flatCostRemain,
+                 isNull(f1.Imps,cast(0 as int))                         as Imps,
+                 isNull(f1.impsRunTot,cast(0 as int))                   as impsRunTot,
+                 isNull(f1.impsRemain,cast(0 as int))                   as impsRemain,
+                 isNull(f1.Planned_Amt,cast(0 as int))                  as Planned_Amt
+             from (
+                      select
+                          almost.stDate                                                                              as stDate,
+                          almost.edDate                                                                              as edDate,
+                          almost.dcmDate                                                                             as dcmDate,
+                          almost.Cost_ID                                                                             as Cost_ID,
+                          almost.dcmYrMo                                                                             as dcmYrMo,
+                          almost.Cost_Method                                                                         as prsCostMethod,
+                          almost.PackageCat                                                                          as PackageCat,
+                          almost.Rate                                                                                as prsRate,
+                          almost.stYrMo                                                                              as prsStYrMo,
+                          almost.edYrMo                                                                              as prsEdYrMo,
+                          isNull(almost.ed_diff,cast(0 as decimal(20,10)))                                           as diff,
+                          sum(almost.flatCost) over (partition by almost.Cost_ID,almost.dcmDate)                     as flatCost,
+                          lag(almost.flatcost,1,0) over (partition by almost.Cost_ID order by almost.dcmDate)        as lagCost,
+                          sum(almost.flatCost) over (partition by almost.Cost_ID order by almost.dcmDate asc range between unbounded preceding and current row)              as flatCostRunTot,
+
+--                        what remains of flat fee to be spent after cost is calculated for day
+						  case
+						  when (cast(almost.Rate as decimal) - sum(almost.flatCost) over (partition by almost.Cost_ID
+                                  order by almost.dcmDate asc)) <= 0 then 0
+                          else (cast(almost.Rate as decimal) - sum(almost.flatCost) over (partition by almost.Cost_ID
+                              order by almost.dcmDate asc)) end as flatCostRemain,
+
+
+						  sum(almost.impressions) over (partition by almost.Cost_ID,almost.dcmDate)                  as Imps,
+                          sum(almost.impressions) over (partition by almost.Cost_ID
+                              order by
+                                  almost.dcmDate asc range between unbounded preceding and current row)              as impsRunTot,
+                          case when (cast(almost.Planned_Amt as decimal) -
+                              sum(almost.impressions) over (partition by almost.Cost_ID
+                                  order by
+                                      almost.dcmDate asc range between unbounded preceding and current row)) <=
+                              0 then 0
+                          else (
+                              cast(almost.Planned_Amt as decimal) -
+                                  sum(almost.impressions) over (partition by almost.Cost_ID
+                                      order by
+                                          almost.dcmDate asc range between unbounded preceding and current row)) end as impsRemain,
+                          almost.Planned_Amt                                                                         as Planned_Amt
 			          FROM
 
 				          (
@@ -134,22 +143,26 @@ INSERT INTO master.dbo.flatTableDay
 						          finalish.Cost_ID                                             as Cost_ID,
 						          finalish.cost_method                                         as cost_method,
 						          CASE
-						          WHEN finalish.dcmDate - finalish.stDate < 0
-							          THEN 0
-						          WHEN finalish.edDate = finalish.dcmDate AND finalish.edDate = finalish.dcmDate
-							          THEN finalish.rate
-						          WHEN ( finalish.edDate - finalish.dcmDate ) > 0 AND sum(finalish.impressions) > finalish.planned_amt
-							          THEN finalish.rate
+ 								  -- if traffic date occurs before package start date, then no cost
+						          when finalish.dcmDate - finalish.stDate < 0 then 0
+ 								  -- if traffic date is equal to package start date AND end date (one-day flight),
+                                  -- then charge the full rate; this calculation doesn't get more granular than DAY
+								  when finalish.edDate = finalish.dcmDate and finalish.edDate = finalish.dcmDate then finalish.rate
+ 								  -- if traffic date occurs before package end date (there are days left in the flight)
+                                  -- BUT Impressions delivery exceeds the planned amount, then charge the full rate;
+                                  -- this has the effect of zeroing out cost for all future delivery
+						          when ( finalish.edDate - finalish.dcmDate ) > 0
+									  and sum(finalish.impressions) > finalish.planned_amt then finalish.rate
+ 								  -- otherwise, if traffic date occurs before package end date (there are days left in the flight), then calculate cost as equal to the same % of the total fee as the % of total impressions delivered
 
-						          WHEN ( finalish.edDate - finalish.dcmDate ) > 0
-							          THEN sum(
-								          ( cast(finalish.impressions as decimal(20,10)) /
+						          when ( finalish.edDate - finalish.dcmDate ) > 0
+							          then sum((cast(finalish.impressions as decimal(20,10)) /
 								            NULLIF(cast(finalish.planned_amt as decimal(20,10)),0) ) *
 								          cast(finalish.rate as decimal(20,10)))
-						          WHEN ( finalish.edDate - finalish.dcmDate ) = 0
-							          THEN finalish.rate
-						          WHEN ( finalish.edDate - finalish.dcmDate ) < 0
-							          THEN 0
+						          when ( finalish.edDate - finalish.dcmDate ) = 0
+							          then finalish.rate
+						          when ( finalish.edDate - finalish.dcmDate ) < 0
+							          then 0
 						          ELSE 0 END                                                   as flatCost,
 						          finalish.rate                                                as rate,
 						          finalish.PackageCat                                          as PackageCat,
@@ -164,7 +177,7 @@ INSERT INTO master.dbo.flatTableDay
 						          (
 							          SELECT
 								          Prisma.adserverPlacementID             as adserverPlacementID,
-								 dcmReport.PlacementNumber              as PlacementNumber,
+								          dcmReport.PlacementNumber              as PlacementNumber,
 								          dcmReport.site_placement               as site_placement,
 								          MONTH(cast(dcmReport.dcmDate as date)) as dcmMonth,
 								          YEAR(cast(dcmReport.dcmDate as date))  as dcmYear,
@@ -233,7 +246,7 @@ cast(Conversions.Click_Time as date) as "Date"
 ,sum(Case When Event_ID = 1 Then (Conversions.Revenue) / (Rates.exchange_rate) Else 0 End)  as Click_Thru_Revenue
 ,sum(Case When Event_ID = 2 THEN 1 ELSE 0 END)                as View_Thru_Conv
 ,sum(Case When Event_ID = 2 Then Conversions.Quantity Else 0 End)                           as View_Thru_Tickets
-,sum(Case When Event_ID = 2 Then (Conversions.Revenue) / (Rates.exchange_rate) Else 0 End)  as View_Thru_Revenue
+,sum(Case When Event_ID = 2 Then (Conversions.Revenue) / (Rates.exchange_rate) Else 0 End) as View_Thru_Revenue
 ,sum(Conversions.Revenue/Rates.exchange_rate)                                               as Revenue
 
 from
