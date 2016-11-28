@@ -26,11 +26,11 @@
 
 
 
-DECLARE @report_st date,
-@report_ed date;
+DECLARE @report_st date
+DECLARE @report_ed date
 --
-SET @report_ed = '2016-11-14';
-SET @report_st = '2016-01-01';
+SET @report_ed = '2016-11-18'
+SET @report_st = '2016-01-01'
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
@@ -58,22 +58,7 @@ select
 	-- DCM Campaign name
 	final.Buy                                                                                               as "DCM Campaign",
 	-- Friendly Campaign name
-	case
-	when  final.order_id = '9973506' 						      then 'SFO-AKL'
-	when  final.order_id = '9304728' 							  then 'Trade'
-	when  final.order_id = '9407915' 							  then 'Google PDE'
-	when  final.order_id = '9548151' 							  then 'Smithsonian'
-	when  final.order_id = '9630239' 							  then 'SFO-TLV'
-	when  final.order_id = '9639387' 							  then 'Targeted Marketing'
-	when  final.order_id = '9739006' 							  then 'Spoke Markets'
-	when  final.order_id = '9923634' 							  then 'SFO-SIN'
-	when  final.order_id = '10276123' 							  then 'Polaris'
-	when  final.order_id = '10094548' 							  then 'Marketing Fund'
-	when  final.order_id = '10090315' 							  then 'SME'
-	when  final.order_id = '9994694' 							  then 'SFO-China'
-	when  final.order_id = '9408733' 							  then 'Chile CoOp'
-	when  final.order_id = '9999841' or final.order_id='10121649' then 'Olympics'
-	else  final.Buy end                                                                                     as Campaign,
+	[dbo].udf_campaignName(final.order_id, final.Buy)  														as Campaign,
 	-- DCM campaing ID
 	final.order_id                                                                                          as "Campaign ID",
 	-- Reference/optional: three-character designation, sometimes descriptive, from placement name.
@@ -83,80 +68,7 @@ select
 	-- DCM site name
 -- 	final.Directory_Site                                                          							as SITE,
 -- Preferred, friendly site name; also corresponds to what's used in the joinKey fields across DFA, DV, and Moat.
-	case	when ( final.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or final.Directory_Site like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
-				when ( final.Directory_Site like '[Gg][Dd][Nn]%' or final.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
-				when final.Directory_Site like '%[Aa]dara%' then 'Adara'
-				when final.Directory_Site like '%[Aa]tlantic%' then 'The Atlantic'
-				when final.Directory_Site like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
-				when final.Directory_Site like '%[Cc][Nn][Nn]%' then 'CNN'
-				when final.Directory_Site like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
-				when final.Directory_Site like '%[Ff]orbes%' then 'Forbes'
-				when final.Directory_Site like '%[Gg]olf%[Dd]igest%' then 'GolfDigest'
-				when final.Directory_Site like '%[Jj]un%[Gg]roup%' then 'JunGroup'
-				when final.Directory_Site like '%[Mm][Ll][Bb]%' then 'MLB'
-				when final.Directory_Site like '%[Mm]ansueto%' then 'Inc'
-				when final.Directory_Site like '%[Mn][Ss][Nn]%' then 'MSN'
-				when final.Directory_Site like '%[Nn][Bb][Aa]%' then 'NBA'
-				when final.Directory_Site like '%[Nn][Ff][Ll]%' then 'NFL'
-				when final.Directory_Site like '%[Nn]ast_[Tt]raveler%' then 'CN Traveler'
-				when final.Directory_Site like '%[Nn]ew_[Yy]ork_[Tt]imes%' then 'NYTimes'
-				when final.Directory_Site like '%[Nn]ew_[Yy]orker%' then 'New Yorker'
-				when final.Directory_Site like '%[Pp][Gg][Aa]%[Tt][Oo][Uu][Rr]%' then 'PGATour'
-				when final.Directory_Site like '%[Pp]riceline%' then 'Priceline'
-				when final.Directory_Site like '%[Ss]ports_[Ii]llustrated%' then 'Sports Illustrated'
-				when final.Directory_Site like '%[Tt]ap%[Aa]d%' then 'TapAd'
-				when final.Directory_Site like '%[Tt]ime%[Oo]ut%' then 'Time Out New York'
-				when final.Directory_Site like '%[Tt]ravel%[Ll]eisure%' then 'TravelLeisure'
-				when final.Directory_Site like '%[Ww]all_[Ss]treet_[Jj]ournal%'  or final.Directory_Site like '[Ww][Ss][Jj]' then 'Wall Street Journal'
-				when final.Directory_Site like '%[Ww]ashington_[Pp]ost%' then 'Washington Post'
-				when final.Directory_Site like '%[Yy]ahoo%' then 'Yahoo'
-				when final.Directory_Site like '%[Yy]ou%[Tt]ube%' then 'YouTube'
-				when final.Directory_Site like '[Aa]d[Pp]rime%' then 'AdPrime'
-				when final.Directory_Site like '[Aa]ds[Mm]ovil%' then 'AdsMovil'
-				when final.Directory_Site like '[Aa]mobee%' then 'Amobee'
-				when final.Directory_Site like '[Cc]ardlytics%' then 'Cardlytics'
-				when final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Google' then 'DART Search_Google'
-				when final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%MSN' then 'DART Search_MSN'
-				when final.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Other' then 'DART Search_Other'
-				when final.Directory_Site like '[Ff]acebook%' then 'Facebook'
-				when final.Directory_Site like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
-				when final.Directory_Site like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
-			    when final.Directory_Site like '[Ff]lipboard%' then 'Flipboard'
-				when final.Directory_Site like '[Gg]um_[Gg]um%' then 'Gum Gum'
-				when final.Directory_Site like '[Hh]ulu%' then 'Hulu'
-				when final.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
-				when final.Directory_Site like '[Ii][Nn][Cc]%' then 'Inc'
-				when final.Directory_Site like '[Ii]mpre%[Mm]edia%' then 'Impre Media'
-				when final.Directory_Site like '[Ii]nternet%[Bb]rands%' then 'Internet Brands'
-				when final.Directory_Site like '[Ii]ndependent%' then 'Independent'
-				when final.Directory_Site like '[Kk]ayak%' then 'Kayak'
-				when final.Directory_Site like '[Ll]ive%[Ii]ntent%' then 'LiveIntent'
-				when final.Directory_Site like '[Mm]artini_[Mm]edia%' then 'Martini Media'
-				when final.Directory_Site like '[Oo]rbitz%' then 'Orbitz'
-				when final.Directory_Site like '[Ss]kyscanner%' then 'Skyscanner'
-				when final.Directory_Site like '[Ss]mart%[Bb]r[ei][ei]f%' then 'SmartBrief'
-				when final.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
-				when final.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
-				when final.Directory_Site like '[Ss]ojern%' then 'Sojern'
-				when final.Directory_Site like '[Ss]pecific_[Mm]edia%' or final.Directory_Site like '[Vv]iant%' then 'Viant'
-				when final.Directory_Site like '[Ss]potify%' then 'Spotify'
-				when final.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
-				when final.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
-				when final.Directory_Site like '[Tt]ravel%[Ss]pike%' then 'Travel Spike'
-				when final.Directory_Site like '[Tt]ravelocity%' then 'Travelocity'
-				when final.Directory_Site like '[Tt]riggit%' then 'Triggit'
-				when final.Directory_Site like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
-				when final.Directory_Site like '[Uu]ndertone%' then 'Undertone'
-				when final.Directory_Site like '[Uu]nited%' then 'United'
-				when final.Directory_Site like '[Vv]erve%' then 'VerveMobile'
-				when final.Directory_Site like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
-				when final.Directory_Site like '[Vv]ox%' then 'Vox'
-				when final.Directory_Site like '[Ww]ired%' then 'Wired'
-				when final.Directory_Site like '[Xx][Aa][Xx][Ii][Ss]%' then 'Xaxis'
-				when final.Directory_Site like '[Xx]ad%' then 'xAd Inc'
-				when final.Directory_Site like '[Yy]ieldbot%' then 'Yieldbot'
-				when final.Directory_Site like '[Yy]u[Mm]e%' then 'YuMe'
-				else final.Directory_Site end                                                               as Site,
+	[dbo].udf_siteName(final.Directory_Site) as "Site",
 	-- DCM site ID
 	final.Site_ID                                                                                           as "Site ID",
 	-- Reference/optional: package cost/pricing model, from Prisma; attributed to all placements within package.
@@ -247,7 +159,9 @@ from (
 		     flat.flatcost                                                              as flatcost,
 --  Logic excludes flat fees
 		     case
--- 			 Click-based cost
+
+
+-- 			 Zeros out cost for placements traffic BEFORE specified start date or AFTER specified end date
 		     when ((almost.DV_Map = 'N' or almost.DV_Map = 'Y') and (almost.edDate - almost.dcmMatchDate < 0 or almost.dcmMatchDate - almost.stDate < 0)
 		           and (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE' or almost.CostMethod = 'CPC' or
 		                almost.CostMethod = 'CPCV'))
@@ -396,41 +310,32 @@ from (
 			     			     select
 				     dcmReport.dcmDate as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as int) as dcmmonth,
-				     case
-				     when len(cast(month(cast(dcmReport.dcmDate as date)) as varchar(2))) = 1
-					     then convert(int,
-					                  cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
-					                  cast(0 as varchar(1)) +
-					                  cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
-					                  right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
-					     )
-				     else
-					     convert(int,cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
-					                 cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
-					                 right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
-					     )
-					 end                       as dcmMatchDate,
+				     [dbo].udf_dateToInt(dcmReport.dcmDate) as dcmMatchDate,
 					 dcmReport.Buy             as Buy,
 					 dcmReport.order_id        as order_id,
 					 dcmReport.Directory_Site  as Directory_Site,
 					 dcmReport.Site_ID         as Site_ID,
-					 dcmReport.PlacementNumber as PlacementNumber,
-					 dcmReport.Site_Placement  as Site_Placement,
-					 dcmReport.page_id         as page_id,
+					 case when dcmReport.PlacementNumber in('PBKB7J', 'PBKB7H', 'PBKB7K') then 'PBKB7J' end as PlacementNumber,
+
+					 case when dcmReport.Site_Placement like 'PBKB7J%' or dcmReport.Site_Placement like 'PBKB7H%' or dcmReport.Site_Placement like 'PBKB7K%' or dcmReport.Site_Placement ='United 360 - Polaris 2016 - Q4 - Amobee'        then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID' else  dcmReport.Site_Placement end     as Site_Placement,
+-- 				Amobee Video 360 placements, tracked differently across DCM, Innovid, and MOAT; this combines the three placements into one
+					case when dcmReport.page_id in (137412510, 137412401, 137412609) then 137412609 else dcmReport.page_id end as page_id,
 					 Prisma.stDate             as stDate,
-					 Prisma.edDate             as edDate,
+-- 					 correction for SFO-SIN campaign end date
+					 case when dcmReport.order_id = 9923634 and dcmReport.Site_ID != 1190258 then 20161022 else
+					 Prisma.edDate end         as edDate,
 					 Prisma.PackageCat         as PackageCat,
 					 Prisma.CostMethod         as CostMethod,
 					 Prisma.Cost_ID            as Cost_ID,
 					 Prisma.Planned_Amt        as Planned_Amt,
 -- 					 Prisma.Planned_Cost       as Planned_Cost,
 					 Prisma.PlacementStart     as PlacementStart,
-					 Prisma.PlacementEnd       as PlacementEnd,
+					 case when dcmReport.order_id = 9923634 and dcmReport.Site_ID != 1190258 then '2016-10-22' else
+					 Prisma.PlacementEnd end   as PlacementEnd,
 
 --  			Flat.flatCostRemain                                                               AS flatCostRemain,
 --  			Flat.impsRemain                                                                   AS impsRemain,
-				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / nullif(cast(Prisma.Planned_Amt as decimal(10,2)),0) ) * cast(Prisma.Rate as
-				                                                                                                             decimal(10,2)))                as incrFlatCost,
+				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / nullif(cast(Prisma.Planned_Amt as decimal(10,2)),0) ) * cast(Prisma.Rate as decimal(10,2)))                as incrFlatCost,
 					 cast(Prisma.Rate as decimal(10,2))                                   as Rate,
 					 sum(dcmReport.Impressions)                                           as impressions,
 					 sum(dcmReport.Clicks)                                                as clicks,
@@ -547,7 +452,7 @@ from
 (
 SELECT *
 FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-11-14'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-11-18'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -559,7 +464,7 @@ and order_id in (
 9923634,   	-- SFO-SIN
 9973506,   	-- SFO-AKL
 9994694,	-- SFO-China
-10307468	-- SFO-HGH/XIY
+10307468,	-- SFO-HGH/XIY
 10505745 	-- Brussels
 )
 and (advertiser_id <> 0)
@@ -598,13 +503,13 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-14''
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-18''
 -- Intl 2016
 and order_id in (
 9923634,   	-- SFO-SIN
 9973506,   	-- SFO-AKL
 9994694,	-- SFO-China
-10307468	-- SFO-HGH/XIY
+10307468,	-- SFO-HGH/XIY
 10505745 	-- Brussels
 )
 
@@ -638,13 +543,13 @@ FROM  (
 
 SELECT *
 FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-14''
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-18''
 -- Intl 2016
 and order_id in (
 9923634,   	-- SFO-SIN
 9973506,   	-- SFO-AKL
 9994694,	-- SFO-China
-10307468	-- SFO-HGH/XIY
+10307468,	-- SFO-HGH/XIY
 10505745 	-- Brussels
 )
 
@@ -710,7 +615,7 @@ cast(Report.Date AS DATE)
 				ON dcmReport.page_id = Prisma.AdserverPlacementId
 
 		group by
-			dcmReport.dcmDate
+			 dcmReport.dcmDate
 			,cast(month(cast(dcmReport.dcmDate as date)) as int)
 			,dcmReport.Buy
 			,dcmReport.order_id
@@ -750,82 +655,7 @@ cast(Report.Date AS DATE)
 		          where dvDate between @report_st and @report_ed
 	          ) as DV
 			on
-			left(almost.Site_Placement,6) + '_' + replace(
-			case	when ( almost.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or almost.Directory_Site like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
-				when ( almost.Directory_Site like '[Gg][Dd][Nn]%' or almost.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
-				when almost.Directory_Site like '%[Aa]dara%' then 'Adara'
-				when almost.Directory_Site like '%[Aa]tlantic%' then 'The Atlantic'
-				when almost.Directory_Site like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
-				when almost.Directory_Site like '%[Cc][Nn][Nn]%' then 'CNN'
-				when almost.Directory_Site like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
-				when almost.Directory_Site like '%[Ff]orbes%' then 'Forbes'
-				when almost.Directory_Site like '%[Gg]olf%[Dd]igest%' then 'GolfDigest'
-				when almost.Directory_Site like '%[Jj]un%[Gg]roup%' then 'JunGroup'
-				when almost.Directory_Site like '%[Mm][Ll][Bb]%' then 'MLB'
-				when almost.Directory_Site like '%[Mm]ansueto%' then 'Inc'
-				when almost.Directory_Site like '%[Mn][Ss][Nn]%' then 'MSN'
-				when almost.Directory_Site like '%[Nn][Bb][Aa]%' then 'NBA'
-				when almost.Directory_Site like '%[Nn][Ff][Ll]%' then 'NFL'
-				when almost.Directory_Site like '%[Nn]ast_[Tt]raveler%' then 'CN Traveler'
-				when almost.Directory_Site like '%[Nn]ew_[Yy]ork_[Tt]imes%' then 'NYTimes'
-				when almost.Directory_Site like '%[Nn]ew_[Yy]orker%' then 'New Yorker'
-				when almost.Directory_Site like '%[Pp][Gg][Aa]%[Tt][Oo][Uu][Rr]%' then 'PGATour'
-				when almost.Directory_Site like '%[Pp]riceline%' then 'Priceline'
-				when almost.Directory_Site like '%[Ss]ports_[Ii]llustrated%' then 'Sports Illustrated'
-				when almost.Directory_Site like '%[Tt]ap%[Aa]d%' then 'TapAd'
-				when almost.Directory_Site like '%[Tt]ime%[Oo]ut%' then 'Time Out New York'
-				when almost.Directory_Site like '%[Tt]ravel%[Ll]eisure%' then 'TravelLeisure'
-				when almost.Directory_Site like '%[Ww]all_[Ss]treet_[Jj]ournal%'  or almost.Directory_Site like '[Ww][Ss][Jj]' then 'Wall Street Journal'
-				when almost.Directory_Site like '%[Ww]ashington_[Pp]ost%' then 'Washington Post'
-				when almost.Directory_Site like '%[Yy]ahoo%' then 'Yahoo'
-				when almost.Directory_Site like '%[Yy]ou%[Tt]ube%' then 'YouTube'
-				when almost.Directory_Site like '[Aa]d[Pp]rime%' then 'AdPrime'
-				when almost.Directory_Site like '[Aa]ds[Mm]ovil%' then 'AdsMovil'
-				when almost.Directory_Site like '[Aa]mobee%' then 'Amobee'
-				when almost.Directory_Site like '[Cc]ardlytics%' then 'Cardlytics'
-				when almost.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Google' then 'DART Search_Google'
-				when almost.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%MSN' then 'DART Search_MSN'
-				when almost.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Other' then 'DART Search_Other'
-				when almost.Directory_Site like '[Ff]acebook%' then 'Facebook'
-				when almost.Directory_Site like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
-				when almost.Directory_Site like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
-			    when almost.Directory_Site like '[Ff]lipboard%' then 'Flipboard'
-				when almost.Directory_Site like '[Gg]um_[Gg]um%' then 'Gum Gum'
-				when almost.Directory_Site like '[Hh]ulu%' then 'Hulu'
-				when almost.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
-				when almost.Directory_Site like '[Ii][Nn][Cc]%' then 'Inc'
-				when almost.Directory_Site like '[Ii]mpre%[Mm]edia%' then 'Impre Media'
-				when almost.Directory_Site like '[Ii]nternet%[Bb]rands%' then 'Internet Brands'
-				when almost.Directory_Site like '[Ii]ndependent%' then 'Independent'
-				when almost.Directory_Site like '[Kk]ayak%' then 'Kayak'
-				when almost.Directory_Site like '[Ll]ive%[Ii]ntent%' then 'LiveIntent'
-				when almost.Directory_Site like '[Mm]artini_[Mm]edia%' then 'Martini Media'
-				when almost.Directory_Site like '[Oo]rbitz%' then 'Orbitz'
-				when almost.Directory_Site like '[Ss]kyscanner%' then 'Skyscanner'
-				when almost.Directory_Site like '[Ss]mart%[Bb]r[ei][ei]f%' then 'SmartBrief'
-				when almost.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
-				when almost.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
-				when almost.Directory_Site like '[Ss]ojern%' then 'Sojern'
-				when almost.Directory_Site like '[Ss]pecific_[Mm]edia%' or almost.Directory_Site like '[Vv]iant%' then 'Viant'
-				when almost.Directory_Site like '[Ss]potify%' then 'Spotify'
-				when almost.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
-				when almost.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
-				when almost.Directory_Site like '[Tt]ravel%[Ss]pike%' then 'Travel Spike'
-				when almost.Directory_Site like '[Tt]ravelocity%' then 'Travelocity'
-				when almost.Directory_Site like '[Tt]riggit%' then 'Triggit'
-				when almost.Directory_Site like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
-				when almost.Directory_Site like '[Uu]ndertone%' then 'Undertone'
-				when almost.Directory_Site like '[Uu]nited%' then 'United'
-				when almost.Directory_Site like '[Vv]erve%' then 'VerveMobile'
-				when almost.Directory_Site like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
-				when almost.Directory_Site like '[Vv]ox%' then 'Vox'
-				when almost.Directory_Site like '[Ww]ired%' then 'Wired'
-				when almost.Directory_Site like '[Xx][Aa][Xx][Ii][Ss]%' then 'Xaxis'
-				when almost.Directory_Site like '[Xx]ad%' then 'xAd Inc'
-				when almost.Directory_Site like '[Yy]ieldbot%' then 'Yieldbot'
-				when almost.Directory_Site like '[Yy]u[Mm]e%' then 'YuMe'
-				else almost.Directory_Site end
-				,' ','') + '_'
+			left(almost.Site_Placement,6) + '_' + [dbo].udf_siteKey( almost.Directory_Site) + '_'
 			+ cast(almost.dcmDate as varchar(10)) = DV.joinKey
 
 -- MOAT Table JOIN ==============================================================================================================================================
@@ -836,82 +666,7 @@ cast(Report.Date AS DATE)
 		          where mtDate between @report_st and @report_ed
 	          ) as MT
 			on
-			left(almost.Site_Placement,6) + '_' + replace(
-				case	when ( almost.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or almost.Directory_Site like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
-				when ( almost.Directory_Site like '[Gg][Dd][Nn]%' or almost.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
-				when almost.Directory_Site like '%[Aa]dara%' then 'Adara'
-				when almost.Directory_Site like '%[Aa]tlantic%' then 'The Atlantic'
-				when almost.Directory_Site like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
-				when almost.Directory_Site like '%[Cc][Nn][Nn]%' then 'CNN'
-				when almost.Directory_Site like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
-				when almost.Directory_Site like '%[Ff]orbes%' then 'Forbes'
-				when almost.Directory_Site like '%[Gg]olf%[Dd]igest%' then 'GolfDigest'
-				when almost.Directory_Site like '%[Jj]un%[Gg]roup%' then 'JunGroup'
-				when almost.Directory_Site like '%[Mm][Ll][Bb]%' then 'MLB'
-				when almost.Directory_Site like '%[Mm]ansueto%' then 'Inc'
-				when almost.Directory_Site like '%[Mn][Ss][Nn]%' then 'MSN'
-				when almost.Directory_Site like '%[Nn][Bb][Aa]%' then 'NBA'
-				when almost.Directory_Site like '%[Nn][Ff][Ll]%' then 'NFL'
-				when almost.Directory_Site like '%[Nn]ast_[Tt]raveler%' then 'CN Traveler'
-				when almost.Directory_Site like '%[Nn]ew_[Yy]ork_[Tt]imes%' then 'NYTimes'
-				when almost.Directory_Site like '%[Nn]ew_[Yy]orker%' then 'New Yorker'
-				when almost.Directory_Site like '%[Pp][Gg][Aa]%[Tt][Oo][Uu][Rr]%' then 'PGATour'
-				when almost.Directory_Site like '%[Pp]riceline%' then 'Priceline'
-				when almost.Directory_Site like '%[Ss]ports_[Ii]llustrated%' then 'Sports Illustrated'
-				when almost.Directory_Site like '%[Tt]ap%[Aa]d%' then 'TapAd'
-				when almost.Directory_Site like '%[Tt]ime%[Oo]ut%' then 'Time Out New York'
-				when almost.Directory_Site like '%[Tt]ravel%[Ll]eisure%' then 'TravelLeisure'
-				when almost.Directory_Site like '%[Ww]all_[Ss]treet_[Jj]ournal%'  or almost.Directory_Site like '[Ww][Ss][Jj]' then 'Wall Street Journal'
-				when almost.Directory_Site like '%[Ww]ashington_[Pp]ost%' then 'Washington Post'
-				when almost.Directory_Site like '%[Yy]ahoo%' then 'Yahoo'
-				when almost.Directory_Site like '%[Yy]ou%[Tt]ube%' then 'YouTube'
-				when almost.Directory_Site like '[Aa]d[Pp]rime%' then 'AdPrime'
-				when almost.Directory_Site like '[Aa]ds[Mm]ovil%' then 'AdsMovil'
-				when almost.Directory_Site like '[Aa]mobee%' then 'Amobee'
-				when almost.Directory_Site like '[Cc]ardlytics%' then 'Cardlytics'
-				when almost.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Google' then 'DART Search_Google'
-				when almost.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%MSN' then 'DART Search_MSN'
-				when almost.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Other' then 'DART Search_Other'
-				when almost.Directory_Site like '[Ff]acebook%' then 'Facebook'
-				when almost.Directory_Site like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
-				when almost.Directory_Site like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
-			    when almost.Directory_Site like '[Ff]lipboard%' then 'Flipboard'
-				when almost.Directory_Site like '[Gg]um_[Gg]um%' then 'Gum Gum'
-				when almost.Directory_Site like '[Hh]ulu%' then 'Hulu'
-				when almost.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
-				when almost.Directory_Site like '[Ii][Nn][Cc]%' then 'Inc'
-				when almost.Directory_Site like '[Ii]mpre%[Mm]edia%' then 'Impre Media'
-				when almost.Directory_Site like '[Ii]nternet%[Bb]rands%' then 'Internet Brands'
-				when almost.Directory_Site like '[Ii]ndependent%' then 'Independent'
-				when almost.Directory_Site like '[Kk]ayak%' then 'Kayak'
-				when almost.Directory_Site like '[Ll]ive%[Ii]ntent%' then 'LiveIntent'
-				when almost.Directory_Site like '[Mm]artini_[Mm]edia%' then 'Martini Media'
-				when almost.Directory_Site like '[Oo]rbitz%' then 'Orbitz'
-				when almost.Directory_Site like '[Ss]kyscanner%' then 'Skyscanner'
-				when almost.Directory_Site like '[Ss]mart%[Bb]r[ei][ei]f%' then 'SmartBrief'
-				when almost.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
-				when almost.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
-				when almost.Directory_Site like '[Ss]ojern%' then 'Sojern'
-				when almost.Directory_Site like '[Ss]pecific_[Mm]edia%' or almost.Directory_Site like '[Vv]iant%' then 'Viant'
-				when almost.Directory_Site like '[Ss]potify%' then 'Spotify'
-				when almost.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
-				when almost.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
-				when almost.Directory_Site like '[Tt]ravel%[Ss]pike%' then 'Travel Spike'
-				when almost.Directory_Site like '[Tt]ravelocity%' then 'Travelocity'
-				when almost.Directory_Site like '[Tt]riggit%' then 'Triggit'
-				when almost.Directory_Site like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
-				when almost.Directory_Site like '[Uu]ndertone%' then 'Undertone'
-				when almost.Directory_Site like '[Uu]nited%' then 'United'
-				when almost.Directory_Site like '[Vv]erve%' then 'VerveMobile'
-				when almost.Directory_Site like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
-				when almost.Directory_Site like '[Vv]ox%' then 'Vox'
-				when almost.Directory_Site like '[Ww]ired%' then 'Wired'
-				when almost.Directory_Site like '[Xx][Aa][Xx][Ii][Ss]%' then 'Xaxis'
-				when almost.Directory_Site like '[Xx]ad%' then 'xAd Inc'
-				when almost.Directory_Site like '[Yy]ieldbot%' then 'Yieldbot'
-				when almost.Directory_Site like '[Yy]u[Mm]e%' then 'YuMe'
-				else almost.Directory_Site end
-				,' ','') + '_'
+			left(almost.Site_Placement,6) + '_' + [dbo].udf_siteKey( almost.Directory_Site) + '_'
 			+ cast(almost.dcmDate as varchar(10)) = MT.joinKey
 
 
@@ -923,82 +678,7 @@ cast(Report.Date AS DATE)
 		          where ivDate between @report_st and @report_ed
 	          ) as IV
 			on
-			left(almost.Site_Placement,6) + '_' + replace(
-			case	when ( almost.Directory_Site like '%[Cc]hicago%[Tt]ribune%' or almost.Directory_Site like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
-				when ( almost.Directory_Site like '[Gg][Dd][Nn]%' or almost.Directory_Site like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
-				when almost.Directory_Site like '%[Aa]dara%' then 'Adara'
-				when almost.Directory_Site like '%[Aa]tlantic%' then 'The Atlantic'
-				when almost.Directory_Site like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
-				when almost.Directory_Site like '%[Cc][Nn][Nn]%' then 'CNN'
-				when almost.Directory_Site like '%[Ee][Ss][Pp][Nn]%' then 'ESPN'
-				when almost.Directory_Site like '%[Ff]orbes%' then 'Forbes'
-				when almost.Directory_Site like '%[Gg]olf%[Dd]igest%' then 'GolfDigest'
-				when almost.Directory_Site like '%[Jj]un%[Gg]roup%' then 'JunGroup'
-				when almost.Directory_Site like '%[Mm][Ll][Bb]%' then 'MLB'
-				when almost.Directory_Site like '%[Mm]ansueto%' then 'Inc'
-				when almost.Directory_Site like '%[Mn][Ss][Nn]%' then 'MSN'
-				when almost.Directory_Site like '%[Nn][Bb][Aa]%' then 'NBA'
-				when almost.Directory_Site like '%[Nn][Ff][Ll]%' then 'NFL'
-				when almost.Directory_Site like '%[Nn]ast_[Tt]raveler%' then 'CN Traveler'
-				when almost.Directory_Site like '%[Nn]ew_[Yy]ork_[Tt]imes%' then 'NYTimes'
-				when almost.Directory_Site like '%[Nn]ew_[Yy]orker%' then 'New Yorker'
-				when almost.Directory_Site like '%[Pp][Gg][Aa]%[Tt][Oo][Uu][Rr]%' then 'PGATour'
-				when almost.Directory_Site like '%[Pp]riceline%' then 'Priceline'
-				when almost.Directory_Site like '%[Ss]ports_[Ii]llustrated%' then 'Sports Illustrated'
-				when almost.Directory_Site like '%[Tt]ap%[Aa]d%' then 'TapAd'
-				when almost.Directory_Site like '%[Tt]ime%[Oo]ut%' then 'Time Out New York'
-				when almost.Directory_Site like '%[Tt]ravel%[Ll]eisure%' then 'TravelLeisure'
-				when almost.Directory_Site like '%[Ww]all_[Ss]treet_[Jj]ournal%'  or almost.Directory_Site like '[Ww][Ss][Jj]' then 'Wall Street Journal'
-				when almost.Directory_Site like '%[Ww]ashington_[Pp]ost%' then 'Washington Post'
-				when almost.Directory_Site like '%[Yy]ahoo%' then 'Yahoo'
-				when almost.Directory_Site like '%[Yy]ou%[Tt]ube%' then 'YouTube'
-				when almost.Directory_Site like '[Aa]d[Pp]rime%' then 'AdPrime'
-				when almost.Directory_Site like '[Aa]ds[Mm]ovil%' then 'AdsMovil'
-				when almost.Directory_Site like '[Aa]mobee%' then 'Amobee'
-				when almost.Directory_Site like '[Cc]ardlytics%' then 'Cardlytics'
-				when almost.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Google' then 'DART Search_Google'
-				when almost.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%MSN' then 'DART Search_MSN'
-				when almost.Directory_Site like '[Dd][Aa][Rr][Tt]_Search%Other' then 'DART Search_Other'
-				when almost.Directory_Site like '[Ff]acebook%' then 'Facebook'
-				when almost.Directory_Site like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
-				when almost.Directory_Site like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
-			    when almost.Directory_Site like '[Ff]lipboard%' then 'Flipboard'
-				when almost.Directory_Site like '[Gg]um_[Gg]um%' then 'Gum Gum'
-				when almost.Directory_Site like '[Hh]ulu%' then 'Hulu'
-				when almost.Directory_Site like '[Ii][Nn][Vv][Ii][Tt][Ee]%[Mm][Ee][Dd][Ii][Aa]%' then 'Invite Media'
-				when almost.Directory_Site like '[Ii][Nn][Cc]%' then 'Inc'
-				when almost.Directory_Site like '[Ii]mpre%[Mm]edia%' then 'Impre Media'
-				when almost.Directory_Site like '[Ii]nternet%[Bb]rands%' then 'Internet Brands'
-				when almost.Directory_Site like '[Ii]ndependent%' then 'Independent'
-				when almost.Directory_Site like '[Kk]ayak%' then 'Kayak'
-				when almost.Directory_Site like '[Ll]ive%[Ii]ntent%' then 'LiveIntent'
-				when almost.Directory_Site like '[Mm]artini_[Mm]edia%' then 'Martini Media'
-				when almost.Directory_Site like '[Oo]rbitz%' then 'Orbitz'
-				when almost.Directory_Site like '[Ss]kyscanner%' then 'Skyscanner'
-				when almost.Directory_Site like '[Ss]mart%[Bb]r[ei][ei]f%' then 'SmartBrief'
-				when almost.Directory_Site like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
-				when almost.Directory_Site like '[Ss]mithsonian%' then 'Smithsonian'
-				when almost.Directory_Site like '[Ss]ojern%' then 'Sojern'
-				when almost.Directory_Site like '[Ss]pecific_[Mm]edia%' or almost.Directory_Site like '[Vv]iant%' then 'Viant'
-				when almost.Directory_Site like '[Ss]potify%' then 'Spotify'
-				when almost.Directory_Site like '[Tt]ime%[Ii]nc%' then 'Time Inc'
-				when almost.Directory_Site like '[Tt]ony%[As]wards%' then 'TonyAwards'
-				when almost.Directory_Site like '[Tt]ravel%[Ss]pike%' then 'Travel Spike'
-				when almost.Directory_Site like '[Tt]ravelocity%' then 'Travelocity'
-				when almost.Directory_Site like '[Tt]riggit%' then 'Triggit'
-				when almost.Directory_Site like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
-				when almost.Directory_Site like '[Uu]ndertone%' then 'Undertone'
-				when almost.Directory_Site like '[Uu]nited%' then 'United'
-				when almost.Directory_Site like '[Vv]erve%' then 'VerveMobile'
-				when almost.Directory_Site like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
-				when almost.Directory_Site like '[Vv]ox%' then 'Vox'
-				when almost.Directory_Site like '[Ww]ired%' then 'Wired'
-				when almost.Directory_Site like '[Xx][Aa][Xx][Ii][Ss]%' then 'Xaxis'
-				when almost.Directory_Site like '[Xx]ad%' then 'xAd Inc'
-				when almost.Directory_Site like '[Yy]ieldbot%' then 'Yieldbot'
-				when almost.Directory_Site like '[Yy]u[Mm]e%' then 'YuMe'
-				else almost.Directory_Site end
-				,' ','') + '_'
+			left(almost.Site_Placement,6) + '_' + [dbo].udf_siteKey( almost.Directory_Site) + '_'
 			+ cast(almost.dcmDate as varchar(10)) = IV.joinKey
 
 -- where almost.CostMethod = 'Flat'

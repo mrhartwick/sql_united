@@ -57,23 +57,8 @@ select
 	-- DCM Campaign name
 	final.Buy                                                                                               as "DCM Campaign",
 	-- Friendly Campaign name
-	case
-	when  final.order_id = '9973506' 						      then 'SFO-AKL'
-	when  final.order_id = '9304728' 							  then 'Trade'
-	when  final.order_id = '9407915' 							  then 'Google PDE'
-	when  final.order_id = '9548151' 							  then 'Smithsonian'
-	when  final.order_id = '9630239' 							  then 'SFO-TLV'
-	when  final.order_id = '9639387' 							  then 'Targeted Marketing'
-	when  final.order_id = '9739006' 							  then 'Spoke Markets'
-	when  final.order_id = '9923634' 							  then 'SFO-SIN'
-	when  final.order_id = '10276123' 							  then 'Polaris'
-	when  final.order_id = '10094548' 							  then 'Marketing Fund'
-	when  final.order_id = '10090315' 							  then 'SME'
-	when  final.order_id = '9994694' 							  then 'SFO-China'
-	when  final.order_id = '9408733' 							  then 'Chile CoOp'
-	when  final.order_id = '9999841' or final.order_id='10121649' then 'Olympics'
-	else  final.Buy end                                                                                     as Campaign,
-	-- DCM campaing ID
+	[dbo].udf_campaignName(final.order_id, final.Buy)  														as Campaign,
+	-- DCM campaign ID
 	final.order_id                                                                                          as "Campaign ID",
 	-- Reference/optional: three-character designation, sometimes descriptive, from placement name.
 -- 	final.campaignShort                                                                                     as "Campaign Short Name",
@@ -173,7 +158,7 @@ from (
 		     flat.flatcost                                                              as flatcost,
 --  Logic excludes flat fees
 		     case
--- 			 Click-based cost
+-- 			 Zeros out cost for placements traffic BEFORE specified start date or AFTER specified end date
 		     when ((almost.DV_Map = 'N' or almost.DV_Map = 'Y') and (almost.edDate - almost.dcmMatchDate < 0 or almost.dcmMatchDate - almost.stDate < 0)
 		           and (almost.CostMethod = 'CPM' or almost.CostMethod = 'CPMV' or almost.CostMethod = 'CPE' or almost.CostMethod = 'CPC' or
 		                almost.CostMethod = 'CPCV'))
@@ -327,18 +312,23 @@ from (
 					 dcmReport.order_id        as order_id,
 					 dcmReport.Directory_Site  as Directory_Site,
 					 dcmReport.Site_ID         as Site_ID,
-					 dcmReport.PlacementNumber as PlacementNumber,
-					 dcmReport.Site_Placement  as Site_Placement,
-					 dcmReport.page_id         as page_id,
+					 case when dcmReport.PlacementNumber in('PBKB7J', 'PBKB7H', 'PBKB7K') then 'PBKB7J' end as PlacementNumber,
+
+					 case when dcmReport.Site_Placement like 'PBKB7J%' or dcmReport.Site_Placement like 'PBKB7H%' or dcmReport.Site_Placement like 'PBKB7K%' or dcmReport.Site_Placement ='United 360 - Polaris 2016 - Q4 - Amobee'        then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID' else  dcmReport.Site_Placement end     as Site_Placement,
+-- 				Amobee Video 360 placements, tracked differently across DCM, Innovid, and MOAT; this combines the three placements into one
+					case when dcmReport.page_id in (137412510, 137412401, 137412609) then 137412609 else dcmReport.page_id end as page_id,
 					 Prisma.stDate             as stDate,
-					 Prisma.edDate             as edDate,
+-- 					 correction for SFO-SIN campaign end date
+					 case when dcmReport.order_id = 9923634 and dcmReport.Site_ID != 1190258 then 20161022 else
+					 Prisma.edDate end         as edDate,
 					 Prisma.PackageCat         as PackageCat,
 					 Prisma.CostMethod         as CostMethod,
 					 Prisma.Cost_ID            as Cost_ID,
 					 Prisma.Planned_Amt        as Planned_Amt,
 -- 					 Prisma.Planned_Cost       as Planned_Cost,
 					 Prisma.PlacementStart     as PlacementStart,
-					 Prisma.PlacementEnd       as PlacementEnd,
+					 case when dcmReport.order_id = 9923634 and dcmReport.Site_ID != 1190258 then '2016-10-22' else
+					 Prisma.PlacementEnd end   as PlacementEnd,
 
 --  			Flat.flatCostRemain                                                               AS flatCostRemain,
 --  			Flat.impsRemain                                                                   AS impsRemain,
@@ -466,7 +456,7 @@ and quantity != 0
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
 
-and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315) -- Display 2016
+and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
 and (advertiser_id <> 0)
 ) as Conversions
 
@@ -504,7 +494,7 @@ FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_impression
 WHERE cast(impression_time as date) BETWEEN ''2016-10-10'' AND ''2016-10-10''
-and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315) -- Display 2016
+and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
 
 
 ) AS Impressions
@@ -537,7 +527,7 @@ FROM  (
 SELECT *
 FROM mec.UnitedUS.dfa_click
 WHERE cast(click_time as date) BETWEEN ''2016-10-10'' AND ''2016-10-10''
-and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315) -- Display 2016
+and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
 
 ) AS Clicks
 
