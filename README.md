@@ -4,10 +4,11 @@ This is a central repository for SQL code on United.
 
 ### This repository is broken up into sections ###
 
-* adhoc _random asks and one-offs_
-* functions _user-defined functions to make life easier_
-	* sqlServer_dataMart _function with MS SQL - compatible syntax
-* [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
+* __adhoc__: random asks and one-offs
+* __functions__: user-defined functions to make life easier
+	* sqlServer_dataMart: functions written in MS SQL-compatible syntax
+	* vertica: functions written in Vertica-compatible syntax
+* reporting
 
 ### How do I get set up? ###
 
