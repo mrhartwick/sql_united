@@ -4,9 +4,9 @@ This is a central repository for SQL code on United.
 
 ### This repository is broken up into sections ###
 
-* adhoc
-> random asks or occasional reports
-* Version
+* adhoc _random asks and one-offs_
+* functions _user-defined functions to make life easier_
+	* sqlServer_dataMart _function with MS SQL - compatible syntax
 * [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
 
 ### How do I get set up? ###
