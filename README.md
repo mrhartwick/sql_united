@@ -1,10 +1,11 @@
-# README #
+# Readme #
 
-This README would normally document whatever steps are necessary to get your application up and running.
+This is a central repository for SQL code on United.
 
-### What is this repository for? ###
+### This repository is broken up into sections ###
 
-* Quick summary
+* adhoc
+> random asks or occasional reports
 * Version
 * [Learn Markdown](https://bitbucket.org/tutorials/markdowndemo)
 
