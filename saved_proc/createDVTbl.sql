@@ -29,9 +29,7 @@ insert into master.dbo.DVTable
 		sum(DV.total_impressions),
 		sum(DV.groupm_passed_impressions),
 		sum(DV.groupm_billable_impressions)
-	from ( select distinct
-
-
+	from ( select
 		       cast(date as date)                                as dvDate,
 		       replace(left(placement_name,6) + '_' +
 		               [dbo].udf_siteKey(media_property)
@@ -49,7 +47,8 @@ insert into master.dbo.DVTable
 
 	where DV.placement_name not like '%[Dd][Oo]%[Nn][Oo][Tt]%[Uu][Ss][Ee]%'
 	      and DV.placement_name not like '%[Nn]o%[Tt]racking%'
--- and cast(DV.dvDate AS DATE) BETWEEN '2016-01-01' AND '2016-03-31'
+		and dv.placement_code != '300492'
+and cast(DV.dvDate AS DATE) > '2016-01-01'
 	group by
 		DV.joinKey,
 		DV.dvDate,
