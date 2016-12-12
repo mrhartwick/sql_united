@@ -1,4 +1,4 @@
---  Master Query (2016-9-28)
+--  Master Query, new cluster
 /*  This query is a bit of a hack. Non-optimal aspects are necessitated by the particularities of the current tech stack on United.
 	Code is most easily read by starting at the "innermost" block, inside the openQuery call.
 
@@ -28,8 +28,8 @@
 DECLARE @report_st date
 DECLARE @report_ed date
 --
-SET @report_ed = '2016-10-10'
-SET @report_st = '2016-10-10'
+SET @report_ed = '2016-11-30'
+SET @report_st = '2016-01-01'
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
@@ -275,6 +275,7 @@ from (
 		     sum(almost.Impressions)                                                    as cnslImps,
 			 sum(IV.impressions)														as IV_Impressions,
 			 sum(IV.click_thrus)														as IV_Clicks,
+				 sum(IV.all_completion) as IV_Completes,
 		     sum(cast(DV.total_impressions as int))                                     as DV_Impressions,
 		     sum(DV.groupm_passed_impressions)                                          as DV_Viewed,
 		     sum(cast(DV.groupm_billable_impressions as decimal(10,2)))                 as DV_GroupMPayable,
@@ -302,12 +303,25 @@ from (
 -- DECLARE @report_st date,
 -- @report_ed date;
 -- --
--- SET @report_ed = '2016-10-10';
+-- SET @report_ed = '2016-10-21';
 -- SET @report_st = '2016-10-10';
 			     			     select
 				     dcmReport.dcmDate as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as int) as dcmmonth,
-				     [dbo].udf_dateToInt(dcmReport.dcmDate) as dcmMatchDate,
+				     case
+				     when len(cast(month(cast(dcmReport.dcmDate as date)) as varchar(2))) = 1
+					     then convert(int,
+					                  cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
+					                  cast(0 as varchar(1)) +
+					                  cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
+					                  right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
+					     )
+				     else
+					     convert(int,cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
+					                 cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
+					                 right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
+					     )
+					 end                       as dcmMatchDate,
 					 dcmReport.Buy             as Buy,
 					 dcmReport.order_id        as order_id,
 					 dcmReport.Directory_Site  as Directory_Site,
@@ -318,7 +332,6 @@ from (
 -- 				Amobee Video 360 placements, tracked differently across DCM, Innovid, and MOAT; this combines the three placements into one
 					case when dcmReport.page_id in (137412510, 137412401, 137412609) then 137412609 else dcmReport.page_id end as page_id,
 					 Prisma.stDate             as stDate,
--- 					 correction for SFO-SIN campaign end date
 					 case when dcmReport.order_id = 9923634 and dcmReport.Site_ID != 1190258 then 20161022 else
 					 Prisma.edDate end         as edDate,
 					 Prisma.PackageCat         as PackageCat,
@@ -332,7 +345,8 @@ from (
 
 --  			Flat.flatCostRemain                                                               AS flatCostRemain,
 --  			Flat.impsRemain                                                                   AS impsRemain,
-				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / nullif(cast(Prisma.Planned_Amt as decimal(10,2)),0) ) * cast(Prisma.Rate as decimal(10,2)))                as incrFlatCost,
+				     sum(( cast(dcmReport.Impressions as decimal(10,2)) / nullif(cast(Prisma.Planned_Amt as decimal(10,2)),0) ) * cast(Prisma.Rate as
+				                                                                                                             decimal(10,2)))                as incrFlatCost,
 					 cast(Prisma.Rate as decimal(10,2))                                   as Rate,
 					 sum(dcmReport.Impressions)                                           as impressions,
 					 sum(dcmReport.Clicks)                                                as clicks,
@@ -404,7 +418,7 @@ from (
 -- openQuery call must not exceed 8,000 characters; no room for comments inside the function
 		FROM (
 			     SELECT *
-			     FROM openQuery(VerticaGroupM,
+			     FROM openQuery(VerticaUnited,
 			                    'SELECT
 cast(Report.Date AS DATE)                   AS dcmDate,
 cast(month(cast(Report.Date as date)) as int) as reportMonth,
@@ -447,20 +461,20 @@ cast(Conversions.Click_Time as date) as "Date"
 from
 (
 SELECT *
-FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-10-10'' AND ''2016-10-10'')
+FROM diap01.mec_us_united_20056.dfa_activity
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
 and quantity != 0
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
-
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
+
 and (advertiser_id <> 0)
 ) as Conversions
 
-LEFT JOIN mec.Cross_Client_Resources.EXCHANGE_RATES AS Rates
+LEFT JOIN diap01.mec_us_mecexchangerates_20067.EXCHANGE_RATES AS Rates
 ON UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) = UPPER(Rates.Currency)
 AND cast(Conversions.Click_Time as date) = Rates.DATE
 
@@ -492,11 +506,11 @@ cast(Impressions.impression_time as date) as "Date"
 
 FROM  (
 SELECT *
-FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-10-10'' AND ''2016-10-10''
+FROM diap01.mec_us_united_20056.dfa_impression
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
 
-
+and (advertiser_id <> 0)
 ) AS Impressions
 GROUP BY
 -- Impressions.impression_time
@@ -525,10 +539,10 @@ cast(Clicks.click_time as date)       as "Date"
 FROM  (
 
 SELECT *
-FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-10-10'' AND ''2016-10-10''
+FROM diap01.mec_us_united_20056.dfa_click
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
-
+and (advertiser_id <> 0)
 ) AS Clicks
 
 GROUP BY
@@ -540,33 +554,36 @@ cast(Clicks.Click_time as date)
 ) as report
 LEFT JOIN
 (
--- 			     SELECT *
+
 select cast(buy as varchar(4000)) as ''buy'', order_id as ''order_id''
-from mec.UnitedUS.dfa_campaign
+from diap01.mec_us_united_20056.dfa_campaign
 ) AS Campaign
 ON Report.order_id = Campaign.order_id
 
-LEFT JOIN
+left join
 (
--- 			     SELECT *
-select  cast(site_placement as varchar(4000)) as ''site_placement'',  max(page_id) as ''page_id'', order_id as ''order_id'', site_id as ''site_id''
-from mec.UnitedUS.dfa_page_name
-		group by site_placement, order_id, site_id
-) AS Placements
-ON Report.page_id = Placements.page_id
-AND Report.order_id = Placements.order_id
+select cast(t1.site_placement as varchar(4000)) as ''site_placement'',  t1.page_id as ''page_id'', t1.order_id as ''order_id'', t1.site_id as ''site_id''
+
+from (select order_id as order_id, site_id as site_id, page_id as page_id, site_placement as site_placement, cast(start_date as date) as thisDate,
+	row_number() over (partition by order_id, site_id, page_id  order by cast(start_date as date) desc) as r1
+    FROM diap01.mec_us_united_20056.dfa_page
+
+) as t1
+where r1 = 1
+) AS placements
+on 	report.page_id 	= placements.page_id
+and Report.order_id = placements.order_id
 and report.site_ID  = placements.site_id
 
 LEFT JOIN
 (
--- 			     SELECT *
 select cast(directory_site as varchar(4000)) as ''directory_site'', site_id as ''site_id''
-from mec.UnitedUS.dfa_site
+from diap01.mec_us_united_20056.dfa_site
 ) AS Directory
 ON Report.Site_ID = Directory.Site_ID
 
 WHERE NOT REGEXP_LIKE(site_placement,''.do\s*not\s*use.'',''ib'')
-
+and Report.Site_ID !=''1485655''
 GROUP BY
 cast(Report.Date AS DATE)
 -- , cast(month(cast(Report.Date as date)) as int)
