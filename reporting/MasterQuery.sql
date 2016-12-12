@@ -28,8 +28,8 @@
 DECLARE @report_st date
 DECLARE @report_ed date
 --
-SET @report_ed = '2016-11-30'
-SET @report_st = '2016-01-01'
+SET @report_ed = '2016-10-10'
+SET @report_st = '2016-10-10'
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
