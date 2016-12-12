@@ -29,7 +29,7 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-11-11';
+SET @report_ed = '2016-11-25';
 SET @report_st = '2016-01-01';
 
 --
@@ -100,7 +100,7 @@ select
 	sum(final.IV_Completes) as "Innovid Video Completes",
 -- 	sum(MT.human_impressions)                                      											as MT_Impressions,
 -- 	sum(final.dv_impressions)                                                     							as DV_Impressions,
--- 	sum(final.DV_Viewed)                                                                                    as DV_Viewed,
+	sum(final.DV_Viewed)                                                                                    as DV_Viewed,
 -- 	sum(final.DV_GroupMPayable)                                                   							as DV_GroupMPayable,
 	sum(final.Clicks)                                                                                       as clicks,
 	case when sum(final.dlvrImps) = 0 then 0
@@ -423,7 +423,7 @@ from (
 -- openQuery call must not exceed 8,000 characters; no room for comments inside the function
 		FROM (
 			     SELECT *
-			     FROM openQuery(VerticaGroupM,
+			     FROM openQuery(VerticaUnited,
 			                    'SELECT
 cast(Report.Date AS DATE)                   AS dcmDate,
 cast(month(cast(Report.Date as date)) as int) as reportMonth,
@@ -466,20 +466,20 @@ cast(Conversions.Click_Time as date) as "Date"
 from
 (
 SELECT *
-FROM mec.UnitedUS.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-11-11'')
+FROM diap01.mec_us_united_20056.dfa_activity
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
 and quantity != 0
 AND (Activity_Type = ''ticke498'')
 AND (Activity_Sub_Type = ''unite820'')
-
 and order_id = 10276123 -- Polaris 2016
+
 and (advertiser_id <> 0)
 ) as Conversions
 
-LEFT JOIN mec.Cross_Client_Resources.EXCHANGE_RATES AS Rates
+LEFT JOIN diap01.mec_us_mecexchangerates_20067.EXCHANGE_RATES AS Rates
 ON UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) = UPPER(Rates.Currency)
 AND cast(Conversions.Click_Time as date) = Rates.DATE
 
@@ -511,8 +511,8 @@ cast(Impressions.impression_time as date) as "Date"
 
 FROM  (
 SELECT *
-FROM mec.UnitedUS.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-11''
+FROM diap01.mec_us_united_20056.dfa_impression
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30''
 and order_id = 10276123 -- Polaris 2016
 
 and (advertiser_id <> 0)
@@ -544,10 +544,9 @@ cast(Clicks.click_time as date)       as "Date"
 FROM  (
 
 SELECT *
-FROM mec.UnitedUS.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-11''
+FROM diap01.mec_us_united_20056.dfa_click
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30''
 and order_id = 10276123 -- Polaris 2016
-
 and (advertiser_id <> 0)
 ) AS Clicks
 
@@ -560,28 +559,31 @@ cast(Clicks.Click_time as date)
 ) as report
 LEFT JOIN
 (
--- 			     SELECT *
+
 select cast(buy as varchar(4000)) as ''buy'', order_id as ''order_id''
-from mec.UnitedUS.dfa_campaign
+from diap01.mec_us_united_20056.dfa_campaign
 ) AS Campaign
 ON Report.order_id = Campaign.order_id
 
-LEFT JOIN
+left join
 (
--- 			     SELECT *
-select  cast(site_placement as varchar(4000)) as ''site_placement'',  max(page_id) as ''page_id'', order_id as ''order_id'', site_id as ''site_id''
-from mec.UnitedUS.dfa_page_name
-		group by site_placement, order_id, site_id
-) AS Placements
-ON Report.page_id = Placements.page_id
-AND Report.order_id = Placements.order_id
+select cast(t1.site_placement as varchar(4000)) as ''site_placement'',  t1.page_id as ''page_id'', t1.order_id as ''order_id'', t1.site_id as ''site_id''
+
+from (select order_id as order_id, site_id as site_id, page_id as page_id, site_placement as site_placement, cast(start_date as date) as thisDate,
+	row_number() over (partition by order_id, site_id, page_id  order by cast(start_date as date) desc) as r1
+    FROM diap01.mec_us_united_20056.dfa_page
+
+) as t1
+where r1 = 1
+) AS placements
+on 	report.page_id 	= placements.page_id
+and Report.order_id = placements.order_id
 and report.site_ID  = placements.site_id
 
 LEFT JOIN
 (
--- 			     SELECT *
 select cast(directory_site as varchar(4000)) as ''directory_site'', site_id as ''site_id''
-from mec.UnitedUS.dfa_site
+from diap01.mec_us_united_20056.dfa_site
 ) AS Directory
 ON Report.Site_ID = Directory.Site_ID
 
@@ -661,7 +663,7 @@ cast(Report.Date AS DATE)
 		          where mtDate between @report_st and @report_ed
 	          ) as MT
 			on
-			left(almost.Site_Placement,6) + '_' + [dbo].udf_siteKey( almost.Directory_Site) + '_'
+			left(almost.Site_Placement,6) + '_' + [dbo].udf_siteKey(almost.Directory_Site) + '_'
 			+ cast(almost.dcmDate as varchar(10)) = MT.joinKey
 
 
