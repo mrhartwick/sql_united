@@ -1,4 +1,5 @@
-create function diap01.mec_us_united_20056.udf_dateToInt2 (
+-- Convert a date object into a date expressed as an integer in "yyyyMMdd" format. Enables simple, accurate comparison/addition/subtraction'
+create function diap01.mec_us_united_20056.udf_dateToInt (
     initDate date
 )
 return int
