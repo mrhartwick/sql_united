@@ -1,4 +1,4 @@
-alter procedure dbo.createMTTbl
+CREATE procedure dbo.createMTTbl
 as
     if OBJECT_ID('master.dbo.MTTable',N'U') is not null
         drop table master.dbo.MTTable;
@@ -148,7 +148,9 @@ as
                                                                  half_duration_impressions                                as ''half_duration_impressions'',
                                                                  groupm_payable_impressions                               as ''groupm_payable_impressions''
                                                                  from diap01.mec_us_united_20056.moat_impression
-                                                                 ')) as t0
+                                                      where REGEXP_LIKE(cast(placement_id as varchar(255)),''\d'',''ib'')'
+
+                                                                 )) as t0
 
                                      ) as mt1
 
@@ -297,4 +299,3 @@ as
             t2.campaign_name,
             t2.placement_code,
             t2.placement_name
-go

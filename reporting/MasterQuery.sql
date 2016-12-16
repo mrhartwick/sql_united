@@ -28,8 +28,8 @@
 DECLARE @report_st date
 DECLARE @report_ed date
 --
-SET @report_ed = '2016-10-10'
-SET @report_st = '2016-10-10'
+SET @report_ed = '2016-12-11'
+SET @report_st = '2016-01-01'
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
@@ -462,7 +462,7 @@ from
 (
 SELECT *
 FROM diap01.mec_us_united_20056.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-12-11'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -507,7 +507,7 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM diap01.mec_us_united_20056.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30''
+WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-12-11''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
 
 and (advertiser_id <> 0)
@@ -540,7 +540,7 @@ FROM  (
 
 SELECT *
 FROM diap01.mec_us_united_20056.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30''
+WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-12-11''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
 and (advertiser_id <> 0)
 ) AS Clicks
