@@ -1,4 +1,4 @@
-CREATE procedure dbo.createMTTbl
+alter procedure dbo.createMTTbl
 as
     if OBJECT_ID('master.dbo.MTTable',N'U') is not null
         drop table master.dbo.MTTable;
@@ -27,9 +27,9 @@ as
             t2.campaign_name                                           as campaign_name,
             t2.placement_code                                          as placement_code,
             t2.placement_name                                          as placement_name,
-            sum(t2.total_impressions)                                  as total_impressions,
-            sum(t2.groupm_passed_impressions)                          as groupm_passed_impressions,
-            sum(t2.groupm_billable_impressions)                        as groupm_billable_impressions
+            isnull(sum(t2.total_impressions),0)                                  as total_impressions,
+            isnull(sum(t2.groupm_passed_impressions),0)                          as groupm_passed_impressions,
+            isnull(sum(t2.groupm_billable_impressions),0)                        as groupm_billable_impressions
         from (
 
 
