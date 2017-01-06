@@ -55,7 +55,7 @@ select
 	-- Reference/optional: first six characters of package-level placement name, used to join 1) Prisma table, and 2) flat fee table
 	final.Cost_ID                                                                                           as Cost_ID,
 	-- DCM Campaign name
-	final.Buy                                                                                               as "DCM Campaign",
+-- 	final.Buy                                                                                               as "DCM Campaign",
 	-- Friendly Campaign name
 	[dbo].udf_campaignName(final.order_id, final.Buy)  														as Campaign,
 	-- DCM campaign ID
@@ -101,21 +101,22 @@ select
 	sum(final.Clicks)                                                                                       as clicks,
 	case when sum(final.dlvrImps) = 0 then 0
 	else (sum(cast(final.Clicks as decimal(20,10)))/sum(cast(final.dlvrImps as decimal(20,10))))*100 end 	as CTR,
--- 	sum(final.View_Thru_Conv)                                                    							as View_Thru_Conv,
--- 	sum(final.Click_Thru_Conv)                                                   							as Click_Thru_Conv,
+
 	sum(final.conv)                                                                                         as Transactions,
--- 	sum(final.View_Thru_Tickets)                                                  							as View_Thru_Tickets,
--- 	sum(final.Click_Thru_Tickets)                                                 							as Click_Thru_Tickets,
+	sum(final.View_Thru_Conv)                                                    							as View_Thru_Trns,
+	sum(final.Click_Thru_Conv)                                                   							as Clck_Thru_Trns,
+	sum(final.View_Thru_Tickets)                                                  							as View_Thru_Tickets,
+	sum(final.Click_Thru_Tickets)                                                 							as Click_Thru_Tickets,
 	sum(final.tickets)                                                                                      as Tickets,
 	case when sum(final.conv) = 0 then 0
 	else sum(final.cost)/sum(final.conv) end                                                            	as "Cost/Transaction",
--- 	sum(final.View_Thru_Revenue)                                                  							as View_Thru_Revenue,
--- 	sum(final.Click_Thru_Revenue)                                                 							as Click_Thru_Revenue,
+	sum(final.View_Thru_Revenue)                                                  							as View_Thru_Revenue,
+	sum(final.Click_Thru_Revenue)                                                 							as Clck_Thru_Revenue,
 	sum(final.Revenue)                                                                                      as Revenue,
 	sum(final.viewRevenue)                                                                                  as "Billable Revenue",
-	sum(final.adjsRevenue)                                                                                  as "Adjusted (Final) Revenue",
-	case when sum(final.cost) = 0 then 0
-	else ((sum(adjsRevenue)-sum(final.cost))/sum(final.cost)) end * 100                                 	as aROAS
+	sum(final.adjsRevenue)                                                                                  as "Adjusted (Final) Revenue"
+-- 	case when sum(final.cost) = 0 then 0
+-- 	else ((sum(adjsRevenue)-sum(final.cost))/sum(final.cost)) end * 100                                 	as aROAS
 from (
 
 -- for running the code here instead of at "final," above
@@ -203,30 +204,23 @@ from (
 		     sum(case
 		         -- 		not subject to viewability
 		         when (almost.DV_Map = 'N')
-			         then almost.View_Thru_Revenue
+			         then almost.View_Thru_Revenue + almost.Click_Thru_Revenue
 
 		         -- 		subject to viewability with flag; MT source
 		         when (almost.DV_Map = 'Y' and (len(ISNULL(MT.joinKey,''))>0))
-			         then (almost.View_Thru_Revenue) *
-			              ((cast(MT.groupm_passed_impressions as decimal) /
-			                nullif(cast(MT.total_impressions as decimal),0)))
+			         then ((almost.View_Thru_Revenue) *
+			              (cast(MT.groupm_passed_impressions as decimal) /
+			                nullif(cast(MT.total_impressions as decimal),0))) + almost.Click_Thru_Revenue
 		         -- 		subject to viewability; DV source
 		         when (almost.DV_Map = 'Y')
-			         then (almost.View_Thru_Revenue) *
-			              ((cast(DV.groupm_passed_impressions as decimal) /
-			                nullif(cast(DV.total_impressions as decimal),0)))
-
-		         -- 		subject to viewability with flag; MT source
-		         when (almost.DV_Map = 'Y' and (len(ISNULL(MT.joinKey,''))>0))
-			         then (almost.View_Thru_Revenue) *
-			              ((cast(MT.groupm_passed_impressions as decimal) /
-			                nullif(cast(MT.total_impressions as decimal),0)))
-
+			         then ((almost.View_Thru_Revenue) *
+			              (cast(DV.groupm_passed_impressions as decimal) /
+			                nullif(cast(DV.total_impressions as decimal),0))) + almost.Click_Thru_Revenue
 		         -- 		subject to viewability; MOAT source
 		         when (almost.DV_Map = 'M')
-			         then (almost.View_Thru_Revenue) *
-			              ((cast(MT.groupm_passed_impressions as decimal) /
-			                nullif(cast(MT.total_impressions as decimal),0)))
+			         then ((almost.View_Thru_Revenue) *
+			              (cast(MT.groupm_passed_impressions as decimal) /
+			                nullif(cast(MT.total_impressions as decimal),0))) + almost.Click_Thru_Revenue
 		         else 0 end)                                                            as viewRevenue,
 
 
@@ -234,25 +228,28 @@ from (
 
 -- 				 not subject to viewability
 		         when (almost.DV_Map = 'N')
-			         then cast(almost.View_Thru_Revenue * .2 * .15 as decimal(10,2))
+			         then cast((almost.View_Thru_Revenue * .2 * .15) + almost.Click_Thru_Revenue as decimal(10,2))
 
 -- 				 subject to viewability with flag; MT source
 		         when (almost.DV_Map = 'Y' and (len(ISNULL(MT.joinKey,''))>0))
-			         then cast(((almost.View_Thru_Revenue) *
-			                    ((cast(MT.groupm_passed_impressions as decimal) /
-			                      nullif(cast(MT.total_impressions as decimal),0)))) * .2 * .15 as decimal(10,2))
+			         then cast(
+						 (((almost.View_Thru_Revenue) *
+			                    (cast(MT.groupm_passed_impressions as decimal) /
+			                      nullif(cast(MT.total_impressions as decimal),0))) * .2 * .15) + almost.Click_Thru_Revenue as decimal(10,2))
 
 -- 				 subject to viewability; DV source
 		         when (almost.DV_Map = 'Y')
-			         then cast(((almost.View_Thru_Revenue) *
-			                    ((cast(DV.groupm_passed_impressions as decimal) /
-			                      nullif(cast(DV.total_impressions as decimal),0)))) * .2 * .15 as decimal(10,2))
+			         then cast(
+						 (((almost.View_Thru_Revenue) *
+							  (cast(DV.groupm_passed_impressions as decimal) /
+			                      nullif(cast(DV.total_impressions as decimal),0))) * .2 * .15) + almost.Click_Thru_Revenue as decimal(10,2))
 
 -- 				 subject to viewability; MOAT source
 		         when (almost.DV_Map = 'M')
-			         then cast(((almost.View_Thru_Revenue) *
-			                    ((cast(MT.groupm_passed_impressions as decimal) /
-			                      nullif(cast(MT.total_impressions as decimal),0)))) * .2 * .15 as decimal(10,2))
+			         then cast(
+						 (((almost.View_Thru_Revenue) *
+			                    (cast(MT.groupm_passed_impressions as decimal) /
+			                      nullif(cast(MT.total_impressions as decimal),0))) * .2 * .15) + almost.Click_Thru_Revenue as decimal(10,2))
 		         else 0 end)                                                            as adjsRevenue,
 
 -- 			 Total impressions as reported by 1.) DCM for "N," 2.) DV for "Y," or MOAT for "M"
