@@ -35,7 +35,6 @@ insert into master.dbo.flatTableDay
 
 
     select
-
         f3.Cost_ID                                          as Cost_ID,
         f3.dcmDate                                          as dcmDate,
         f3.dcmYrMo                                          as dcmYrMo,
@@ -62,6 +61,7 @@ insert into master.dbo.flatTableDay
         when f3.flatCost = 0 then 0
         when f3.flatCost > f3.lagRemain then f3.lagRemain
         else f3.flatCost - f3.lagRemain end                 as flatCost,
+
         isNull(f3.lagCost,cast(0 as decimal(20,10)))        as lagCost,
         isNull(f3.lagRemain,cast(0 as decimal(20,10)))      as lagRemain,
         isNull(f3.flatCostRunTot,cast(0 as decimal(20,10))) as flatCostRunTot,
@@ -169,7 +169,6 @@ insert into master.dbo.flatTableDay
                                   f1.dcmDate asc range between unbounded preceding and current row)) end as impsRemain,
                           f1.Planned_Amt                                                                 as Planned_Amt
                       from
-
                           (
                               select
                                   f0.dcmmonth                                      as dcmmonth,
@@ -238,7 +237,6 @@ insert into master.dbo.flatTableDay
                                           end                                        as dcmYrMo,
 
                                           [dbo].udf_dateToInt(dcmReport.dcmDate)     as dcmDate,
-
                                           dcmReport.directory_site,
                                           Prisma.CostMethod                          as Cost_Method,
                                           Prisma.Cost_ID                             as Cost_ID,
@@ -430,8 +428,7 @@ cast(Report.Date as DATE)
                                               on dcmReport.Placement_ID = Prisma.AdserverPlacementId
                                       where Prisma.CostMethod = 'Flat'
 
-
-                                      -- =========================================================================================================================
+-- =========================================================================================================================
                                       group by
                                           cast(dcmReport.dcmDate as date)
                                           ,dcmReport.PlacementNumber
