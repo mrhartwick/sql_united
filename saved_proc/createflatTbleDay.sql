@@ -215,7 +215,8 @@ insert into master.dbo.flatTableDay
                                   -- difference (in days) between traffic date and end date of package
                                   cast(f0.edDate as int) - cast(f0.dcmDate as int) as ed_diff,
                                   f0.planned_amt                                   as planned_amt,
-                                  sum(f0.impressions)                              as impressions
+                                  case when f0.dcmDate - f0.stDate < 0 then 0
+                                  else sum(f0.impressions)     end                         as impressions
                               from
                                   (
                                       select
