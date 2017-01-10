@@ -56,11 +56,7 @@ as
                                        cast(PlacementStartDate as date)                      as PlacementStartDate,
                                        row_number() over (partition by ParentId
                                            order by cast(PlacementMonthlyStartDate as date)) as r1,
-                                       convert(int,cast(year(cast(PlacementStartDate as date)) as varchar(4)) +
-                                           SUBSTRING((convert(varchar(10),cast(PlacementStartDate as date))),
-                                                     (CHARINDEX('-',convert(varchar(10),
-                                                                            cast(PlacementStartDate as date))) + 1),
-                                                     2))                                     as YearMo
+                                       [dbo].udf_yrmotoint(PlacementStartDate)               as YearMo
                                    from [DFID037724_PrismaPlacementsMonthlyDelivery_Extracted]
                                    where PlannedUnits is not null
                                        and AdserverSupplierCode is not null

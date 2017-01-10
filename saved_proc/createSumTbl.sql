@@ -1,4 +1,4 @@
-ALTER PROCEDURE dbo.createSumTbl
+alter PROCEDURE dbo.createSumTbl
 AS
 IF OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.summaryTable',N'U') IS NOT NULL
 	DROP TABLE dbo.summaryTable;
@@ -53,101 +53,83 @@ INSERT INTO dbo.summaryTable
 		final.CostMethod                                                                                        AS CostMethod
 	FROM (
 
-		     SELECT DISTINCT
-			     t1.PlacementId,
-			     t1.AdserverPlacementId,
-			     t1.AdserverCampaignId,
-			     t1.PlacementNumber,
-			     t1.PlacementName,
-			     t2.CampaignName,
-			     amt.PlannedCost,
-			     amt.PlannedUnits,
-			     t1.ParentId,
-			     t2.PackageCat,
-			     cast(t1.PlacementStartDate AS
-			          date)                                                            AS PlacementStart,
-			     cast(t1.PlacementEndDate AS
-			          date)                                                                                        AS PlacementEnd,
+			 select distinct
+				 t1.PlacementId,
+				 t1.AdserverPlacementId,
+				 t1.AdserverCampaignId,
+				 t1.PlacementNumber,
+				 t1.PlacementName,
+				 t2.CampaignName,
+				 amt.PlannedCost,
+				 amt.PlannedUnits,
+				 t1.ParentId,
+				 t2.PackageCat,
+				 cast(t1.PlacementStartDate as
+					  date)                                 as PlacementStart,
+				 cast(t1.PlacementEndDate as
+					  date)                                 as PlacementEnd,
 
-			    [dbo].udf_dateToInt(t1.PlacementStartDate) AS stDate,
-                [dbo].udf_dateToInt(t1.PlacementEndDate) AS edDate,
+				 [dbo].udf_dateToInt(t1.PlacementStartDate) as stDate,
+				 [dbo].udf_dateToInt(t1.PlacementEndDate)   as edDate,
+				 [dbo].udf_yrmoToInt(t1.PlacementStartDate) as stYrMo,
+				 [dbo].udf_yrmoToInt(t1.PlacementEndDate)   as edYrMo,
+				 vew.CustomColumnValue                      as DV_Map,
+				 isNull(t2.Rate,cast(0 as decimal(20,10)))  as Rate,
+				 pak.PackageName,
+				 pak.Cost_ID,
+				 t2.CostMethod
+			 from (
+					  select distinct
+						  PlacementId,
+						  cast(AdserverPlacementId as int) as AdserverPlacementId,
+						  cast(AdserverCampaignId as int)  as AdserverCampaignId,
+						  ParentId,
+						  PlacementNumber,
+						  PlacementName,
+						  PlacementStartDate,
+						  PlacementEndDate,
+						  PackageType
+					  from DM_1161_UnitedAirlinesUSA.dbo.DFID037723_PrismaAdvancedPlacementDetails_Extracted) as t1
 
--- 			Horrible code to turn start and end dates of placements into integers, ready for absolute value comparison with other, similarly transformed dates in queries.
-			     CASE
-			     WHEN len(cast(month(cast(t1.PlacementStartDate AS date)) AS varchar(2))) = 1
-				     THEN cast(CAST(year(CAST(t1.PlacementStartDate AS date)) AS
-				                    varchar(4)) + cast(0 AS varchar(1)) +
-				               CAST(MONTH(CAST(t1.PlacementStartDate AS date)) AS varchar(2)) AS int)
-			     ELSE
-				     cast(CAST(YEAR(CAST(t1.PlacementStartDate AS date)) AS varchar(4)) +
-				          CAST(MONTH(CAST(t1.PlacementStartDate AS date)) AS varchar(2)) AS int)
-			     END                                                                                               AS stYrMo,
-			     CASE
-			     WHEN len(cast(month(cast(t1.PlacementEndDate AS date)) AS varchar(2))) = 1
-				     THEN cast(CAST(year(CAST(t1.PlacementEndDate AS date)) AS
-				                    varchar(4)) + cast(0 AS varchar(1)) +
-				               CAST(MONTH(CAST(t1.PlacementEndDate AS date)) AS varchar(2)) AS int)
-			     ELSE
-				     cast(CAST(YEAR(CAST(t1.PlacementEndDate AS date)) AS varchar(4)) +
-				          CAST(MONTH(CAST(t1.PlacementEndDate AS date)) AS varchar(2)) AS int)
-			     END                                                                                               AS edYrMo,
-			     vew.CustomColumnValue                                                                             AS DV_Map,
-			     isNull(t2.Rate, cast(0 AS decimal(20,10)))  AS Rate,
-			     pak.PackageName,
-			     pak.Cost_ID,
-			     t2.CostMethod
-		     FROM (
-			          SELECT DISTINCT
-				          PlacementId,
-				          cast(AdserverPlacementId AS int) AS AdserverPlacementId,
-				          cast(AdserverCampaignId AS int)  AS AdserverCampaignId,
-				          ParentId,
-				          PlacementNumber,
-				          PlacementName,
-				          PlacementStartDate,
-				          PlacementEndDate,
-				          PackageType
-			          FROM DM_1161_UnitedAirlinesUSA.dbo.DFID037723_PrismaAdvancedPlacementDetails_Extracted ) AS t1
+				 outer apply (
+								 select distinct
+									 PlacementId,
+									 ParentId,
+									 isNull(cast(Rate as decimal(20,10)),0) as Rate,
+									 CostMethod,
+									 CampaignName,
+									 PackageType                            as PackageCat
+								 from DM_1161_UnitedAirlinesUSA.dbo.DFID037722_PrismaPlacementDetails_Extracted as t2
+								 where t1.PlacementId = t2.PlacementId) as t2
 
-			     OUTER APPLY (
-				                 SELECT DISTINCT
-					                 PlacementId,
-					                 ParentId,
-					                isNull(cast(Rate AS decimal(20,10)), 0) 							 AS Rate,
-					                 CostMethod,
-					                 CampaignName,
-					                 PackageType                                 AS PackageCat
-				                 FROM DM_1161_UnitedAirlinesUSA.dbo.DFID037722_PrismaPlacementDetails_Extracted AS t2
-				                 WHERE t1.PlacementId = t2.PlacementId ) AS t2
+				 outer apply (
+								 select
+									 PlacementId,
+									 CustomColumnValue
+								 from DM_1161_UnitedAirlinesUSA.dbo.ViewTable as vew
 
-			     OUTER APPLY (
-				                 SELECT
-					                 PlacementId,
-					                 CustomColumnValue
-				                 FROM DM_1161_UnitedAirlinesUSA.dbo.ViewTable AS vew
+								 where t1.PlacementId = vew.PlacementId) as vew
 
-				                 WHERE t1.PlacementId = vew.PlacementId ) AS vew
+				 outer apply (
+								 select
+									 ParentId,
+									 PackageName,
+									 Cost_ID
+								 from DM_1161_UnitedAirlinesUSA.dbo.packageTable as pak
+								 where t1.ParentId = pak.ParentId) as pak
 
-			     OUTER APPLY (
-				                 SELECT
-					                 ParentId,
-					                 PackageName,
-					                 Cost_ID
-				                 FROM DM_1161_UnitedAirlinesUSA.dbo.packageTable AS pak
-				                 WHERE t1.ParentId = pak.ParentId ) AS pak
+				 outer apply (
+								 select
+									 ParentId,
+									 PlannedCost,
+									 PlannedUnits,
+									 PlacementStartDate
 
-			     OUTER APPLY (
-				                 SELECT
-					                 ParentId,
-					                 PlannedCost,
-					                 PlannedUnits,
-					                 PlacementStartDate
+								 from DM_1161_UnitedAirlinesUSA.[dbo].plannedAmtTable as amt
 
-				                 FROM DM_1161_UnitedAirlinesUSA.[dbo].plannedAmtTable AS amt
-
-				                 WHERE t1.ParentId = amt.ParentId
+								 where t1.ParentId = amt.ParentId
 -- 				                       AND cast(t1.AdserverPlacementId AS int) = amt.AdserverPlacementId
-			                 ) AS amt
+							 ) as amt
 
 -- 			The same as above, using JOIN syntax
 
@@ -249,4 +231,3 @@ INSERT INTO dbo.summaryTable
 		final.PackageName,
 		final.Cost_ID,
 		final.CostMethod
-go
