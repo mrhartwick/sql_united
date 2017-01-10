@@ -305,20 +305,7 @@ from (
                      select
              dcmreport.dcmdate as dcmdate,
              cast(month(cast(dcmreport.dcmdate as date)) as int) as dcmmonth,
-             case
-             when len(cast(month(cast(dcmreport.dcmdate as date)) as varchar(2))) = 1
-               then convert(int,
-                            cast(year(cast(dcmreport.dcmdate as date)) as varchar(4)) +
-                            cast(0 as varchar(1)) +
-                            cast(month(cast(dcmreport.dcmdate as date)) as varchar(2)) +
-                            right(cast(cast(dcmreport.dcmdate as date) as varchar(10)),2)
-               )
-             else
-               convert(int,cast(year(cast(dcmreport.dcmdate as date)) as varchar(4)) +
-                           cast(month(cast(dcmreport.dcmdate as date)) as varchar(2)) +
-                           right(cast(cast(dcmreport.dcmdate as date) as varchar(10)),2)
-               )
-           end                       as dcmmatchdate,
+             [dbo].udf_dateToInt(dcmreport.dcmdate) as dcmmatchdate,
            dcmreport.campaign             as campaign,
            dcmreport.campaign_id        as campaign_id,
            dcmreport.site_dcm  as site_dcm,
