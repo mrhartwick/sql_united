@@ -403,11 +403,6 @@ group by
                                       group by
                                           cast(dcmReport.dcmDate as date)
                                           ,dcmReport.PlacementNumber
-                                          ,CONVERT(int,cast(YEAR(cast(dcmReport.dcmDate as date)) as varchar(4)) +
-                                          SUBSTRING((CONVERT(varchar(10),cast(dcmReport.dcmDate as date))),
-                                                    (CHARINDEX('-',
-                                                               CONVERT(varchar(10),cast(dcmReport.dcmDate as date))) +
-                                                        1),2))
                                           ,Prisma.CostMethod
                                           ,[dbo].udf_dateToInt(dcmReport.dcmDate)
                                           ,[dbo].udf_yrmoToInt(dcmReport.dcmDate)
