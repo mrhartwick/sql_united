@@ -410,6 +410,7 @@ group by
                                                         1),2))
                                           ,Prisma.CostMethod
                                           ,[dbo].udf_dateToInt(dcmReport.dcmDate)
+                                          ,[dbo].udf_yrmoToInt(dcmReport.dcmDate)
                                           ,Prisma.stYrMo
                                           ,Prisma.edYrMo
                                           ,Prisma.PlacementStart
