@@ -1,12 +1,12 @@
-ALTER FUNCTION [dbo].udf_siteName (
+alter FUNCTION [dbo].udf_siteName (
 	@site_name varchar(4000)
 )
-RETURNS varchar(4000)
---     WITH EXECUTE AS CALLER
+RETURNS  varchar(4000)
+    WITH EXECUTE AS CALLER
 AS
     begin
 		declare @finalSiteName varchar(4000)
-		set @finalSiteName = case when ( @site_name like '%[Cc]hicago%[Tt]ribune%' or @site_name like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
+		set @finalSiteName = case
 				when ( @site_name like '[Gg][Dd][Nn]%' or @site_name like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
 				when @site_name like '%[Aa]dara%' then 'Adara'
 				when @site_name like '%[Aa]tlantic%' then 'The Atlantic'
@@ -24,6 +24,7 @@ AS
 				when @site_name like '%[Nn]ast_[Tt]raveler%' then 'CN Traveler'
 				when @site_name like '%[Nn]ew_[Yy]ork_[Tt]imes%' then 'NYTimes'
 				when @site_name like '%[Nn]ew_[Yy]orker%' then 'New Yorker'
+				when @site_name like '%[Pp]eople%' and @site_name like '%[Ee]spa[nñ]ol%' then 'People En Espanol'
 				when @site_name like '%[Pp][Gg][Aa]%[Tt][Oo][Uu][Rr]%' then 'PGATour'
 				when @site_name like '%[Pp]riceline%' then 'Priceline'
 				when @site_name like '%[Ss]ports_[Ii]llustrated%' then 'Sports Illustrated'
@@ -69,7 +70,7 @@ AS
 				when @site_name like '[Tt]ravelocity%' then 'Travelocity'
 				when @site_name like '[Tt]riggit%' then 'Triggit'
 				when @site_name like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
-				when @site_name like '[Uu]ndertone%' then 'Undertone'
+				when @site_name like '%[Uu]ndertone%' then 'Undertone'
 				when @site_name like '[Uu]nited%' then 'United'
 				when @site_name like '[Vv]erve%' then 'VerveMobile'
 				when @site_name like '[Vv]istar%[Mm]edia%' then 'VistarMedia'
@@ -80,6 +81,6 @@ AS
 				when @site_name like '[Yy]ieldbot%' then 'Yieldbot'
 				when @site_name like '[Yy]u[Mm]e%' then 'YuMe'
 				else @site_name end;
+
 RETURN @finalSiteName
 end
-go
