@@ -323,9 +323,9 @@ from (
            dcmreport.campaign_id        as campaign_id,
            dcmreport.site_dcm  as site_dcm,
            dcmreport.site_id_dcm         as site_id_dcm,
-           case when dcmreport.placementnumber in('pbkb7j', 'pbkb7h', 'pbkb7k') then 'pbkb7j' end as placementnumber,
+     case when dcmReport.PlacementNumber in('PBKB7J', 'PBKB7H', 'PBKB7K') then 'PBKB7J' end as PlacementNumber,
 
-           case when dcmreport.placement like 'pbkb7j%' or dcmreport.placement like 'pbkb7h%' or dcmreport.placement like 'pbkb7k%' or dcmreport.placement ='united 360 - polaris 2016 - q4 - amobee'        then 'pbkb7j_uac_bra_016_mobile_amobee_video360_inviewpackage_640x360_mob_moat_fixed placement_other_p25-54_1 x 1_standard_innovid_pub paid' else  dcmreport.placement end     as placement,
+           case when dcmReport.placement like 'PBKB7J%' or dcmReport.placement like 'PBKB7H%' or dcmReport.placement like 'PBKB7K%' or dcmReport.placement ='United 360 - Polaris 2016 - Q4 - Amobee'        then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID' else  dcmReport.placement end     as placement,
 --        amobee video 360 placements, tracked differently across dcm, innovid, and moat; this combines the three placements into one
           case when dcmreport.placement_id in (137412510, 137412401, 137412609) then 137412609 else dcmreport.placement_id end as placement_id,
            prisma.stdate             as stdate,
@@ -359,9 +359,8 @@ from (
              case when cast(month(prisma.placementend) as int) - cast(month(cast(dcmreport.dcmdate as date)) as int) <= 0 then 0
              else cast(month(prisma.placementend) as int) - cast(month(cast(dcmreport.dcmdate as date)) as int) end as diff,
 
-
            case
-           when prisma.costmethod = 'flat' or prisma.costmethod = 'cpc' or prisma.costmethod = 'cpcv' or prisma.costmethod = 'dcpm'
+           when prisma.costmethod = 'Flat' or prisma.costmethod = 'CPC' or prisma.costmethod = 'CPCV' or prisma.costmethod = 'DCPM'
              then 'N'
 
 --           live intent for sfo-sin campaign is email (not subject to viewab.), but mistakenly labeled with "y"
@@ -375,7 +374,7 @@ from (
              then 'Y'
 
 --           corrections to sfo-sin placements
-           when dcmreport.campaign_id = '9923634' and dcmreport.site_id_dcm = '1534879' and prisma.costmethod = 'cpm'
+           when dcmreport.campaign_id = '9923634' and dcmreport.site_id_dcm = '1534879' and prisma.costmethod = 'CPM'
              then 'N'
 --           designates all xaxis placements as "y." not always true.
 --            when dcmreport.site_id_dcm = '1592652' then 'Y'
@@ -388,26 +387,26 @@ from (
 --           designates all sfo-akl placements as "y." not always true. apparently.
 --             when dcmreport.campaign_id = '9973506' then 'Y'
 
-             when prisma.costmethod = 'cpmv' and
-                  ( dcmreport.placement like '%[mm][oo][bb][ii][ll][ee]%' or dcmreport.placement like '%[vv][ii][dd][ee][oo]%' or dcmreport.placement like '%[pp][rr][ee]%[rr][oo][ll][ll]%' or dcmreport.site_id_dcm = '1995643'
---              or dcmreport.site_id_dcm = '1474576'
-              or dcmreport.site_id_dcm = '2854118')
+             when Prisma.CostMethod = 'CPMV' and
+                  ( dcmReport.placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or dcmReport.placement like '%[Vv][Ii][Dd][Ee][Oo]%' or dcmReport.placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or dcmReport.Site_ID = '1995643'
+--              or dcmReport.Site_ID = '1474576'
+              or dcmReport.Site_ID = '2854118')
                then 'M'
---           look for viewability flags investment began including in placement names 6/16.
-           when dcmreport.placement like '%[_]dv[_]%' then 'Y'
-           when dcmreport.placement like '%[_]moat[_]%' then 'M'
-           when dcmreport.placement like '%[_]na[_]%' then 'N'
+--           Look for viewability flags Investment began including in placement names 6/16.
+           when dcmReport.placement like '%[_]DV[_]%' then 'Y'
+           when dcmReport.placement like '%[_]MOAT[_]%' then 'M'
+           when dcmReport.placement like '%[_]NA[_]%' then 'N'
 --
-           when prisma.costmethod = 'cpmv' and prisma.dv_map = 'N' then 'Y'
-             else prisma.dv_map end as dv_map,
+           when Prisma.CostMethod = 'CPMV' and Prisma.DV_Map = 'N' then 'Y'
+             else Prisma.DV_Map end as DV_Map,
 
---           prisma.dv_map as dv_map,
-             substring(dcmreport.placement,( charindex(dcmreport.placement,'_uac_') + 12 ),
-                       3)                                                                                                                           as campaignshort,
-             case when substring(dcmreport.placement,( charindex(dcmreport.placement,'_uac_') + 12 ),3) =
-                       'tmk'
-               then 'acquisition'
-             else 'non-acquisition' end as campaigntype
+--           Prisma.DV_Map as DV_Map,
+             SUBSTRING(dcmReport.placement,( CHARINDEX(dcmReport.placement,'_UAC_') + 12 ),
+                       3)                                                                                                                           as campaignShort,
+             case when SUBSTRING(dcmReport.placement,( CHARINDEX(dcmReport.placement,'_UAC_') + 12 ),3) =
+                       'TMK'
+               then 'Acquisition'
+             else 'Non-Acquisition' end as campaignType
 
 
 -- ==========================================================================================================================================================
@@ -423,7 +422,7 @@ campaign.campaign                                as campaign,
 report.campaign_id                               as campaign_id,
 report.site_id_dcm as site_id_dcm,
 directory.site_dcm                    as site_dcm,
-	left(placements.placement,6) as ''placementnumber'',
+  left(placements.placement,6) as ''placementnumber'',
 placements.placement                   as placement,
 report.placement_id                         as placement_id,
 sum(report.impressions)                     as impressions,
@@ -560,13 +559,13 @@ left join
 select cast(t1.placement as varchar(4000)) as ''placement'',  t1.placement_id as ''placement_id'', t1.campaign_id as ''campaign_id'', t1.site_id_dcm as ''site_id_dcm''
 
 from (select campaign_id as campaign_id, site_id_dcm as site_id_dcm, placement_id as placement_id, placement as placement, cast(placement_start_date as date) as thisdate,
-	row_number() over (partition by campaign_id, site_id_dcm, placement_id  order by cast(placement_start_date as date) desc) as r1
+  row_number() over (partition by campaign_id, site_id_dcm, placement_id  order by cast(placement_start_date as date) desc) as r1
     from diap01.mec_us_united_20056.dfa2_placements
 
 ) as t1
 where r1 = 1
 ) as placements
-on 	report.placement_id 	= placements.placement_id
+on  report.placement_id   = placements.placement_id
 and report.campaign_id = placements.campaign_id
 and report.site_id_dcm  = placements.site_id_dcm
 
