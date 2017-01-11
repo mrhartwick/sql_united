@@ -23,7 +23,7 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-12-09';
+SET @report_ed = '2016-12-31';
 SET @report_st = '2016-09-01';
 
 --
@@ -461,7 +461,7 @@ from
 (
 SELECT *
 FROM diap01.mec_us_united_20056.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-09-01'' AND ''2016-12-09'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-09-01'' AND ''2016-12-31'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -506,7 +506,7 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM diap01.mec_us_united_20056.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-09-01'' AND ''2016-12-09''
+WHERE cast(impression_time as date) BETWEEN ''2016-09-01'' AND ''2016-12-31''
 and order_id = 10276123 -- Polaris 2016
 
 and (advertiser_id <> 0)
@@ -539,7 +539,7 @@ FROM  (
 
 SELECT *
 FROM diap01.mec_us_united_20056.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-09-01'' AND ''2016-12-09''
+WHERE cast(click_time as date) BETWEEN ''2016-09-01'' AND ''2016-12-31''
 and order_id = 10276123 -- Polaris 2016
 and (advertiser_id <> 0)
 ) AS Clicks
@@ -633,7 +633,7 @@ cast(Report.Date AS DATE)
 	left join
 	(
 		select *
-		from master.dbo.flatTableDay
+		from master.dbo.flatTableDT1
 	) as Flat
 		on almost.Cost_ID = Flat.Cost_ID
 		   and almost.dcmMatchDate = flat.dcmDate
