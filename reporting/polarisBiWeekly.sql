@@ -1,16 +1,10 @@
---  Polaris Pacing
+--  Polaris Pacing, new cluster
 /*  This query is a bit of a hack. Non-optimal aspects are necessitated by the particularities of the current tech stack on United.
 	Code is most easily read by starting at the "innermost" block, inside the openQuery call.
-
 	Data must be pulled and reconciled from 1) Prisma, in Datamart, and 2) DFA/DV/Moat in Vertica*.
-
-
-
 	Because of its scale, log-level DFA data (DTF 1.0) must be kept in Vertica to preserve performance. DV and Moat are stored there as well, mostly for convenience.
 	Intermediary summary tables are necessary for this query, so we need to be able to create our own tables and run stored procedures to refresh those tables. But we don't have write access to Vertica, so we can't keep routines and tables there.
-
 	DI could do this, but edits to these routines are frequent (esp. in joinKey fields), so keeping this process in-house is more convenient for all parties.
-
 */
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 --
@@ -29,8 +23,8 @@
 DECLARE @report_st date,
 @report_ed date;
 --
-SET @report_ed = '2016-11-25';
-SET @report_st = '2016-01-01';
+SET @report_ed = '2016-12-09';
+SET @report_st = '2016-09-01';
 
 --
 -- SET @report_ed = DateAdd(DAY, -DatePart(DAY, getdate()), getdate());
@@ -467,7 +461,7 @@ from
 (
 SELECT *
 FROM diap01.mec_us_united_20056.dfa_activity
-WHERE (cast(Click_Time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30'')
+WHERE (cast(Click_Time as date) BETWEEN ''2016-09-01'' AND ''2016-12-09'')
 and UPPER(SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 3)) != ''MIL''
 and SUBSTRING(Other_Data, (INSTR(Other_Data,''u3='')+3), 5) != ''Miles''
 and revenue != 0
@@ -512,7 +506,7 @@ cast(Impressions.impression_time as date) as "Date"
 FROM  (
 SELECT *
 FROM diap01.mec_us_united_20056.dfa_impression
-WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30''
+WHERE cast(impression_time as date) BETWEEN ''2016-09-01'' AND ''2016-12-09''
 and order_id = 10276123 -- Polaris 2016
 
 and (advertiser_id <> 0)
@@ -545,7 +539,7 @@ FROM  (
 
 SELECT *
 FROM diap01.mec_us_united_20056.dfa_click
-WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-11-30''
+WHERE cast(click_time as date) BETWEEN ''2016-09-01'' AND ''2016-12-09''
 and order_id = 10276123 -- Polaris 2016
 and (advertiser_id <> 0)
 ) AS Clicks
