@@ -12,19 +12,19 @@
 */
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
--- --
--- exec master.dbo.createdvtbl go    -- create separate dv aggregate table and store it in my instance; joining to the vertica table in the query
--- exec master.dbo.createmttbl go    -- create separate moat aggregate table and store it in my instance; joining to the vertica table in the query
--- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.createinnovidexttbl go
--- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.createviewtbl go
--- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.createamttbl go
--- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.createpacktbl go
--- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.createsumtbl go
--- exec master.dbo.create_dbm_costTbl go
 --
--- exec master.dbo.create_dfa_costTbl_dt2 go
--- exec master.dbo.createflatTblDT2 go
--- -- -- exec master.dbo.create_dfa_costTbl_dt1 go
+exec master.dbo.crt_dvtbl go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
+exec master.dbo.crt_mttbl go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
+exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
+exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_viewtbl go
+exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
+exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
+exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
+exec master.dbo.crt_dbm_costTbl go
+
+exec master.dbo.crt_dfa_costTbl_dt2 go
+exec master.dbo.crt_dfa_flatCostTbl_dt2 go
+-- -- exec master.dbo.crt__dfa_costTbl_dt1 go
 
 
 declare @report_st date
@@ -539,7 +539,7 @@ cast (report.date as date )
       left join
       (
         select *
-        from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].summarytable
+        from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summTbl
       ) as prisma
         on dcmreport.placement_id = prisma.adserverplacementid
 
@@ -580,7 +580,7 @@ cast (report.date as date )
   left join
   (
     select *
-    from master.dbo.flattableDT2
+    from master.dbo.dfa_flatCost_dt2
   ) as flat
     on almost.cost_id = flat.cost_id
        and almost.dcmmatchdate = flat.dcmdate
@@ -598,7 +598,7 @@ cast (report.date as date )
 
   left join (
               select *
-              from master.dbo.dvtable
+              from master.dbo.dv_summ
               where dvdate between @report_st and @report_ed
             ) as dv
       on
@@ -609,7 +609,7 @@ cast (report.date as date )
 
   left join (
               select *
-              from master.dbo.mttable
+              from master.dbo.moat_summ
               where mtdate between @report_st and @report_ed
             ) as mt
       on
@@ -621,7 +621,7 @@ cast (report.date as date )
 
   left join (
               select *
-              from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].innovidexttable
+              from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summTbl
               where ivdate between @report_st and @report_ed
             ) as iv
       on

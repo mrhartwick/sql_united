@@ -1,8 +1,8 @@
-alter PROCEDURE dbo.createSumTbl
+alter PROCEDURE dbo.crt_prs_sumTbl
 AS
-IF OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.summaryTable',N'U') IS NOT NULL
-	DROP TABLE dbo.summaryTable;
-CREATE TABLE dbo.summaryTable
+IF OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.prs_summTbl',N'U') IS NOT NULL
+	DROP TABLE dbo.prs_summTbl;
+CREATE TABLE dbo.prs_summTbl
 (
 	PlacementId         int            NOT NULL,
 	AdserverPlacementId int,
@@ -27,7 +27,7 @@ CREATE TABLE dbo.summaryTable
 	CostMethod          nvarchar(100)  NOT NULL
 );
 
-INSERT INTO dbo.summaryTable
+INSERT INTO dbo.prs_summTbl
 
 	SELECT DISTINCT
 		final.PlacementId                                                                                       AS PlacementId,
@@ -67,7 +67,7 @@ INSERT INTO dbo.summaryTable
 				 cast(t1.PlacementStartDate as
 					  date)                                 as PlacementStart,
 				 cast(t1.PlacementEndDate as
-					  date)                                 as PlacementEnd,
+					  date)      as PlacementEnd,
 
 				 [dbo].udf_dateToInt(t1.PlacementStartDate) as stDate,
 				 [dbo].udf_dateToInt(t1.PlacementEndDate)   as edDate,
