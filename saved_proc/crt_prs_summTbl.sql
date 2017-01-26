@@ -1,8 +1,8 @@
-alter PROCEDURE dbo.crt_prs_sumTbl
+alter PROCEDURE dbo.crt_prs_summTbl
 AS
-IF OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.prs_summTbl',N'U') IS NOT NULL
-	DROP TABLE dbo.prs_summTbl;
-CREATE TABLE dbo.prs_summTbl
+IF OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.prs_summ',N'U') IS NOT NULL
+	DROP TABLE dbo.prs_summ;
+CREATE TABLE dbo.prs_summ
 (
 	PlacementId         int            NOT NULL,
 	AdserverPlacementId int,
@@ -27,7 +27,7 @@ CREATE TABLE dbo.prs_summTbl
 	CostMethod          nvarchar(100)  NOT NULL
 );
 
-INSERT INTO dbo.prs_summTbl
+INSERT INTO dbo.prs_summ
 
 	SELECT DISTINCT
 		final.PlacementId                                                                                       AS PlacementId,
@@ -106,7 +106,7 @@ INSERT INTO dbo.prs_summTbl
 								 select
 									 PlacementId,
 									 CustomColumnValue
-								 from DM_1161_UnitedAirlinesUSA.dbo.ViewTable as vew
+								 from DM_1161_UnitedAirlinesUSA.dbo.prs_view as vew
 
 								 where t1.PlacementId = vew.PlacementId) as vew
 
@@ -115,7 +115,7 @@ INSERT INTO dbo.prs_summTbl
 									 ParentId,
 									 PackageName,
 									 Cost_ID
-								 from DM_1161_UnitedAirlinesUSA.dbo.packageTable as pak
+								 from DM_1161_UnitedAirlinesUSA.dbo.prs_packages as pak
 								 where t1.ParentId = pak.ParentId) as pak
 
 				 outer apply (
@@ -125,7 +125,7 @@ INSERT INTO dbo.prs_summTbl
 									 PlannedUnits,
 									 PlacementStartDate
 
-								 from DM_1161_UnitedAirlinesUSA.[dbo].plannedAmtTable as amt
+								 from DM_1161_UnitedAirlinesUSA.[dbo].prs_amt as amt
 
 								 where t1.ParentId = amt.ParentId
 -- 				                       AND cast(t1.AdserverPlacementId AS int) = amt.AdserverPlacementId

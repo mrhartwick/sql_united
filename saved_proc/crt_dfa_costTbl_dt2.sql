@@ -1,10 +1,10 @@
-alter procedure dbo.create_dfa_costTbl_dt2
+alter procedure dbo.crt_dfa_costTbl_dt2
 as
-if OBJECT_ID('master.dbo.dfa_costTbl_dt2',N'U') is not null
-    drop table master.dbo.dfa_costTbl_dt2;
+if OBJECT_ID('master.dbo.dfa_cost_dt2',N'U') is not null
+    drop table master.dbo.dfa_cost_dt2;
 
 
-create table master.dbo.dfa_costTbl_dt2
+create table master.dbo.dfa_cost_dt2
 (
     cost_id       nvarchar(6)    not null,
     plce_id       nvarchar(6)    not null,
@@ -41,7 +41,7 @@ create table master.dbo.dfa_costTbl_dt2
     tix     int             not null
 );
 
-insert into master.dbo.dfa_costTbl_dt2
+insert into master.dbo.dfa_cost_dt2
     select
         t7.cost_id       as cost_id,
         t7.plce_id       as plce_id,
@@ -93,7 +93,7 @@ t7.rev      as rev,
                  t6.placement                                       as placement,
                  t6.placement_id                                    as placement_id,
                  t6.dv_map                                          as dv_map,
-                 t6.rate                                            as rate,
+                 t6.rate                                          as rate,
                  t6.PackageCat                                      as PackageCat,
                  t6.stDate                                          as stDate,
                  t6.edDate                                          as edDate,
@@ -144,7 +144,7 @@ t7.rev      as rev,
                           t5.dvjoinkey                                    as dvjoinkey,
                           t5.mtjoinkey                                    as mtjoinkey,
                           t5.ivjoinkey                                    as ivjoinkey,
-                          t5.campaign                                     as campaign,
+                          t5.campaign        as campaign,
                           t5.campaign_id                                  as campaign_id,
                           t5.placement                                    as placement,
                           t5.placement_id                                 as placement_id,
@@ -307,7 +307,7 @@ select
 
     [dbo].udf_dateToInt(t2.dcmdate)        as dcmdate,
     t2.dcmmonth                            as dcmmonth,
-    t2.diff                                as diff,
+    t2.diff                             as diff,
     t2.dvjoinkey                           as dvjoinkey,
     t2.mtjoinkey                           as mtjoinkey,
     t2.ivjoinkey                           as ivjoinkey,
@@ -481,7 +481,7 @@ from (
 -- =========================================================================================================================
 
                  select
-                     dcmreport.dcmdate                                                          as dcmdate,
+    dcmreport.dcmdate                                                          as dcmdate,
                      cast(month(cast(dcmreport.dcmdate as date)) as int)                        as dcmmonth,
                      [dbo].udf_dateToInt(dcmreport.dcmdate)                                     as dcmmatchdate,
                      dcmreport.campaign                                                         as campaign,
@@ -764,7 +764,7 @@ cast(report.date as date)
              left join
              (
                  select *
-                 from master.dbo.flattableDT2
+                 from master.dbo.dfa_flatCostTbl_dt2
              ) as flat
                  on t1.cost_id = flat.cost_id
                  and t1.dcmmatchdate = flat.dcmdate
@@ -773,7 +773,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from master.dbo.dvtable
+                           from master.dbo.dv_summtbl
 -- where dvdate between @report_st and @report_ed
                        ) as dv
                  on
@@ -784,7 +784,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from master.dbo.mttable
+                           from master.dbo.mt_summtbl
 -- where mtdate between @report_st and @report_ed
                        ) as mt
                  on
@@ -796,14 +796,14 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].innovidexttable
+                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summTbl
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
                      left(t1.placement,6) + '_' + [dbo].udf_sitekey(t1.site_dcm) + '_'
                          + cast(t1.dcmdate as varchar(10)) = iv.joinkey
 --          where t1.costmethod != 'Flat'
---              and (t1.cost_id = 'P6SF6Y' or t1.cost_id = 'P8H1HG')
+--       and (t1.cost_id = 'P6SF6Y' or t1.cost_id = 'P8H1HG')
 --                  and t1.cost_id = 'P8FSSK'
                      where t1.campaign not like 'BidManager%Campaign%'
              and t1.site_dcm not like '%DfaSite%'
@@ -840,7 +840,7 @@ cast(report.date as date)
      ) as t2
                                                left join (
                            select *
-                           from master.dbo.dbm_costTbl
+                           from master.dbo.dbm_cost
                        ) as db
                       on [dbo].udf_dateToInt(t2.dcmdate) = db.dcmdate
                       and t2.plce_id = db.plce_id
@@ -876,5 +876,3 @@ where t4.costmethod != 'Flat'
                   ) as t5
          ) as t6
 ) as t7
-
-go

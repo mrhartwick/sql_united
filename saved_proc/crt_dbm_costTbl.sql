@@ -1,10 +1,10 @@
-alter procedure dbo.create_dbm_costTbl
+CREATE procedure dbo.crt_dbm_costTbl
 as
-if OBJECT_ID('master.dbo.dbm_costTbl',N'U') is not null
-    drop table master.dbo.dbm_costTbl;
+if OBJECT_ID('master.dbo.dbm_cost',N'U') is not null
+    drop table master.dbo.dbm_cost;
 
 
-create table master.dbo.dbm_costTbl
+create table master.dbo.dbm_cost
 (
 dcmDate      int            not null,
 campaign     nvarchar(4000) not null,
@@ -26,7 +26,7 @@ clk_rev     decimal(20,10)  not null,
 rev         decimal(20,10)  not null
 );
 
-insert into master.dbo.dbm_costTbl
+insert into master.dbo.dbm_cost
 
 select
     t2.dcmmatchdate    as dcmdate,
@@ -145,7 +145,7 @@ ta.site_id_dcm   as site_id_dcm,
 ta.placement_id  as placement_id,
 0                as impressions,
 0                as dbm_cost,
-0                as clicks,
+0      as clicks,
 sum(case when ta.conversion_id = 1 then 1 else 0 end ) as clk_conv,
 sum(case when ta.conversion_id = 1 then ta.total_conversions else 0 end ) as clk_tix,
 sum(case when ta.conversion_id = 1 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as clk_rev,

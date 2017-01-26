@@ -1,8 +1,8 @@
-alter procedure dbo.createAmtTbl
+alter procedure dbo.crt_prs_amtTbl
 as
-    if OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.plannedAmtTable',N'U') is not null
-        drop table dbo.plannedAmtTable;
-    create table dbo.plannedAmtTable
+    if OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.prs_amt',N'U') is not null
+        drop table dbo.prs_amt;
+    create table dbo.prs_amt
     (
         ParentId           int     not null,
         SupplierCode       int     not null,
@@ -13,7 +13,7 @@ as
         YearMo             int     not null
     );
 
-    insert into dbo.plannedAmtTable
+    insert into dbo.prs_amt
 
         select
             t3.ParentId,
@@ -76,4 +76,3 @@ as
             ,t3.PlannedUnits
             ,t3.PlacementStartDate
             ,t3.YearMo
-

@@ -1,10 +1,10 @@
-alter procedure dbo.createMTTbl
+alter procedure dbo.crt_mt_summTbl
 as
-    if OBJECT_ID('master.dbo.MTTable',N'U') is not null
-        drop table master.dbo.MTTable;
+    if OBJECT_ID('master.dbo.mt_summTbl',N'U') is not null
+        drop table master.dbo.mt_summTbl;
 
 
-    create table master.dbo.MTTable
+    create table master.dbo.mt_summTbl
     (
         joinKey                     varchar(255),
         mtDate                      date         not null,
@@ -17,7 +17,7 @@ as
         groupm_billable_impressions int          not null
     );
 
-    insert into master.dbo.MTTable
+    insert into master.dbo.mt_summTbl
         select distinct
             replace(left(t2.placement_name,6) + '_' +
                         [dbo].udf_siteKey(t2.media_property)
@@ -124,8 +124,8 @@ as
                                          select
                                              t0.mtDate,
                                              t0.campaign_id,
-                                             t0.campaign_label,
-                                             t0.site_id,
+ t0.campaign_label,
+                   t0.site_id,
                                              t0.site_label,
                                              t0.placement_id,
                                              t0.placement_label,
@@ -169,8 +169,7 @@ as
 
                                ) as MT
 
-                              --               Placements 1
-
+--                            Placements 1
                               left join
                               (
                                   select *
@@ -188,8 +187,7 @@ as
                                   )) as p1
                                   on cast(mt.placement_id as int) = p1.page_id
 
-                              --               Placements 2
-
+--                            Placements 2
                               left join
                               (
                                   select *
@@ -226,7 +224,7 @@ as
                               MT.placement_label
                       ) as t1
 
-                     --               Campaigns
+--                   Campaigns
                      left join
                      (
                          select *
@@ -244,7 +242,7 @@ as
                          )) as c1
                          on cast(t1.campaign_id as int) = c1.order_id
 
-
+--                   Sites
                      left join
                      (
                          select *
@@ -255,15 +253,14 @@ as
 
                                         select
                                         cast(directory_site as varchar(4000)) as "directory_site", site_id as "site_id"
-                                                from diap01.mec_us_united_20056.dfa_site
+                 from diap01.mec_us_united_20056.dfa_site
                                         ) as s1
 
                                         group by s1.directory_site, s1.site_id'
                          )) as s1
                          on cast(t1.site_id as int) = s1.site_id
 
-                     -- Placements 3
-
+--                   Placements 3
                      left join
                      (
                          select *

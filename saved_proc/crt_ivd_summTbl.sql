@@ -1,10 +1,8 @@
-alter procedure dbo.createInnovidExtTbl
+alter procedure dbo.crt_ivd_summTbl
 as
-
-
-if OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.innovidExtTable',N'U') is not null
-    drop table dbo.innovidExtTable;
-create table dbo.innovidExtTable
+if OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.ivd_summTbl',N'U') is not null
+    drop table dbo.ivd_summTbl;
+create table dbo.ivd_summTbl
 (
     joinKey                 varchar(255),
     ivDate                  date,
@@ -28,7 +26,7 @@ create table dbo.innovidExtTable
     in_unit_clicks          int
 );
 
-insert into dbo.innovidExtTable
+insert into dbo.ivd_summTbl
 
     select
         case when placement_name like '%United_360%Amobee%' then replace('PBKB7J' + '_' + [dbo].udf_siteKey(publisher) + '_' + cast(date as varchar(10)),' ','')
@@ -57,7 +55,7 @@ insert into dbo.innovidExtTable
         sum(slate_open_by_rollover),
         sum(total_slate_open_events),
         sum(in_unit_clicks)
-    from DM_1161_UnitedAirlinesUSA.dbo.innovidTable
+    from DM_1161_UnitedAirlinesUSA.dbo.ivd_summ_1
 
     group by
         date,

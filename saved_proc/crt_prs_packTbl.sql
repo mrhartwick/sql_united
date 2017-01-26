@@ -1,8 +1,8 @@
-ALTER PROCEDURE dbo.createPackTbl
+alter PROCEDURE dbo.crt_prs_packTbl
 AS
-	IF OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.packageTable', N'U') IS NOT NULL
-		DROP TABLE dbo.packageTable;
-	CREATE TABLE dbo.packageTable
+	IF OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.prs_packTbl', N'U') IS NOT NULL
+		DROP TABLE dbo.prs_packTbl;
+	CREATE TABLE dbo.prs_packTbl
 	(
 		ParentId    INT NOT NULL,
 		PackageName NVARCHAR(4000),
@@ -11,7 +11,7 @@ AS
 
 	);
 
-	INSERT INTO dbo.packageTable
+	INSERT INTO dbo.prs_packTbl
 		SELECT DISTINCT
 			advanced.ParentId,
 			plc.PlacementName AS PackageName,
@@ -36,4 +36,3 @@ Group by
 
 
 	;
-go

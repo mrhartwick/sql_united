@@ -1,10 +1,10 @@
-alter procedure dbo.createDVTbl
+alter procedure dbo.crt_dv_summTbl
 as
-if OBJECT_ID('master.dbo.DVTable',N'U') is not null
-    drop table master.dbo.DVTable;
+if OBJECT_ID('master.dbo.dv_summTbl',N'U') is not null
+    drop table master.dbo.dv_summTbl;
 
 
-create table master.dbo.DVTable
+create table master.dbo.dv_summTbl
 (
     joinKey                     varchar(255) not null,
     dvDate                      date         not null,
@@ -18,7 +18,7 @@ create table master.dbo.DVTable
 
 );
 
-insert into master.dbo.DVTable
+insert into master.dbo.dv_summTbl
     select distinct
         DV.joinKey,
         DV.dvDate,
@@ -53,13 +53,13 @@ insert into master.dbo.DVTable
                    from openQuery(VerticaUnited,
                                   'select
                                   cast(event_date as date)                                    as ''dvDate'',
-                                  cast(campaign_name as varchar(255))                        	as ''campaign_name'',
+                                  cast(campaign_name as varchar(255))                         as ''campaign_name'',
                                   cast(media_property as varchar(255))                        as ''media_property'',
                                   cast(placement_code as varchar(255))                        as ''placement_code'',
                                   cast(placement_name as varchar(255))                        as ''placement_name'',
-                                  total_impressions                                     		as ''total_impressions'',
-                                  groupm_passed_impressions                             		as ''groupm_passed_impressions'',
-                                  groupm_billable_impressions                           		as ''groupm_billable_impressions''
+                                  total_impressions                                         as ''total_impressions'',
+                                  groupm_passed_impressions                                 as ''groupm_passed_impressions'',
+                                  groupm_billable_impressions                               as ''groupm_billable_impressions''
                                   from diap01.mec_us_united_20056.dv_impression_agg')) as t1
 
          ) as DV
@@ -75,4 +75,3 @@ insert into master.dbo.DVTable
         DV.campaign_name,
         DV.placement_code,
         DV.placement_name
-go

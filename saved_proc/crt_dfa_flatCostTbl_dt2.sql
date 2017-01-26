@@ -1,10 +1,10 @@
-alter procedure dbo.createflatTblDT2
+alter procedure dbo.crt_dfa_flatCostTbl_dt2
 as
-if OBJECT_ID('master.dbo.flatTableDT2',N'U') is not null
-    drop table master.dbo.flatTableDT2;
+if OBJECT_ID('master.dbo.dfa_flatCostTbl_dt2',N'U') is not null
+    drop table master.dbo.dfa_flatCostTbl_dt2;
 
 
-create table master.dbo.flatTableDT2
+create table master.dbo.dfa_flatCostTbl_dt2
 (
     Cost_ID        nvarchar(6)    not null,
     dcmDate        int            not null,
@@ -29,7 +29,7 @@ create table master.dbo.flatTableDT2
 
 );
 
-insert into master.dbo.flatTableDT2
+insert into master.dbo.dfa_flatCostTbl_dt2
 
 
     select
@@ -169,7 +169,7 @@ insert into master.dbo.flatTableDT2
                       from
                           (
                               select
-                                  f0.dcmmonth                                      as dcmmonth,
+                                  f0.dcmmonth            as dcmmonth,
                                   f0.dcmDate                                       as dcmDate,
                                   f0.dcmyear                                       as dcmyear,
                                   f0.dcmYrMo                                       as dcmYrMo,
@@ -211,7 +211,7 @@ insert into master.dbo.flatTableDT2
                                   f0.edDate                                        as edDate,
                                   -- difference (in days) between traffic date and end date of package
                                   cast(f0.edDate as int) - cast(f0.dcmDate as int) as ed_diff,
-                                  f0.planned_amt                                   as planned_amt,
+                      f0.planned_amt                                   as planned_amt,
                                   case when f0.dcmDate - f0.stDate < 0 then 0
                                   else sum(f0.impressions)     end                         as impressions
                               from
@@ -404,7 +404,7 @@ group by
                                           cast(dcmReport.dcmDate as date)
                                           ,dcmReport.PlacementNumber
                                           ,Prisma.CostMethod
-                                          ,[dbo].udf_dateToInt(dcmReport.dcmDate)
+             ,[dbo].udf_dateToInt(dcmReport.dcmDate)
                                           ,[dbo].udf_yrmoToInt(dcmReport.dcmDate)
                                           ,Prisma.stYrMo
                                           ,Prisma.edYrMo

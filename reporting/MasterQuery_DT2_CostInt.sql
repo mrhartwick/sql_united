@@ -13,24 +13,25 @@
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 --
-exec master.dbo.crt_dvtbl go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
-exec master.dbo.crt_mttbl go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_viewtbl go
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
-exec master.dbo.crt_dbm_costTbl go
+-- exec master.dbo.crt_dv_summTbl go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec master.dbo.crt_mt_summTbl go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
+-- exec [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
+--
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
+-- exec master.dbo.crt_dfa_flatCostTbl_dt2 go
+-- exec master.dbo.crt_dbm_costTbl go
+-- exec master.dbo.crt_dfa_costTbl_dt2 go
 
-exec master.dbo.crt_dfa_costTbl_dt2 go
-exec master.dbo.crt_dfa_flatCostTbl_dt2 go
 -- -- exec master.dbo.crt__dfa_costTbl_dt1 go
 
 
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-01-17';
+set @report_ed = '2017-01-24';
 set @report_st = '2017-01-01';
 
 --
@@ -123,7 +124,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-01-17';
+-- set @report_ed = '2017-01-24';
 -- set @report_st = '2017-01-01';
 
        select
@@ -396,7 +397,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-01-17''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-01-24''
 and upper ( substring (other_data,(instr(other_data,''u3='')+3),3)) != ''mil''
 and substring (other_data,(instr(other_data,''u3='')+3),5) != ''miles''
 and total_revenue != 0
@@ -440,7 +441,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-01-17''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-01-24''
 and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -474,7 +475,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-01-17''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-01-24''
 and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
@@ -539,14 +540,9 @@ cast (report.date as date )
       left join
       (
         select *
-        from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summTbl
+        from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
       ) as prisma
         on dcmreport.placement_id = prisma.adserverplacementid
-
-
-
-
-
 
         where dcmreport.campaign not like '%Search%'
 --         and dcmreport.placement like 'P%'
@@ -589,7 +585,7 @@ cast (report.date as date )
       left join
       (
         select *
-        from master.dbo.dfa_costTbl_dt2
+        from master.dbo.dfa_cost_dt2
       ) as c1
         on cast(almost.dcmmatchdate as varchar(8)) + almost.plce_id = cast(c1.dcmdate as varchar(8)) + c1.plce_id
 
@@ -609,7 +605,7 @@ cast (report.date as date )
 
   left join (
               select *
-              from master.dbo.moat_summ
+              from master.dbo.mt_summ
               where mtdate between @report_st and @report_ed
             ) as mt
       on
@@ -621,7 +617,7 @@ cast (report.date as date )
 
   left join (
               select *
-              from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summTbl
+              from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
               where ivdate between @report_st and @report_ed
             ) as iv
       on
