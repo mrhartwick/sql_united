@@ -1,3 +1,6 @@
+
+-- Retargeting/Prospecting Users and Tickets
+
 select
     t3.date,
     t3.site_dcm,
@@ -34,8 +37,9 @@ from (
 
          from (
                   select
-                      cast(t1.click_time as date)                                                      as "date",
---     t1.click_time                                                   as "date",
+                     t1.click_time                                                   as "date",
+--                       t1.month_time                                                      as "date",
+--                           t1.qrt_time                                                   as "date",
                       case when t1.site_id = 1578478 then 'Google' else s1.site_dcm end                as site_dcm,
                       t1.site_id                                                                       as site_id,
                       t1.user_id                                                                       as user_id,
@@ -54,6 +58,8 @@ from (
                       (
                           select
                               cast(click_time as date) as click_time,
+                               date_part('month', cast(click_time as date)) as month_time,
+                              date_part('quarter', cast(click_time as date)) as qrt_time,
                               row_number()                over (partition by user_id order by user_id) as user_cnt3,
                               event_id,
                               quantity,
@@ -62,27 +68,30 @@ from (
                               user_id,
                               site_id
                           from diap01.mec_us_united_20056.dfa_activity as a
---         where
---             a.user_id in (
---               select user_id
---               from diap01.mec_us_united_20056.dfa_activity as t1
---               where
---                   cast(click_time as date) between '2016-01-01' and '2016-12-31'
---                     and advertiser_id <> 0
--- --  Google
---                     and site_id <> 1578478
---                     and revenue <> 0
---                     and quantity <> 0
---                     and (activity_type = 'ticke498')
---                     and (activity_sub_type = 'unite820')
---                     and advertiser_id <> 0
---                     and order_id = 9639387
---         and user_id <> '0'
---                     and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
---                     and a.user_id = t1.user_id
---             )
+        where
+            a.user_id in (
+              select user_id
+              from diap01.mec_us_united_20056.dfa_activity as t99
+              where
+                  cast(click_time as date) between '2016-01-01' and '2016-12-31'
+                    and advertiser_id <> 0
+--  Google
+                    and site_id <> 1578478
+                    and revenue <> 0
+                    and quantity <> 0
+                    and (activity_type = 'ticke498')
+                    and (activity_sub_type = 'unite820')
+                    and advertiser_id <> 0
+                    and order_id = 9639387
+                    and user_id <> '0'
+                    and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
+                    and a.user_id = t99.user_id
+--                       and cast(a.click_time as date) = cast(t99.click_time as date)
+--                     and date_part('month', cast(a.click_time as date)) = date_part('month', cast(t99.click_time as date))
+--                 and date_part('quarter', cast(a.click_time as date)) = date_part('quarter', cast(t99.click_time as date))
+            )
 
-                          where cast(click_time as date) between '2016-01-01' and '2016-12-31'
+                            and cast(click_time as date) between '2016-01-01' and '2016-12-31'
                             and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
                             and revenue <> 0
                             and quantity <> 0
@@ -100,19 +109,21 @@ from (
                       left join
                       (
                           select
-                              cast(site as varchar(4000)) as 'site_dcm',
-                              site_id as 'site_id_dcm'
+                              cast(site as varchar(4000)) as site_dcm,
+                              site_id as site_id_dcm
                           from diap01.mec_us_united_20056.dfa_site
                       ) as s1
                           on t1.site_id = s1.site_id_dcm
 
                   group by
-                      cast(t1.click_time as date ),
+                    t1.click_time,
+--                      t1.month_time,
+--                       t1.qrt_time,
                   t1.user_id,
                   t1.user_cnt3,
                   s1.site_dcm,
                   t1.site_id
-                  order by user_id
+--                   order by user_id
               ) as t2
 
      ) as t3
