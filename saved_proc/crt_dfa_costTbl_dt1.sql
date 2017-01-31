@@ -1,10 +1,10 @@
-CREATE procedure dbo.crt_dfa_costTbl_dt1
+alter procedure dbo.crt_dfa_costTbl_dt2
 as
-if OBJECT_ID('master.dbo.dfa_costTbl_dt1',N'U') is not null
-    drop table master.dbo.dfa_costTbl_dt1;
+if OBJECT_ID('master.dbo.dfa_cost_dt2',N'U') is not null
+    drop table master.dbo.dfa_cost_dt2;
 
 
-create table master.dbo.dfa_costTbl_dt1
+create table master.dbo.dfa_cost_dt2
 (
     cost_id       nvarchar(6)    not null,
     plce_id       nvarchar(6)    not null,
@@ -20,18 +20,28 @@ create table master.dbo.dfa_costTbl_dt1
     lagCostRemain decimal(20,10) not null,
     CostRunTot    decimal(20,10) not null,
     CostRemain    decimal(20,10) not null,
-    Imps          int            not null,
+    billimps          int            not null,
     impsRunTot    int            not null,
     impsRemain    int            not null,
+    dlvrimps    int            not null,
+    dfa_imps    int            not null,
     Clks          int            not null,
     ClksRunTot    int            not null,
     ClksRemain    int            not null,
     planned_amt   int            not null,
-    planned_cost  decimal(20,10) not null
-
+    planned_cost  decimal(20,10) not null,
+    vew_con     int             not null,
+    clk_con     int             not null,
+    vew_tix     int             not null,
+    clk_tix     int             not null,
+    vew_rev     decimal(20,10)  not null,
+    clk_rev     decimal(20,10)  not null,
+    rev         decimal(20,10)  not null,
+    con     int             not null,
+    tix     int             not null
 );
 
-insert into master.dbo.dfa_costTbl_dt1
+insert into master.dbo.dfa_cost_dt2
     select
         t7.cost_id       as cost_id,
         t7.plce_id       as plce_id,
@@ -50,11 +60,22 @@ insert into master.dbo.dfa_costTbl_dt1
         t7.Imps          as Imps,
         t7.impsRunTot    as impsRunTot,
         t7.impsRemain    as impsRemain,
+             t7.dlvrimps                                        as dlvrimps,
+     t7.dfa_imps                                        as dfa_imps,
         t7.clks          as clks,
         t7.clksRunTot    as clksRunTot,
         t7.clksRemain    as clksRemain,
         t7.planned_amt   as planned_amt,
-        t7.planned_cost  as planned_cost
+        t7.planned_cost  as planned_cost,
+        t7.vew_con  as vew_con,
+t7.clk_con  as clk_con,
+t7.vew_tix  as vew_tix,
+t7.clk_tix  as clk_tix,
+t7.vew_rev  as vew_rev,
+t7.clk_rev  as clk_rev,
+t7.rev      as rev,
+        t7.con          as con,
+        t7.tix           as tix
     from (
 
 
@@ -72,7 +93,7 @@ insert into master.dbo.dfa_costTbl_dt1
                  t6.placement                                       as placement,
                  t6.placement_id                                    as placement_id,
                  t6.dv_map                                          as dv_map,
-                 t6.rate                                            as rate,
+                 t6.rate                                          as rate,
                  t6.PackageCat                                      as PackageCat,
                  t6.stDate                                          as stDate,
                  t6.edDate                                          as edDate,
@@ -90,20 +111,28 @@ insert into master.dbo.dfa_costTbl_dt1
                  isNull(t6.costRunTot,cast(0 as decimal(20,10)))    as costRunTot,
                  isNull(t6.costRemain,cast(0 as decimal(20,10)))    as costRemain,
                  isNull(t6.lagCostRemain,cast(0 as decimal(20,10))) as lagCostRemain,
-                 t6.Imps                                            as Imps,
-                 t6.impsRunTot                                      as impsRunTot,
+                 isNull(t6.Imps,cast(0 as decimal(20,10)))          as Imps,
+                 isNull(t6.impsRunTot,cast(0 as decimal(20,10)))    as impsRunTot,
                  isNull(t6.impsRemain,cast(0 as int))               as impsRemain,
                  isNull(t6.planned_amt,cast(0 as int))              as planned_amt,
                  isNull(t6.planned_cost,cast(0 as int))             as planned_cost,
-                 t6.billimps                                        as billimps,
-                 t6.dlvrimps                                        as dlvrimps,
-                 t6.dfa_imps                                        as dfa_imps,
-                 t6.iv_imps                                         as iv_imps,
-                 t6.dv_imps                                         as dv_imps,
-                 t6.mt_imps                                         as mt_imps,
-                 t6.clks                                            as clks,
-                 t6.clksRunTot                                      as clksRunTot,
-                 isNull(t6.clksRemain,cast(0 as int))               as clksRemain
+                 isNull(t6.dlvrimps,cast(0 as int))                 as dlvrimps,
+                 isNull(t6.dfa_imps,cast(0 as int))                 as dfa_imps,
+                 isNull(t6.iv_imps,cast(0 as int))                  as iv_imps,
+                 isNull(t6.dv_imps,cast(0 as int))                  as dv_imps,
+                 isNull(t6.mt_imps,cast(0 as decimal(20,10)))       as mt_imps,
+                 isNull(t6.clks,cast(0 as decimal(20,10)))          as clks,
+                 isNull(t6.clksRunTot,cast(0 as decimal(20,10)))    as clksRunTot,
+                 isNull(t6.clksRemain,cast(0 as int))               as clksRemain,
+                 isNull(t6.vew_con,cast(0 as int))                  as vew_con,
+                 isNull(t6.clk_con,cast(0 as int))                  as clk_con,
+                 isNull(t6.vew_tix,cast(0 as int))                  as vew_tix,
+                 isNull(t6.clk_tix,cast(0 as int))                  as clk_tix,
+                 isNull(t6.vew_rev,cast(0 as decimal(20,10)))       as vew_rev,
+                 isNull(t6.clk_rev,cast(0 as decimal(20,10)))       as clk_rev,
+                 isNull(t6.rev,cast(0 as decimal(20,10)))           as rev,
+                 isNull(t6.con,cast(0 as int))                      as con,
+                 isNull(t6.tix,cast(0 as int))                      as tix
 
              from (
                       select
@@ -115,7 +144,7 @@ insert into master.dbo.dfa_costTbl_dt1
                           t5.dvjoinkey                                    as dvjoinkey,
                           t5.mtjoinkey                                    as mtjoinkey,
                           t5.ivjoinkey                                    as ivjoinkey,
-                          t5.campaign                                     as campaign,
+                          t5.campaign        as campaign,
                           t5.campaign_id                                  as campaign_id,
                           t5.placement                                    as placement,
                           t5.placement_id                                 as placement_id,
@@ -149,7 +178,16 @@ insert into master.dbo.dfa_costTbl_dt1
                           t5.mt_imps                                      as mt_imps,
                           isNull(t5.clks,cast(0 as int))                  as clks,
                           isNull(t5.clksRunTot,cast(0 as int))            as clksRunTot,
-                          isNull(t5.clksRemain,cast(0 as int))            as clksRemain
+                          isNull(t5.clksRemain,cast(0 as int))            as clksRemain,
+                          t5.vew_con  as vew_con,
+t5.clk_con  as clk_con,
+t5.vew_tix  as vew_tix,
+t5.clk_tix  as clk_tix,
+t5.vew_rev  as vew_rev,
+t5.clk_rev  as clk_rev,
+t5.rev      as rev,
+                          t5.con                                         as con,
+                          t5.tix                                          as tix
              from (
                       select
                           t4.dcmmonth     as dcmmonth,
@@ -200,7 +238,17 @@ insert into master.dbo.dfa_costTbl_dt1
                           case
                               when (cast(t4.planned_amt as decimal(20,10)) - sum(t4.clicks) over (partition by t4.cost_id order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
                               else (cast(t4.planned_amt as decimal(20,10)) - sum(t4.clicks) over (partition by t4.cost_id order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row))
-                          end as clksRemain
+                          end as clksRemain,
+                          t4.vew_con  as vew_con,
+t4.clk_con  as clk_con,
+
+t4.vew_tix  as vew_tix,
+t4.clk_tix  as clk_tix,
+t4.vew_rev  as vew_rev,
+t4.clk_rev  as clk_rev,
+t4.rev      as rev,
+                          t4.con                                    as con,
+                          t4.tix                                    as tix
 
                       from
                           (
@@ -230,7 +278,7 @@ insert into master.dbo.dfa_costTbl_dt1
                                       when (t3.edDate - t3.dcmDate) > 0 and sum(t3.billimps) > t3.planned_amt then t3.planned_cost
                                       when (t3.edDate - t3.dcmDate) > 0 then sum(t3.cost)
                                       when (t3.edDate - t3.dcmDate) < 0 then 0
-                                    else 0
+                                      else 0
                                   end                                       as cost,
                                   cast(t3.edDate as int) - cast(t3.dcmDate as int) as ed_diff,
                                   case
@@ -241,7 +289,17 @@ insert into master.dbo.dfa_costTbl_dt1
                                   sum(t3.iv_imps)                                  as iv_imps,
                                   sum(t3.dv_imps)                                  as dv_imps,
                                   sum(t3.mt_imps)                                  as mt_imps,
-                                  sum(t3.clicks) as clicks
+                                  sum(t3.clicks)                                    as clicks,
+                                  sum(t3.vew_con)  as vew_con,
+                                    sum(t3.clk_con)  as clk_con,
+                                    sum(t3.vew_tix)  as vew_tix,
+                                    sum(t3.clk_tix)  as clk_tix,
+                                    sum(t3.vew_rev)  as vew_rev,
+                                    sum(t3.clk_rev)  as clk_rev,
+                                    sum(t3.rev    )  as rev,
+                                  sum(t3.con)                                    as con,
+                                  sum(t3.tix)                                    as tix
+
                               from
                                   (
 
@@ -249,14 +307,14 @@ select
 
     [dbo].udf_dateToInt(t2.dcmdate)        as dcmdate,
     t2.dcmmonth                            as dcmmonth,
-    t2.diff                                as diff,
+    t2.diff                             as diff,
     t2.dvjoinkey                           as dvjoinkey,
     t2.mtjoinkey                           as mtjoinkey,
     t2.ivjoinkey                           as ivjoinkey,
     t2.campaign                            as campaign,
     t2.campaign_id                         as campaign_id,
     t2.placement                           as placement,
-    t2.placementnumber                     as plce_id,
+    t2.plce_id                             as plce_id,
     t2.placement_id                        as placement_id,
     t2.dv_map                              as dv_map,
     t2.packagecat                          as packagecat,
@@ -266,15 +324,31 @@ select
     [dbo].udf_dateToInt(t2.placementstart) as stDate,
     t2.planned_amt                         as planned_amt,
     t2.planned_cost                        as planned_cost,
-    t2.cost                                as cost,
+    case when t2.costmethod = 'dCPM' then db.dbm_cost
+    else t2.cost end                       as cost,
+    db.dbm_cost                            as dbm_cost,
     t2.rate                                as rate,
-    t2.dlvrimps                            as dlvrimps,
-    t2.billimps                            as billimps,
-    t2.dfa_imps                            as dfa_imps,
+    case when t2.costmethod = 'dCPM' then db.imps
+    else t2.dlvrimps end                   as dlvrimps,
+    case when t2.costmethod = 'dCPM' then db.imps
+    else t2.billimps end                   as billimps,
+    case when t2.costmethod = 'dCPM' then db.imps
+    else t2.dfa_imps end                   as dfa_imps,
     t2.iv_imps                             as iv_imps,
     t2.dv_imps                             as dv_imps,
     t2.mt_imps                             as mt_imps,
-    t2.clicks                              as clicks
+    case when t2.costmethod = 'dCPM' then db.clicks
+    else t2.clicks end                     as clicks,
+    db.vew_con                             as vew_con,
+    db.clk_con                             as clk_con,
+    db.con                                 as con,
+    db.vew_tix                             as vew_tix,
+    db.clk_tix                             as clk_tix,
+    db.tix                                 as tix,
+    db.vew_rev                             as vew_rev,
+    db.clk_rev                             as clk_rev,
+    db.rev                                 as rev
+
 
 -- ============================================================================================================================================
 
@@ -298,13 +372,13 @@ from (
              t1.cost_id                                                                 as cost_id,
              t1.campaign                                                                as campaign,
              t1.campaign_id                                                             as campaign_id,
-              t1.site_dcm                as site_dcm,
-              t1.site_id_dcm                                                             as site_id_dcm,
+             t1.site_dcm                                                                as site_dcm,
+             t1.site_id_dcm                                                             as site_id_dcm,
              t1.costmethod                                                              as costmethod,
-             sum(1) over (partition by t1.cost_id,t1.placementnumber
+             sum(1) over (partition by t1.cost_id,t1.plce_id
                  order by
                      t1.dcmmonth asc range between unbounded preceding and current row) as newcount,
-             t1.placementnumber                                                         as placementnumber,
+             t1.plce_id                                                         as plce_id,
              t1.placement                                                               as placement,
              t1.placement_id                                                            as placement_id,
              t1.placementend                                                            as placementend,
@@ -397,8 +471,8 @@ from (
 --       clicks
              sum(case
                  when (len(isnull(iv.joinkey,'')) > 0) then iv.click_thrus
-                 else t1.clicks end)  as clicks
---              sum(t1.conv)                                                               as conv,
+                 else t1.clicks end)                                                    as clicks
+--              sum(t1.con)                                                               as con,
 --              sum(t1.tix)                                                                as tix
 
 
@@ -407,18 +481,17 @@ from (
 -- =========================================================================================================================
 
                  select
-                     dcmreport.dcmdate                                                          as dcmdate,
+    dcmreport.dcmdate                                                          as dcmdate,
                      cast(month(cast(dcmreport.dcmdate as date)) as int)                        as dcmmonth,
                      [dbo].udf_dateToInt(dcmreport.dcmdate)                                     as dcmmatchdate,
                      dcmreport.campaign                                                         as campaign,
                      dcmreport.campaign_id                                                      as campaign_id,
                      dcmreport.site_dcm                                                         as site_dcm,
                      dcmreport.site_id_dcm                                                      as site_id_dcm,
-                     case when dcmReport.PlacementNumber in ('PBKB7J','PBKB7H','PBKB7K') then 'PBKB7J'
-                     else dcmReport.PlacementNumber end                                         as PlacementNumber,
-
+                     case when dcmReport.plce_id in ('PBKB7J','PBKB7H','PBKB7K') then 'PBKB7J'
+                    else dcmReport.plce_id end                                                           as plce_id,
                      case when dcmReport.placement like 'PBKB7J%' or dcmReport.placement like 'PBKB7H%' or dcmReport.placement like 'PBKB7K%' or dcmReport.placement = 'United 360 - Polaris 2016 - Q4 - Amobee' then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID'
-                     else dcmReport.placement end                                               as placement,
+          else dcmReport.placement end                                                         as placement,
 --        amobee video 360 placements, tracked differently across dcm, innovid, and moat; this combines the three placements into one
                      case when dcmreport.placement_id in (137412510,137412401,137412609) then 137412609
                      else dcmreport.placement_id end                                            as placement_id,
@@ -441,8 +514,8 @@ from (
                                                                                decimal(20,10))) as incrflatcost,
                      cast(prisma.rate as decimal(20,10))                                        as rate,
                      sum(dcmreport.impressions)                                                 as impressions,
-   sum(dcmreport.clicks)                                                      as clicks,
---                      sum(dcmreport.conv)                                                        as conv,
+                     sum(dcmreport.clicks)                                                      as clicks,
+--                      sum(dcmreport.con)                                                        as con,
 --                      sum(dcmreport.tix)                                                         as tix,
 
                      case when cast(month(prisma.placementend) as int) - cast(month(cast(dcmreport.dcmdate as date)) as
@@ -502,15 +575,15 @@ select
 cast(report.date as date)                   as dcmdate,
 cast(month(cast(report.date as date)) as int) as reportmonth,
 campaign.campaign                                as campaign,
-report.campaign_id         as campaign_id,
+report.campaign_id                               as campaign_id,
 report.site_id_dcm as site_id_dcm,
 directory.site_dcm                    as site_dcm,
-left(placements.placement,6) as ''placementnumber'',
+left(placements.placement,6) as plce_id,
 placements.placement                   as placement,
 report.placement_id                         as placement_id,
 sum(report.impressions)                     as impressions,
 sum(report.clicks)                          as clicks,
-sum(report.conv)                  as conv,
+sum(report.con)                  as con,
 sum(report.tix)                 as tix
 
 from (
@@ -522,7 +595,7 @@ cast(timestamp_trunc(to_timestamp(ta.interaction_time / 1000000), ''SS'') as dat
 ,ta.placement_id                                                                        as placement_id
 ,0                                                                                          as impressions
 ,0                                                                                          as clicks
-,sum(case when ta.conversion_id = 1 or ta.conversion_id = 2 then 1 else 0 end) as conv
+,sum(case when ta.conversion_id = 1 or ta.conversion_id = 2 then 1 else 0 end) as con
 ,sum(case when ta.conversion_id = 1 or ta.conversion_id = 2 then ta.total_conversions else 0 end) as tix
 
 from
@@ -530,10 +603,10 @@ from
 select *
 from diap01.mec_us_united_20056.dfa2_activity
 where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2017-01-01''
--- and upper(substring(other_data, (instr(other_data,''u3='')+3), 3)) != ''MIL''
--- and substring(other_data, (instr(other_data,''u3='')+3), 5) != ''Miles''
--- and total_revenue != 0
--- and total_conversions != 0
+and upper(substring(other_data, (instr(other_data,''u3='')+3), 3)) != ''MIL''
+and substring(other_data, (instr(other_data,''u3='')+3), 5) != ''Miles''
+and total_revenue != 0
+and total_conversions != 0
 and activity_id = 978826
 and (advertiser_id <> 0)
 ) as ta
@@ -557,7 +630,7 @@ cast(timestamp_trunc(to_timestamp(ti.event_time / 1000000), ''SS'') as date) as 
 ,ti.placement_id                  as placement_id
 ,count(*)                             as impressions
 ,0                                    as clicks
-,0                                    as conv
+,0                                    as con
 ,0                                    as tix
 
 
@@ -585,7 +658,7 @@ cast(timestamp_trunc(to_timestamp(tc.event_time / 1000000), ''SS'') as date)    
 ,tc.placement_id                       as placement_id
 ,0                                    as impressions
 ,count(*)                             as clicks
-,0                                    as conv
+,0                                    as con
 ,0                                    as tix
 
 from  (
@@ -636,7 +709,8 @@ on report.site_id_dcm = directory.site_id_dcm
 
 where not regexp_like(placements.placement,''.do\s*not\s*use.'',''ib'')
 and not regexp_like(campaign.campaign,''.2016.'',''ib'')
-and report.site_id_dcm !=''1485655''
+and not regexp_like(campaign.campaign,''BidManager_Campaign.'',''ib'')
+-- and report.site_id_dcm !=''1485655''
 group by
 cast(report.date as date)
 -- , cast(month(cast(report.date as date)) as int)
@@ -647,6 +721,7 @@ cast(report.date as date)
 , report.placement_id
 , placements.placement
 -- , placements.placementnumber
+
 ')
 
                       ) as dcmreport
@@ -661,6 +736,8 @@ cast(report.date as date)
 --                  where prisma.costmethod != 'Flat'
 --     and prisma.cost_id = 'P8FSSK'
 
+
+
                  group by
                      dcmreport.dcmdate
                      ,cast(month(cast(dcmreport.dcmdate as date)) as int)
@@ -668,7 +745,7 @@ cast(report.date as date)
                      ,dcmreport.campaign_id
                      ,dcmreport.site_dcm
                      ,dcmreport.site_id_dcm
-                     ,dcmreport.placementnumber
+                     ,dcmreport.plce_id
                      ,dcmreport.placement
                      ,dcmreport.placement_id
                      ,prisma.packagecat
@@ -687,7 +764,7 @@ cast(report.date as date)
              left join
              (
                  select *
-                 from master.dbo.flattableDT2
+                 from master.dbo.dfa_flatCostTbl_dt2
              ) as flat
                  on t1.cost_id = flat.cost_id
                  and t1.dcmmatchdate = flat.dcmdate
@@ -696,7 +773,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from master.dbo.dvtable
+                           from master.dbo.dv_summtbl
 -- where dvdate between @report_st and @report_ed
                        ) as dv
                  on
@@ -707,7 +784,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from master.dbo.mttable
+                           from master.dbo.mt_summtbl
 -- where mtdate between @report_st and @report_ed
                        ) as mt
                  on
@@ -719,16 +796,17 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].innovidexttable
+                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summTbl
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
                      left(t1.placement,6) + '_' + [dbo].udf_sitekey(t1.site_dcm) + '_'
                          + cast(t1.dcmdate as varchar(10)) = iv.joinkey
 --          where t1.costmethod != 'Flat'
---              and (t1.cost_id = 'P6SF6Y' or t1.cost_id = 'P8H1HG')
+--       and (t1.cost_id = 'P6SF6Y' or t1.cost_id = 'P8H1HG')
 --                  and t1.cost_id = 'P8FSSK'
-
+                     where t1.campaign not like 'BidManager%Campaign%'
+             and t1.site_dcm not like '%DfaSite%'
 
          group by
 
@@ -741,7 +819,7 @@ cast(report.date as date)
              ,t1.packagecat
              ,t1.placementend
              ,t1.placementstart
-             ,t1.placementnumber
+             ,t1.plce_id
              ,t1.placement_id
              ,t1.planned_amt
              ,t1.planned_cost
@@ -760,8 +838,18 @@ cast(report.date as date)
              ,t1.costmethod
 
      ) as t2
+                                               left join (
+                           select *
+                           from master.dbo.dbm_cost
+                       ) as db
+                      on [dbo].udf_dateToInt(t2.dcmdate) = db.dcmdate
+                      and t2.plce_id = db.plce_id
+
+
 
                                   ) as t3
+
+
 
                               group by
                                   t3.dcmmonth,

@@ -1,10 +1,10 @@
-alter procedure dbo.createflatTblDT1
+alter procedure dbo.crt_dfa_flatCostTbl_dt1
 as
-if  OBJECT_ID('master.dbo.flatTableDT1',N'U') is not null
-    drop table master.dbo.flatTableDT1;
+if  OBJECT_ID('master.dbo.dfa_flatCost_dt1',N'U') is not null
+    drop table master.dbo.dfa_flatCost_dt1;
 
 
-create table master.dbo.flatTableDT1
+create table master.dbo.dfa_flatCost_dt1
 (
     Cost_ID        nvarchar(6)    not null,
     dcmDate        int            not null,
@@ -29,7 +29,7 @@ create table master.dbo.flatTableDT1
 
 );
 
-insert into master.dbo.flatTableDT1
+insert into master.dbo.dfa_flatCost_dt1
 
 
     select
@@ -410,7 +410,7 @@ cast(Report.Date as DATE)
                                           left join
                                           (
                                               select *
-                                              from [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.[dbo].summaryTable
+                                              from [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.[dbo].prs_summ
                                           ) as Prisma
                                               on dcmReport.Placement_ID = Prisma.AdserverPlacementId
                                       where Prisma.CostMethod = 'Flat'

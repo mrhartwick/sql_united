@@ -730,7 +730,7 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].summarytable
+                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prisma
                          on dcmreport.placement_id = prisma.adserverplacementid
 --                  where prisma.costmethod != 'Flat'
