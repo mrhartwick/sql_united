@@ -1,10 +1,10 @@
 alter procedure dbo.crt_mt_summTbl
 as
-    if OBJECT_ID('master.dbo.mt_summTbl',N'U') is not null
-        drop table master.dbo.mt_summTbl;
+    if OBJECT_ID('master.dbo.mt_summ',N'U') is not null
+        drop table master.dbo.mt_summ;
 
 
-    create table master.dbo.mt_summTbl
+    create table master.dbo.mt_summ
     (
         joinKey                     varchar(255),
         mtDate                      date         not null,
@@ -17,7 +17,7 @@ as
         groupm_billable_impressions int          not null
     );
 
-    insert into master.dbo.mt_summTbl
+    insert into master.dbo.mt_summ
         select distinct
             replace(left(t2.placement_name,6) + '_' +
                         [dbo].udf_siteKey(t2.media_property)

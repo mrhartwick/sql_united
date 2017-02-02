@@ -730,7 +730,7 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].summarytable
+                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prisma
                          on dcmreport.placement_id = prisma.adserverplacementid
 --                  where prisma.costmethod != 'Flat'
@@ -764,7 +764,7 @@ cast(report.date as date)
              left join
              (
                  select *
-                 from master.dbo.dfa_flatCostTbl_dt2
+                 from master.dbo.dfa_flatCost_dt2
              ) as flat
                  on t1.cost_id = flat.cost_id
                  and t1.dcmmatchdate = flat.dcmdate
@@ -773,7 +773,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from master.dbo.dv_summtbl
+                           from master.dbo.dv_summ
 -- where dvdate between @report_st and @report_ed
                        ) as dv
                  on
@@ -784,7 +784,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from master.dbo.mt_summtbl
+                           from master.dbo.mt_summ
 -- where mtdate between @report_st and @report_ed
                        ) as mt
                  on
@@ -796,7 +796,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summTbl
+                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on

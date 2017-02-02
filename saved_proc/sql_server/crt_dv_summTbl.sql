@@ -1,10 +1,10 @@
 alter procedure dbo.crt_dv_summTbl
 as
-if OBJECT_ID('master.dbo.dv_summTbl',N'U') is not null
-    drop table master.dbo.dv_summTbl;
+if OBJECT_ID('master.dbo.dv_summ',N'U') is not null
+    drop table master.dbo.dv_summ;
 
 
-create table master.dbo.dv_summTbl
+create table master.dbo.dv_summ
 (
     joinKey                     varchar(255) not null,
     dvDate                      date         not null,
@@ -18,7 +18,7 @@ create table master.dbo.dv_summTbl
 
 );
 
-insert into master.dbo.dv_summTbl
+insert into master.dbo.dv_summ
     select distinct
         DV.joinKey,
         DV.dvDate,
