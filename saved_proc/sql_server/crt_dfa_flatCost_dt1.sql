@@ -1,4 +1,4 @@
-alter procedure dbo.crt_dfa_flatCostTbl_dt1
+alter procedure dbo.crt_dfa_flatCost_dt1
 as
 if  OBJECT_ID('master.dbo.dfa_flatCost_dt1',N'U') is not null
     drop table master.dbo.dfa_flatCost_dt1;

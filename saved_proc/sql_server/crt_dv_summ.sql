@@ -1,4 +1,4 @@
-alter procedure dbo.crt_dv_summTbl
+alter procedure dbo.crt_dv_summ
 as
 if OBJECT_ID('master.dbo.dv_summ',N'U') is not null
     drop table master.dbo.dv_summ;

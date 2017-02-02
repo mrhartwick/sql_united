@@ -1,4 +1,4 @@
-CREATE procedure dbo.crt_dbm_costTbl
+CREATE procedure dbo.crt_dbm_cost
 as
 if OBJECT_ID('master.dbo.dbm_cost',N'U') is not null
     drop table master.dbo.dbm_cost;

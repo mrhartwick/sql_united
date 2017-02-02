@@ -1,4 +1,4 @@
-alter procedure dbo.crt_mt_summTbl
+alter procedure dbo.crt_mt_summ
 as
     if OBJECT_ID('master.dbo.mt_summ',N'U') is not null
         drop table master.dbo.mt_summ;
