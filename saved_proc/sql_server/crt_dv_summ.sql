@@ -1,4 +1,4 @@
-alter procedure dbo.crt_dv_summ
+CREATE procedure dbo.crt_dv_summ
 as
 if OBJECT_ID('master.dbo.dv_summ',N'U') is not null
     drop table master.dbo.dv_summ;
@@ -10,7 +10,7 @@ create table master.dbo.dv_summ
     dvDate                      date         not null,
     media_property              varchar(255) not null,
     campaign_name               varchar(255),
-    placement_code              varchar(255) not null,
+--     placement_code              varchar(255) not null,
     placement_name              varchar(255),
     total_impressions           int          not null,
     groupm_passed_impressions   int          not null,
@@ -24,7 +24,7 @@ insert into master.dbo.dv_summ
         DV.dvDate,
         DV.media_property,
         DV.campaign_name,
-        DV.placement_code,
+--         DV.placement_code,
         DV.placement_name,
         sum(DV.total_impressions),
         sum(DV.groupm_passed_impressions),
@@ -36,8 +36,9 @@ insert into master.dbo.dv_summ
 
               t1.campaign_name                               as campaign_name,
               [dbo].udf_siteName(t1.media_property)          as media_property,
-              case when t1.placement_code in ('137412510','137412401','137412609') then '137412609'
-              else t1.placement_code end                     as placement_code,
+--              Removing placement code - sometimes it matches DCM; sometimes not. Creates duplicates in JOIN to DCM table
+--               case when t1.placement_code in ('137412510','137412401','137412609') then '137412609'
+--               else t1.placement_code end                     as placement_code,
               case when
                   t1.placement_name like 'PBKB7J%' or t1.placement_name like 'PBKB7H%' or
                       t1.placement_name like 'PBKB7K%' or
@@ -55,7 +56,7 @@ insert into master.dbo.dv_summ
                                   cast(event_date as date)                                    as ''dvDate'',
                                   cast(campaign_name as varchar(255))                         as ''campaign_name'',
                                   cast(media_property as varchar(255))                        as ''media_property'',
-                                  cast(placement_code as varchar(255))                        as ''placement_code'',
+--                                   cast(placement_code as varchar(255))                        as ''placement_code'',
                                   cast(placement_name as varchar(255))                        as ''placement_name'',
                                   total_impressions                                         as ''total_impressions'',
                                   groupm_passed_impressions                                 as ''groupm_passed_impressions'',
@@ -66,12 +67,12 @@ insert into master.dbo.dv_summ
 
     where DV.placement_name not like '%[Dd][Oo]%[Nn][Oo][Tt]%[Uu][Ss][Ee]%'
         and DV.placement_name not like '%[Nn]o%[Tt]racking%'
-        and dv.placement_code != '300492'
+--         and dv.placement_code != '300492'
         and cast(DV.dvDate as date) > '2016-01-01'
     group by
         DV.joinKey,
         DV.dvDate,
         DV.media_property,
         DV.campaign_name,
-        DV.placement_code,
+--         DV.placement_code,
         DV.placement_name
