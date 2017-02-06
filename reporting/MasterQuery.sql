@@ -1,4 +1,6 @@
 --  Master Query, new cluster
+--  version that makes use of costTable_dt1
+
 /*  This query is a bit of a hack. Non-optimal aspects are necessitated by the particularities of the current tech stack on United.
 	Code is most easily read by starting at the "innermost" block, inside the openQuery call.
 
@@ -21,7 +23,9 @@
 -- EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createAmtTbl GO
 -- EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createPackTbl GO
 -- EXEC [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.createSumTbl GO
--- EXEC master.dbo.createflatTblDay GO
+-- EXEC master.dbo.crt_dfa_flatCost_dt1 GO
+-- EXEC master.dbo.crt_dfa_flatCost_dt2 GO
+-- EXEC master.dbo.createCostTblDT1 GO
 
 
 
@@ -120,12 +124,12 @@ select
 from (
 
 -- for running the code here instead of at "final," above
-
+--
 -- DECLARE @report_st date,
 -- @report_ed date;
 -- --
--- SET @report_ed = '2016-10-10';
--- SET @report_st = '2016-10-01';
+-- SET @report_ed = '2016-01-31';
+-- SET @report_st = '2016-01-01';
 
 	     select
 		 	 -- DCM ad server date
@@ -305,20 +309,7 @@ from (
 			     			     select
 				     dcmReport.dcmDate as dcmDate,
 				     cast(month(cast(dcmReport.dcmDate as date)) as int) as dcmmonth,
-				     case
-				     when len(cast(month(cast(dcmReport.dcmDate as date)) as varchar(2))) = 1
-					     then convert(int,
-					                  cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
-					                  cast(0 as varchar(1)) +
-					                  cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
-					                  right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
-					     )
-				     else
-					     convert(int,cast(year(cast(dcmReport.dcmDate as date)) as varchar(4)) +
-					                 cast(month(cast(dcmReport.dcmDate as date)) as varchar(2)) +
-					                 right(cast(cast(dcmReport.dcmDate as date) as varchar(10)),2)
-					     )
-					 end                       as dcmMatchDate,
+				     [dbo].udf_dateToInt(dcmreport.dcmdate) as dcmmatchdate,
 					 dcmReport.Buy             as Buy,
 					 dcmReport.order_id        as order_id,
 					 dcmReport.Directory_Site  as Directory_Site,
@@ -469,6 +460,7 @@ AND (Activity_Sub_Type = ''unite820'')
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
 
 and (advertiser_id <> 0)
+-- and user_id <> ''0''
 ) as Conversions
 
 LEFT JOIN diap01.mec_us_mecexchangerates_20067.EXCHANGE_RATES AS Rates
@@ -508,6 +500,7 @@ WHERE cast(impression_time as date) BETWEEN ''2016-01-01'' AND ''2016-12-31''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
 
 and (advertiser_id <> 0)
+-- and user_id <> ''0''
 ) AS Impressions
 GROUP BY
 -- Impressions.impression_time
@@ -540,6 +533,7 @@ FROM diap01.mec_us_united_20056.dfa_click
 WHERE cast(click_time as date) BETWEEN ''2016-01-01'' AND ''2016-12-31''
 and order_id in (9304728, 9407915, 9408733, 9548151, 9630239, 9639387, 9739006, 9923634, 9973506, 9994694, 9999841, 10094548, 10276123, 10121649, 10307468, 10090315, 10505745) -- Display 2016
 and (advertiser_id <> 0)
+-- and user_id <> ''0''
 ) AS Clicks
 
 GROUP BY
@@ -580,6 +574,7 @@ from diap01.mec_us_united_20056.dfa_site
 ON Report.Site_ID = Directory.Site_ID
 
 WHERE NOT REGEXP_LIKE(site_placement,''.do\s*not\s*use.'',''ib'')
+-- and Placements.site_placement like  ''PBF7M2%''
 and Report.Site_ID !=''1485655''
 GROUP BY
 cast(Report.Date AS DATE)
@@ -599,7 +594,7 @@ cast(Report.Date AS DATE)
 			LEFT JOIN
 			(
 				SELECT *
-				FROM [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.[dbo].summaryTable
+				FROM [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.[dbo].prs_summ
 			) AS Prisma
 				ON dcmReport.page_id = Prisma.AdserverPlacementId
 
@@ -632,7 +627,7 @@ cast(Report.Date AS DATE)
 	left join
 	(
 		select *
-		from master.dbo.flatTableDay
+		from master.dbo.dfa_flatCost_dt1
 	) as Flat
 		on almost.Cost_ID = Flat.Cost_ID
 		   and almost.dcmMatchDate = flat.dcmDate
@@ -641,7 +636,7 @@ cast(Report.Date AS DATE)
 
 	left join (
 		          select *
-		          from master.dbo.DVTable
+		          from master.dbo.dv_summ
 		          where dvDate between @report_st and @report_ed
 	          ) as DV
 			on
@@ -652,7 +647,7 @@ cast(Report.Date AS DATE)
 
 	left join (
 		          select *
-		          from master.dbo.MTTable
+		          from master.dbo.mt_summ
 		          where mtDate between @report_st and @report_ed
 	          ) as MT
 			on
@@ -664,16 +659,18 @@ cast(Report.Date AS DATE)
 
 	left join (
 		          select *
-		          from [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.[dbo].InnovidExtTable
+		          from [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.[dbo].ivd_summ_agg
 		          where ivDate between @report_st and @report_ed
 	          ) as IV
 			on
 			left(almost.Site_Placement,6) + '_' + [dbo].udf_siteKey( almost.Directory_Site) + '_'
 			+ cast(almost.dcmDate as varchar(10)) = IV.joinKey
 
-
+-- where almost.cost_id = 'P8FSSK'
 -- 	where almost.CostMethod = 'Flat'
 --     where almost.Site_ID ='1853562'
+-- 			 where almost.Site_Placement like 'PBF7M2%'
+
 group by
 
 	almost.Buy
