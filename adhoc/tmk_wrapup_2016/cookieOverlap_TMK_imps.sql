@@ -43,38 +43,32 @@ from (
                               user_id,
                               site_id
                           from diap01.mec_us_united_20056.dfa_impression as a
---         where
---             a.user_id in (
---               select  user_id
--- --               ,cast(impression_time as date)
---               from diap01.mec_us_united_20056.dfa_impression as t99
---               where
---                   cast(impression_time as date) between '2016-01-01' and '2016-12-31'
---                     and advertiser_id <> 0
--- --  Google
---                     and site_id <> 1578478
---                     and advertiser_id <> 0
---                     and order_id = 9639387
---                     and user_id <> '0'
---                     and a.user_id = t99.user_id
+        where
+            a.user_id in (
+              select  user_id
+--               ,cast(impression_time as date)
+              from diap01.mec_us_united_20056.dfa_impression as t99
+              where
+                  cast(impression_time as date) between '2016-01-01' and '2016-12-31'
+                    and advertiser_id <> 0
+--  Google
+                    and site_id = 1578478
+                    and advertiser_id <> 0
+                    and order_id = 9639387
+                    and user_id <> '0'
+                    and a.user_id = t99.user_id
 --                     and (
--- --                       Retargeting Impression within 7 days of prospecting Impression
--- --                       datediff('dd', cast(a.impression_time as date), cast(t99.impression_time as date)) < 8
--- --                       or
--- --                       prospecting Impression within 7 days of Retargeting Impression
+--                       Retargeting Impression within 7 days of prospecting Impression
+--                       datediff('dd', cast(a.impression_time as date), cast(t99.impression_time as date)) < 8
+--                       or
+--                       prospecting Impression within 7 days of Retargeting Impression
 --                       datediff('dd', cast(t99.impression_time as date), cast(a.impression_time as date)) < 8
 --                   )
--- --                 and cast(a.impression_time as date) = cast(t99.impression_time as date)
--- --                     and date_part('month', cast(a.impression_time as date)) = date_part('month', cast(t99.impression_time as date))
--- --                 and date_part('quarter', cast(a.impression_time as date)) = date_part('quarter', cast(t99.impression_time as date))
---             )
-                         where cast(impression_time as date) between '2016-01-01' and '2016-12-31'
---                           where cast(impression_time as date) between '2016-06-01' and '2016-06-30'
---                             and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
---                             and revenue <> 0
---                             and quantity <> 0
---                             and activity_type = 'ticke498'
---                             and activity_sub_type = 'unite820'
+--                 and cast(a.impression_time as date) = cast(t99.impression_time as date)
+--                     and date_part('month', cast(a.impression_time as date)) = date_part('month', cast(t99.impression_time as date))
+--                 and date_part('quarter', cast(a.impression_time as date)) = date_part('quarter', cast(t99.impression_time as date))
+            )
+                         and cast(impression_time as date) between '2016-01-01' and '2016-12-31'
                             and order_id = 9639387
                             and site_id <> 1578478
                             and advertiser_id <> 0

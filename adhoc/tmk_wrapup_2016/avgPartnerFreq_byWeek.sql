@@ -17,14 +17,14 @@ select
 
 from (
          select
-             t2.day_time,
---              t2.wk_time,
+--              t2.day_time,
+             t2.wk_time,
              t2.site_dcm,
              t2.site_id,
              t2.user_id,
 --              t2.avg_per_user,
              t2.per_user,
-             case when t2.per_user = 0 then 0 else avg(t2.per_user) over (partition by t2.day_time ) end as avg_per_wk,
+             case when t2.per_user = 0 then 0 else avg(t2.per_user) over (partition by t2.wk_time ) end as avg_per_wk,
 --              row_number() over (partition by t2.user_id order by t2.user_id) as user_cnt,
              t2.user_cnt3
 --              t2.imp
@@ -32,17 +32,16 @@ from (
 
          from (
                   select
-                      t1.day_time                                                      as day_time,
+--                       t1.day_time                                                      as day_time,
 --                       t1.month_time                                                      as "date",
 --                           t1.qrt_time                                                   as "date",
---                       t1.wk_time                                                   as wk_time,
-                      case when t1.site_id = 1578478 then 'Google' else s1.site_dcm end                as site_dcm,
+                      t1.wk_time                                                   as wk_time,
+                      case when t1.site_id = 1578478 then 'Google'  else s1.site_dcm end                as site_dcm,
                       t1.site_id                                                                       as site_id,
                       t1.user_id                                                                       as user_id,
                       sum(case when t1.user_cnt3 = 1 then t1.user_cnt3 else 0 end)                     as user_cnt3,
 --                       avg(t1.imp) over (partition by t1.user_id,t1.wk_time order by t1.wk_time) as avg_per_user,
---                       sum(t1.imp) over (partition by t1.user_id, t1.wk_time, t1.site_id order by t1.wk_time) as per_user,
-                      sum(t1.imp) over (partition by t1.user_id, t1.day_time, t1.site_id order by t1.day_time) as per_user,
+                      sum(t1.imp) over (partition by t1.user_id, t1.wk_time, t1.site_id order by t1.wk_time) as per_user,
 --                       t1.user_cnt3                    as user_cnt3,
                         sum(t1.imp) as imp
 
@@ -213,10 +212,10 @@ from (
                           on t1.site_id = s1.site_id_dcm
 
                   group by
-                      day_time,
+--                       day_time,
 --                      t1.month_time,
 --                       t1.qrt_time,
---                       t1.wk_time,
+                      t1.wk_time,
                       t1.imp,
                   t1.user_id,
                   t1.user_cnt3,

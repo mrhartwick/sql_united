@@ -89,10 +89,10 @@ from (
 --               select user_id
 --               from diap01.mec_us_united_20056.dfa_activity as t99
 --               where
---                   cast(click_time as date) between '2016-01-01' and '2016-12-31'
+--                   cast(click_time as date) between '2016-12-01' and '2016-12-10'
 --                     and advertiser_id <> 0
 -- --  Google
---                     and site_id <> 1578478
+--                     and site_id = 1578478
 --                     and revenue <> 0
 --                     and quantity <> 0
 --                     and (activity_type = 'ticke498')
@@ -114,10 +114,10 @@ from (
 -- --                 and date_part('quarter', cast(a.click_time as date)) = date_part('quarter', cast(t99.click_time as date))
 --             )
 
-                            where cast(click_time as date) between '2016-01-01' and '2016-12-31'
+                            where cast(click_time as date) between '2016-12-01' and '2016-12-10'
                             and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
 --                             and site_id = 1578478
-                            and site_id <> 1578478
+--                             and site_id <> 1578478
                             and revenue <> 0
                             and quantity <> 0
                             and activity_type = 'ticke498'
