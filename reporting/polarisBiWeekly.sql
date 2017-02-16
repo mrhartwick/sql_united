@@ -31,84 +31,44 @@ SET @report_st = '2016-09-01';
 -- SET @report_st = DateAdd(DAY, 1 - DatePart(DAY, @report_ed), @report_ed);
 
 select
-	-- DCM ad server date
+
 	cast(final.dcmDate as date)                                                                             as "Date",
-	-- DCM ad server week (from date)
 	cast(dateadd(week,datediff(week,0,cast(final.dcmDate as date)),0) as date)                              as "Week",
-	-- DCM ad server month (from date)
 	dateName(month,cast(final.dcmDate as date))                                                             as "Month",
-	-- DCM ad server quarter + year (from date)
 	'Q' + dateName(quarter,cast(final.dcmDate as date)) + ' ' + dateName(year,cast(final.dcmDate as date))  as "Quarter",
-	-- Reference/optional: difference, in months, between placement end date and report date. Field is used deterministically in other fields below.
--- 	final.diff                                                                                              as diff,
-	-- Reference/optional: match key from the DV table; only present when DV data is available.
 	final.dvJoinKey                                                                                         as dvJoinKey,
-	-- Reference/optional: match key from the Moat table; only present when Moat data is available.
 	final.mtJoinKey                                                                                         as mtJoinKey,
-	final.ivJoinKey as ivJoinKey,
-	-- Reference/optional: package category from Prisma (standalone; package; child). Useful for exchanging info with Planning/Investment
+	final.ivJoinKey 																						as ivJoinKey,
 	final.PackageCat                                                                                        as PackageCat,
-	-- Reference/optional: first six characters of package-level placement name, used to join 1) Prisma table, and 2) flat fee table
 	final.Cost_ID                                                                                           as Cost_ID,
-	-- DCM Campaign name
 	final.Buy                                                                                               as "DCM Campaign",
-	-- Friendly Campaign name
 	[dbo].udf_campaignName(final.order_id, final.Buy)  														as Campaign,
-	-- DCM campaing ID
 	final.order_id                                                                                          as "Campaign ID",
-	-- Reference/optional: three-character designation, sometimes descriptive, from placement name.
--- 	final.campaignShort                                                                                     as "Campaign Short Name",
-	-- Designation specified by Planning/Investment in 2016.
--- 	final.campaignType                                                                                      as "Campaign Type",
-	-- DCM site name
--- 	final.Directory_Site                                                          							as SITE,
--- Preferred, friendly site name; also corresponds to what's used in the joinKey fields across DFA, DV, and Moat.
 	[dbo].udf_siteName(final.Directory_Site) as "Site",
-	-- DCM site ID
 	final.Site_ID                                                                                           as "Site ID",
-	-- Reference/optional: package cost/pricing model, from Prisma; attributed to all placements within package.
 	final.CostMethod                                                                                        as "Cost Method",
-	-- Reference/optional: first six characters of placement name. Used for matching across datasets when no common placement ID is available, e.g. DFA-DV.
--- 	final.PlacementNumber                                                         							as PlacementNumber,
-	-- DCM placement name
 	final.Site_Placement                                                                                    as Placement,
 	case when final.Site_Placement like '%Video%' or final.Site_Placement like '%[_]VID[_]%' then 'Video' else 'Standard'  end      as "Asset Type",
-	-- DCM placement ID
 	final.page_id                                                                                           as page_id,
-	-- Reference/optional: planned package end date, from Prisma; attributed to all placements within package.
 	final.PlacementEnd                                                                                      as "Placement End",
 	final.PlacementStart                                                                                    as "Placement Start",
 	final.DV_Map                                                                                            as "DV Map",
 	final.Rate                                                                                              as Rate,
 	final.Planned_Amt                                                                                       as "Planned Amt",
--- 	final.Planned_Cost                                                                                       as "Planned Cost",
---     	final.Planned_Cost/final.newCount                                                                                      as "Planned Cost 2",
--- 	final.flatCostRemain                                                          							as flatCostRemain,
--- 	final.impsRemain                                                              							as impsRemain,
--- 	sum(final.cost)                                                          								as cost,
 	case when final.CostMethod='Flat' then final.flatCost/max(final.newCount) else sum(final.cost) end      as cost,
 	sum(final.dlvrImps)                                                                                     as "Delivered Impressions",
 	sum(final.billImps)                                                                                     as "Billable Impressions",
 	sum(final.cnslImps)                                                                                     as "DFA Impressions",
 	sum(final.IV_Impressions)                                                                               as "Innovid Impressions",
-	sum(final.IV_Completes) as "Innovid Video Completes",
--- 	sum(MT.human_impressions)                                      											as MT_Impressions,
--- 	sum(final.dv_impressions)                                                     							as DV_Impressions,
+	sum(final.IV_Completes) 																				as "Innovid Video Completes",
 	sum(final.DV_Viewed)                                                                                    as DV_Viewed,
--- 	sum(final.DV_GroupMPayable)                                                   							as DV_GroupMPayable,
 	sum(final.Clicks)                                                                                       as clicks,
 	case when sum(final.dlvrImps) = 0 then 0
 	else (sum(cast(final.Clicks as decimal(20,10)))/sum(cast(final.dlvrImps as decimal(20,10))))*100 end 	as CTR,
--- 	sum(final.View_Thru_Conv)                                                    							as View_Thru_Conv,
--- 	sum(final.Click_Thru_Conv)                                                   							as Click_Thru_Conv,
 	sum(final.conv)                                                                                         as Transactions,
--- 	sum(final.View_Thru_Tickets)                                                  							as View_Thru_Tickets,
--- 	sum(final.Click_Thru_Tickets)                                                 							as Click_Thru_Tickets,
 	sum(final.tickets)                                                                                      as Tickets,
 	case when sum(final.conv) = 0 then 0
 	else sum(final.cost)/sum(final.conv) end                                                            	as "Cost/Transaction",
--- 	sum(final.View_Thru_Revenue)                                                  							as View_Thru_Revenue,
--- 	sum(final.Click_Thru_Revenue)                                                 							as Click_Thru_Revenue,
 	sum(final.Revenue)                                                                                      as Revenue,
 	sum(final.viewRevenue)                                                                                  as "Billable Revenue",
 	sum(final.adjsRevenue)                                                                                  as "Adjusted (Final) Revenue",
