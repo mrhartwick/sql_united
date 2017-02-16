@@ -148,7 +148,7 @@ from (
            t2.dcmmonth asc range between unbounded preceding and current row) as newcount,
 
          t2.plce_id                                                     as plce_id,
---     c1.plce_id as dbm_plce_id,
+--     cst.plce_id as dbm_plce_id,
          t2.placement                                                      as placement,
          t2.placement_id                                                             as placement_id,
          t2.placementend                                                        as placementend,
@@ -158,12 +158,12 @@ from (
       t2.planned_cost                                                        as planned_cost,
          flt.flatcost                                                              as flatcost,
 --  logic excludes flat fees
-         sum(c1.cost)                                                                 as cost,
+         sum(cst.cost)                                                                 as cost,
          t2.rate                                                                as rate,
 --          sum(case
 --              --     not subject to viewability
 --              when (t2.dv_map = 'N') and (t2.costmethod = 'dCPM')
---                then c1.vew_rev + c1.clk_rev
+--                then cst.vew_rev + cst.clk_rev
 --              when (t2.dv_map = 'N')
 --                then t2.vew_rev + t2.clk_rev
 --
@@ -186,7 +186,7 @@ from (
          sum(case
 --         not subject to viewability
              when (t2.dv_map = 'N') and (t2.costmethod = 'dCPM')
-               then cast((c1.vew_rev * .2 * .15) + c1.clk_rev as decimal(10,2))
+               then cast((cst.vew_rev * .2 * .15) + cst.clk_rev as decimal(10,2))
              when (t2.dv_map = 'N')
                then cast((t2.vew_rev * .2 * .15) + t2.clk_rev as decimal(10,2))
 
@@ -228,11 +228,11 @@ from (
 --              when t2.dv_map = 'M' then mt.groupm_billable_impressions
 --          when t2.dv_map = 'N' and (len(isnull(iv.joinkey,''))>0) then iv.impressions
 --              else t2.impressions end)                                           as billimps,
-             sum(c1.dlvrimps)                                                    as dlvrimps,
-    sum(c1.billimps) as billimps,
+             sum(cst.dlvrimps)                                                    as dlvrimps,
+    sum(cst.billimps) as billimps,
 
 --       dcm impressions (for comparison (qa) to dcm console)
-         sum(c1.dfa_imps)                                                    as cnslimps,
+         sum(cst.dfa_imps)                                                    as cnslimps,
 
        sum(iv.impressions)                            as iv_impressions,
        sum(iv.click_thrus)                            as iv_clicks,
@@ -247,17 +247,17 @@ from (
                  when (len(isnull(iv.joinkey,'')) > 0) then iv.click_thrus
                  else t2.clicks end)                                                    as clicks,
 
-         sum(case when t2.costmethod like 'dCPM' then c1.vew_con else t2.vew_con end)  as vew_con,
-         sum(case when t2.costmethod like 'dCPM' then c1.clk_con else t2.clk_con end)  as clk_con,
-         sum(case when t2.costmethod like 'dCPM' then c1.con     else t2.con     end)  as con,
+         sum(case when t2.costmethod like 'dCPM' then cst.vew_con else t2.vew_con end)  as vew_con,
+         sum(case when t2.costmethod like 'dCPM' then cst.clk_con else t2.clk_con end)  as clk_con,
+         sum(case when t2.costmethod like 'dCPM' then cst.con     else t2.con     end)  as con,
          sum(t2.con) as dfa_con,
-         sum(c1.con) as dbm_con,
-         sum(case when t2.costmethod like 'dCPM' then c1.vew_tix else t2.vew_tix end)  as vew_tix,
-         sum(case when t2.costmethod like 'dCPM' then c1.clk_tix else t2.clk_tix end)  as clk_tix,
-         sum(case when t2.costmethod like 'dCPM' then c1.tix     else t2.tix     end)  as tix,
-         sum(case when t2.costmethod like 'dCPM' then c1.vew_rev else t2.vew_rev end)  as vew_rev,
-         sum(case when t2.costmethod like 'dCPM' then c1.clk_rev else t2.clk_rev end)  as clk_rev,
-         sum(case when t2.costmethod like 'dCPM' then c1.rev     else t2.revenue end)  as rev
+         sum(cst.con) as dbm_con,
+         sum(case when t2.costmethod like 'dCPM' then cst.vew_tix else t2.vew_tix end)  as vew_tix,
+         sum(case when t2.costmethod like 'dCPM' then cst.clk_tix else t2.clk_tix end)  as clk_tix,
+         sum(case when t2.costmethod like 'dCPM' then cst.tix     else t2.tix     end)  as tix,
+         sum(case when t2.costmethod like 'dCPM' then cst.vew_rev else t2.vew_rev end)  as vew_rev,
+         sum(case when t2.costmethod like 'dCPM' then cst.clk_rev else t2.clk_rev end)  as clk_rev,
+         sum(case when t2.costmethod like 'dCPM' then cst.rev     else t2.revenue end)  as rev
 
        from
          (
@@ -586,8 +586,8 @@ cast (report.date as date )
       (
         select *
         from master.dbo.dfa_cost_dt2
-      ) as c1
-        on cast(t2.dcmmatchdate as varchar(8)) + t2.plce_id = cast(c1.dcmdate as varchar(8)) + c1.plce_id
+      ) as cst
+        on cast(t2.dcmmatchdate as varchar(8)) + t2.plce_id = cast(cst.dcmdate as varchar(8)) + cst.plce_id
 
 
 -- dv table join ==============================================================================================================================================
@@ -653,7 +653,7 @@ group by
   ,dv.joinkey
   ,mt.joinkey
   ,iv.joinkey
-    ,c1.plce_id
+    ,cst.plce_id
 -- ,t2.flatcostremain
 -- ,t2.impsremain
   ,t2.costmethod
