@@ -5,19 +5,19 @@
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 --
-exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
-exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
-exec [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
+-- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
+-- exec [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
+--
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
+-- exec master.dbo.crt_dfa_flatCost_dt2 go
+-- exec master.dbo.crt_dbm_cost go
+-- exec master.dbo.crt_dfa_cost_dt2 go
 
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
-exec master.dbo.crt_dfa_flatCost_dt2 go
-exec master.dbo.crt_dbm_cost go
-exec master.dbo.crt_dfa_cost_dt2 go
-
--- -- exec master.dbo.crt__dfa_costTbl_dt1 go
+-- -- exec master.dbo.crt_dfa_costTbl_dt1 go
 
 
 declare @report_st date
@@ -26,89 +26,50 @@ declare @report_ed date
 set @report_ed = '2017-02-06';
 set @report_st = '2017-01-23';
 
---
--- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
--- set @report_st = dateadd(day, 1 - datepart(day, @report_ed), @report_ed);
 
 select
-  -- dcm ad server date
-  cast(final.dcmdate as date)                                                                             as "date",
-  -- dcm ad server week (from date)
-  cast(dateadd(week,datediff(week,0,cast(final.dcmdate as date)),0) as date)                              as "week",
-  -- dcm ad server month (from date)
-  datename(month,cast(final.dcmdate as date))                                                             as "month",
-  -- dcm ad server quarter + year (from date)
-  'Q' + datename(quarter,cast(final.dcmdate as date)) + ' ' + datename(year,cast(final.dcmdate as date))  as "quarter",
-  -- reference/optional: difference, in months, between placement end date and report date. field is used deterministically in other fields below.
---  final.diff                                                                                              as diff,
-  -- reference/optional: match key from the dv table; only present when dv data is available.
-  final.dvjoinkey                                                                                         as dvjoinkey,
-  -- reference/optional: match key from the moat table; only present when moat data is available.
-  final.mtjoinkey                                                                                         as mtjoinkey,
-  -- reference/optional: package category from prisma (standalone; package; child). useful for exchanging info with planning/investment
-  final.packagecat                                                                                        as packagecat,
-  -- reference/optional: first six characters of package-level placement name, used to join 1) prisma table, and 2) flat fee table
-  final.cost_id                                                                                           as cost_id,
-  -- dcm campaign name
---  final.campaign                                                                                               as "dcm campaign",
-  -- friendly campaign name
-  [dbo].udf_campaignname(final.campaign_id, final.campaign)                             as campaign,
-  -- dcm campaign id
-  final.campaign_id                                                                                          as "campaign id",
 
--- preferred, friendly site name; also corresponds to what's used in the joinkey fields across dfa, dv, and moat.
+  cast(final.dcmdate as date)                                                                             as "date",
+  cast(dateadd(week,datediff(week,0,cast(final.dcmdate as date)),0) as date)                              as "week",
+  datename(month,cast(final.dcmdate as date))                                                             as "month",
+  'Q' + datename(quarter,cast(final.dcmdate as date)) + ' ' + datename(year,cast(final.dcmdate as date))  as "quarter",
+  final.dvjoinkey                                                                                         as dvjoinkey,
+  final.mtjoinkey                                                                                         as mtjoinkey,
+  final.ivjoinkey                                                                                         as ivjoinkey,
+  final.packagecat                                                                                        as packagecat,
+  final.cost_id                                                                                           as cost_id,
+  [dbo].udf_campaignname(final.campaign_id, final.campaign)                             as campaign,
+  final.campaign_id                                                                                          as "campaign id",
     [dbo].udf_sitename(final.site_dcm) as "site",
-  -- dcm site id
   final.site_id_dcm                                                                                           as "site id",
-  -- reference/optional: package cost/pricing model, from prisma; attributed to all placements within package.
   final.costmethod                                                                                        as "cost method",
-  -- reference/optional: first six characters of placement name. used for matching across datasets when no common placement id is available, e.g. dfa-dv.
---  final.plce_id                                                                       as plce_id,
-  -- dcm placement name
   final.placement                                                                                    as placement,
-  -- dcm placement id
   final.placement_id                                                                                           as placement_id,
-  -- reference/optional: planned package end date, from prisma; attributed to all placements within package.
+  case when final.placement like '%Video%' or final.placement like '%[_]VID[_]%' then 'Video' else 'Standard'  end      as "Asset Type",
   final.placementend                                                                                      as "placement end",
   final.placementstart                                                                                    as "placement start",
   final.dv_map                                                                                            as "dv map",
   final.rate                                                                                              as rate,
   final.planned_amt                                                                                       as "planned amt",
  final.planned_cost                                                                                       as "planned cost",
---      final.planned_cost/final.newcount                                                                                      as "planned cost 2",
---  final.flatcostremain                                                                        as flatcostremain,
---  final.impsremain                                                                            as impsremain,
---  sum(final.cost)                                                                         as cost,
   case when final.costmethod like '[Ff]lat' then final.flatcost/max(final.newcount) else sum(final.cost) end      as cost,
   sum(final.dlvrimps)                                                                                     as "delivered impressions",
   sum(final.billimps)                                                                                     as "billable impressions",
   sum(final.cnslimps)                                                                                     as "dfa impressions",
   sum(final.iv_impressions)                                                                               as "innovid impressions",
---  sum(mt.human_impressions)                                                           as mt_impressions,
---  sum(final.dv_impressions)                                                                   as dv_impressions,
---  sum(final.dv_viewed)                                                                                    as dv_viewed,
---  sum(final.dv_groupmpayable)                                                                 as dv_groupmpayable,
   sum(final.clicks)                                                                                       as clicks,
---   case when sum(final.dlvrimps) = 0 then 0
---   else (sum(cast(final.clicks as decimal(20,10)))/sum(cast(final.dlvrimps as decimal(20,10))))*100 end  as ctr,
-
   sum(final.con)                                                                                         as transactions,
   sum(final.vew_con)                                                                 as vew_trns,
   sum(final.clk_con)                                                                as clck_thru_trns,
   sum(final.tix)                                                                                      as tix,
   sum(final.vew_tix)                                                                as vew_tix,
   sum(final.clk_tix)                                                               as clk_tix,
-
---   case when sum(final.con) = 0 then 0
---   else sum(final.cost)/sum(final.con) end                                                              as "cost/transaction",
   sum(final.rev)                                                                                      as revenue,
   sum(final.vew_rev)                                                                as vew_rev,
   sum(final.clk_rev)                                                               as clck_thru_rev,
 
---   sum(final.viewrevenue)                                                                                  as "billable revenue",
   sum(final.adjsrevenue)                                                                                  as "adjusted (final) revenue"
---  case when sum(final.cost) = 0 then 0
---  else ((sum(adjsrevenue)-sum(final.cost))/sum(final.cost)) end * 100                                   as aroas
+
 from (
 
 -- for running the code here instead of at "final," above
@@ -138,7 +99,6 @@ from (
          almost.costmethod                                                          as costmethod,
          sum(1) over (partition by almost.cost_id,almost.dcmmatchdate order by
            almost.dcmmonth asc range between unbounded preceding and current row) as newcount,
-
          almost.plce_id                                                     as plce_id,
 --     c1.plce_id as dbm_plce_id,
          almost.placement                                                      as placement,
@@ -152,29 +112,7 @@ from (
 --  logic excludes flat fees
          sum(c1.cost)                                                                 as cost,
          almost.rate                                                                as rate,
---          sum(case
---              --     not subject to viewability
---              when (almost.dv_map = 'N') and (almost.costmethod = 'dCPM')
---                then c1.vew_rev + c1.clk_rev
---              when (almost.dv_map = 'N')
---                then almost.vew_rev + almost.clk_rev
---
---              --     subject to viewability with flag; mt source
---              when (almost.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
---                then ((almost.vew_rev) *
---                     (cast(mt.groupm_passed_impressions as decimal) /
---                       nullif(cast(mt.total_impressions as decimal),0))) + almost.clk_rev
---              --     subject to viewability; dv source
---              when (almost.dv_map = 'Y')
---                then ((almost.vew_rev) *
---                     (cast(dv.groupm_passed_impressions as decimal) /
---                       nullif(cast(dv.total_impressions as decimal),0))) + almost.clk_rev
---              --     subject to viewability; moat source
---              when (almost.dv_map = 'M')
---                then ((almost.vew_rev) *
---                     (cast(mt.groupm_passed_impressions as decimal) /
---                       nullif(cast(mt.total_impressions as decimal),0))) + almost.clk_rev
---              else 0 end)                                                            as viewrevenue,
+
          sum(case
 --         not subject to viewability
              when (almost.dv_map = 'N') and (almost.costmethod = 'dCPM')
@@ -204,22 +142,6 @@ from (
                             nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + almost.clk_rev as decimal(10,2))
              else 0 end)                                                            as adjsrevenue,
 
-
---       total impressions as reported by 1.) dcm for "n," 2.) dv for "y," or moat for "m"
---          sum(case
---          when almost.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0) then mt.total_impressions
---          when almost.dv_map = 'Y' then dv.total_impressions
---              when almost.dv_map = 'M' then mt.total_impressions
---          when almost.dv_map = 'N' and (len(isnull(iv.joinkey,''))>0) then iv.impressions
---              else almost.impressions end)                                           as dlvrimps,
-
---       billable impressions as reported by 1.) dcm for "n," 2.) dv for "y," or moat for "m"
---          sum(case
---          when almost.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0) then mt.groupm_billable_impressions
---          when almost.dv_map = 'Y' then dv.groupm_billable_impressions
---              when almost.dv_map = 'M' then mt.groupm_billable_impressions
---          when almost.dv_map = 'N' and (len(isnull(iv.joinkey,''))>0) then iv.impressions
---              else almost.impressions end)                                           as billimps,
              sum(c1.dlvrimps)                                                    as dlvrimps,
     sum(c1.billimps) as billimps,
 
@@ -395,7 +317,7 @@ and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mi
 and total_revenue != 0
 and total_conversions != 0
 and activity_id = 978826
-and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+and campaign_id in (10768497) -- Polaris 2017
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
@@ -434,7 +356,7 @@ from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
 where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-23'' and ''2017-02-06''
-and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+and campaign_id in (10768497) -- Polaris 2017
 
 and (advertiser_id <> 0)
 ) as ti
@@ -468,7 +390,7 @@ from (
 select *
 from diap01.mec_us_united_20056.dfa2_click
 where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-23'' and ''2017-02-06''
-and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+and campaign_id in (10768497) -- Polaris 2017
 and (advertiser_id <> 0)
 ) as tc
 
@@ -662,6 +584,7 @@ group by
   ,final.diff
   ,final.dvjoinkey
   ,final.mtjoinkey
+  ,final.ivjoinkey
   ,final.packagecat
   ,final.cost_id
   ,final.campaign
