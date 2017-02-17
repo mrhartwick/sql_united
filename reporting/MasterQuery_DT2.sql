@@ -113,7 +113,7 @@ select
   sum(t3.vew_rev)                                                                as vew_rev,
   sum(t3.clk_rev)                                                               as clck_thru_rev,
 
---   sum(t3.viewrevenue)                                                                                  as "billable revenue",
+  sum(t3.billrevenue)                                                                                  as "billable revenue",
   sum(t3.adjsrevenue)                                                                                  as "adjusted (final) revenue"
 --  case when sum(t3.cost) = 0 then 0
 --  else ((sum(adjsrevenue)-sum(t3.cost))/sum(t3.cost)) end * 100                                   as aroas
@@ -160,29 +160,36 @@ from (
 --  logic excludes flat fees
          sum(cst.cost)                                                                 as cost,
          t2.rate                                                                as rate,
---          sum(case
---              --     not subject to viewability
---              when (t2.dv_map = 'N') and (t2.costmethod = 'dCPM')
---                then cst.vew_rev + cst.clk_rev
---              when (t2.dv_map = 'N')
---                then t2.vew_rev + t2.clk_rev
---
---              --     subject to viewability with flag; mt source
---              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
---                then ((t2.vew_rev) *
---                     (cast(mt.groupm_passed_impressions as decimal) /
---                       nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev
---              --     subject to viewability; dv source
---              when (t2.dv_map = 'Y')
---                then ((t2.vew_rev) *
---                     (cast(dv.groupm_passed_impressions as decimal) /
---                       nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev
---              --     subject to viewability; moat source
---              when (t2.dv_map = 'M')
---                then ((t2.vew_rev) *
---                     (cast(mt.groupm_passed_impressions as decimal) /
---                       nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev
---              else 0 end)                                                            as viewrevenue,
+
+         sum(case
+--         not subject to viewability
+             when (t2.dv_map = 'N') and (t2.costmethod = 'dCPM')
+               then cast((cst.vew_rev) + cst.clk_rev as decimal(10,2))
+             when (t2.dv_map = 'N')
+               then cast((t2.vew_rev) + t2.clk_rev as decimal(10,2))
+
+--         subject to viewability with flag; mt source
+             when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
+               then cast(
+             (((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
+
+--         subject to viewability; dv source
+             when (t2.dv_map = 'Y')
+               then cast(
+             (((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
+
+--         subject to viewability; moat source
+             when (t2.dv_map = 'M')
+               then cast(
+             (((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
+             else 0 end)                                                            as billrevenue,
+
          sum(case
 --         not subject to viewability
              when (t2.dv_map = 'N') and (t2.costmethod = 'dCPM')
@@ -358,24 +365,24 @@ from (
            from openquery(verticaunited,
                '
   select
-    cast(report.date as date)                      as dcmdate,
-    cast(month (cast(report.date as date)) as int) as reportmonth,
+    cast(r1.date as date)                      as dcmdate,
+    cast(month (cast(r1.date as date)) as int) as reportmonth,
     campaign.campaign                              as campaign,
-    report.campaign_id                             as campaign_id,
-    report.site_id_dcm                             as site_id_dcm,
+    r1.campaign_id                             as campaign_id,
+    r1.site_id_dcm                             as site_id_dcm,
     directory.site_dcm                             as site_dcm,
-left (placements.placement,6) as plce_id,
-placements.placement as placement,
-report.placement_id as placement_id,
-sum (report.impressions) as impressions,
-sum (report.clicks) as clicks,
-sum (report.vew_con) as vew_con,
-sum (report.clk_con) as clk_con,
-sum (report.vew_tix) as vew_tix,
-sum (report.clk_tix) as clk_tix,
-sum ( cast (report.vew_rev as decimal (10,2))) as vew_rev,
-sum ( cast (report.clk_rev as decimal (10,2))) as clk_rev,
-sum ( cast (report.revenue as decimal (10,2))) as revenue
+left (p1.placement,6) as plce_id,
+p1.placement as placement,
+r1.placement_id as placement_id,
+sum (r1.impressions) as impressions,
+sum (r1.clicks) as clicks,
+sum (r1.vew_con) as vew_con,
+sum (r1.clk_con) as clk_con,
+sum (r1.vew_tix) as vew_tix,
+sum (r1.clk_tix) as clk_tix,
+sum ( cast (r1.vew_rev as decimal (10,2))) as vew_rev,
+sum ( cast (r1.clk_rev as decimal (10,2))) as clk_rev,
+sum ( cast (r1.revenue as decimal (10,2))) as revenue
 from (
 
 
@@ -487,51 +494,51 @@ cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date )
 ,tc.site_id_dcm
 ,tc.placement_id
 
-) as report
+) as r1
 
 left join
 (
 select cast (campaign as varchar (4000)) as ''campaign'',campaign_id as ''campaign_id''
 from diap01.mec_us_united_20056.dfa2_campaigns
 ) as campaign
-on report.campaign_id = campaign.campaign_id
+on r1.campaign_id = campaign.campaign_id
 
 left join
 (
-select cast (t1.placement as varchar (4000)) as ''placement'',t1.placement_id as ''placement_id'',t1.campaign_id as ''campaign_id'',t1.site_id_dcm as ''site_id_dcm''
+select cast (p1.placement as varchar (4000)) as ''placement'',p1.placement_id as ''placement_id'',p1.campaign_id as ''campaign_id'',p1.site_id_dcm as ''site_id_dcm''
 
 from ( select campaign_id as campaign_id,site_id_dcm as site_id_dcm,placement_id as placement_id,placement as placement,cast (placement_start_date as date ) as thisdate,
-row_number() over (partition by campaign_id,site_id_dcm,placement_id order by cast (placement_start_date as date ) desc ) as r1
+row_number() over (partition by campaign_id,site_id_dcm,placement_id order by cast (placement_start_date as date ) desc ) as x1
 from diap01.mec_us_united_20056.dfa2_placements
 
-) as t1
-where r1 = 1
-) as placements
-on report.placement_id    = placements.placement_id
-and report.campaign_id = placements.campaign_id
-and report.site_id_dcm  = placements.site_id_dcm
+) as p1
+where x1 = 1
+) as p1
+on r1.placement_id    = p1.placement_id
+and r1.campaign_id = p1.campaign_id
+and r1.site_id_dcm  = p1.site_id_dcm
 
 left join
 (
 select cast (site_dcm as varchar (4000)) as ''site_dcm'',site_id_dcm as ''site_id_dcm''
 from diap01.mec_us_united_20056.dfa2_sites
 ) as directory
-on report.site_id_dcm = directory.site_id_dcm
+on r1.site_id_dcm = directory.site_id_dcm
 
 where not regexp_like(placement,''.do\s* not \s*use.'',''ib'')
 and not regexp_like(campaign.campaign,''.*2016.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
-and report.site_id_dcm !=''1485655''
+and r1.site_id_dcm !=''1485655''
 group by
-cast (report.date as date )
--- , cast(month(cast(report.date as date)) as int)
+cast (r1.date as date )
+-- , cast(month(cast(r1.date as date)) as int)
 ,directory.site_dcm
-,report.site_id_dcm
-,report.campaign_id
+,r1.site_id_dcm
+,r1.campaign_id
 ,campaign.campaign
-,report.placement_id
-,placements.placement
+,r1.placement_id
+,p1.placement
 ')
 
          ) as t1
