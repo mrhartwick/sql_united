@@ -6,76 +6,83 @@ if OBJECT_ID('master.dbo.dfa_cost_dt2',N'U') is not null
 
 create table master.dbo.dfa_cost_dt2
 (
-    cost_id       nvarchar(6)    not null,
-    plce_id       nvarchar(6)    not null,
-    dcmDate       int            not null,
-    prsCostMethod nvarchar(100)  not null,
-    PackageCat    nvarchar(100)  not null,
-    prsRate       decimal(20,10) not null,
-    prsStDate     int            not null,
-    prsEdDate     int            not null,
-    diff          bigint         not null,
-    cost          decimal(20,10) not null,
-    lagCost       decimal(20,10) not null,
-    lagCostRemain decimal(20,10) not null,
-    CostRunTot    decimal(20,10) not null,
-    CostRemain    decimal(20,10) not null,
-    billimps          int            not null,
-    impsRunTot    int            not null,
-    impsRemain    int            not null,
-    dlvrimps    int            not null,
-    dfa_imps    int            not null,
-    Clks          int            not null,
-    ClksRunTot    int            not null,
-    ClksRemain    int            not null,
-    planned_amt   int            not null,
-    planned_cost  decimal(20,10) not null,
-    vew_con     int             not null,
-    clk_con     int             not null,
-    vew_tix     int             not null,
-    clk_tix     int             not null,
-    vew_rev     decimal(20,10)  not null,
-    clk_rev     decimal(20,10)  not null,
-    rev         decimal(20,10)  not null,
-    con     int             not null,
-    tix     int             not null
+  cost_id       nvarchar(6)    not null,
+  plce_id       nvarchar(6)    not null,
+  dcmDate       int            not null,
+  prsCostMethod nvarchar(100)  not null,
+  PackageCat    nvarchar(100)  not null,
+  prsRate       decimal(20,10) not null,
+  prsStDate     int            not null,
+  prsEdDate     int            not null,
+  diff          bigint         not null,
+  cost          decimal(20,10) not null,
+  lagCost       decimal(20,10) not null,
+  lagCostRemain decimal(20,10) not null,
+  CostRunTot    decimal(20,10) not null,
+  CostRemain    decimal(20,10) not null,
+  billimps      int            not null,
+  impsRunTot    int            not null,
+  impsRemain    int            not null,
+  dlvrimps      int            not null,
+  dfa_imps      int            not null,
+  dv_imps       int            not null,
+  iv_imps       int            not null,
+  mt_imps       int            not null,
+  Clks          int            not null,
+  ClksRunTot    int            not null,
+  ClksRemain    int            not null,
+  planned_amt   int            not null,
+  planned_cost  decimal(20,10) not null,
+  vew_con       int            not null,
+  clk_con       int            not null,
+  vew_tix       int            not null,
+  clk_tix       int            not null,
+  vew_rev       decimal(20,10) not null,
+  clk_rev       decimal(20,10) not null,
+  rev           decimal(20,10) not null,
+  con           int            not null,
+  tix           int            not null
 );
 
 insert into master.dbo.dfa_cost_dt2
-    select
-        t7.cost_id       as cost_id,
-        t7.plce_id       as plce_id,
-        t7.dcmDate       as dcmDate,
-        t7.costmethod    as prsCostMethod,
-        t7.PackageCat    as PackageCat,
-        t7.rate          as prsRate,
-        t7.stDate        as prsStDate,
-        t7.edDate        as prsEdDate,
-        t7.diff          as diff,
-        t7.cost          as cost,
-        t7.lagCost       as lagCost,
-        t7.costRunTot    as costRunTot,
-        t7.costRemain    as costRemain,
-        t7.lagCostRemain as lagCostRemain,
-        t7.Imps          as Imps,
-        t7.impsRunTot    as impsRunTot,
-        t7.impsRemain    as impsRemain,
-             t7.dlvrimps                                        as dlvrimps,
-     t7.dfa_imps                                        as dfa_imps,
-        t7.clks          as clks,
-        t7.clksRunTot    as clksRunTot,
-        t7.clksRemain    as clksRemain,
-        t7.planned_amt   as planned_amt,
-        t7.planned_cost  as planned_cost,
-        t7.vew_con  as vew_con,
-t7.clk_con  as clk_con,
-t7.vew_tix  as vew_tix,
-t7.clk_tix  as clk_tix,
-t7.vew_rev  as vew_rev,
-t7.clk_rev  as clk_rev,
-t7.rev      as rev,
-        t7.con          as con,
-        t7.tix           as tix
+  select
+    t7.cost_id       as cost_id,
+    t7.plce_id       as plce_id,
+    t7.dcmDate       as dcmDate,
+    t7.costmethod    as prsCostMethod,
+    t7.PackageCat    as PackageCat,
+    t7.rate          as prsRate,
+    t7.stDate        as prsStDate,
+    t7.edDate        as prsEdDate,
+    t7.diff          as diff,
+    case when t7.costmethod like '[Ff]lat' then t7.flatcost else t7.cost end as cost,
+--    t7.cost          as cost,
+    t7.lagCost       as lagCost,
+    t7.costRunTot    as costRunTot,
+    t7.costRemain    as costRemain,
+    t7.lagCostRemain as lagCostRemain,
+    t7.Imps          as Imps,
+    t7.impsRunTot    as impsRunTot,
+    t7.impsRemain    as impsRemain,
+    t7.dlvrimps      as dlvrimps,
+    t7.dfa_imps      as dfa_imps,
+    t7.dv_imps       as dv_imps,
+    t7.iv_imps       as iv_imps,
+    t7.mt_imps       as mt_imps,
+    t7.clks          as clks,
+    t7.clksRunTot    as clksRunTot,
+    t7.clksRemain    as clksRemain,
+    t7.planned_amt   as planned_amt,
+    t7.planned_cost  as planned_cost,
+    t7.vew_con       as vew_con,
+    t7.clk_con       as clk_con,
+    t7.vew_tix       as vew_tix,
+    t7.clk_tix       as clk_tix,
+    t7.vew_rev       as vew_rev,
+    t7.clk_rev       as clk_rev,
+    t7.rev           as rev,
+    t7.con           as con,
+    t7.tix           as tix
     from (
 
 
@@ -93,11 +100,12 @@ t7.rev      as rev,
                  t6.placement                                       as placement,
                  t6.placement_id                                    as placement_id,
                  t6.dv_map                                          as dv_map,
-                 t6.rate                                          as rate,
+                 t6.rate                                                as rate,
                  t6.PackageCat                                      as PackageCat,
                  t6.stDate                                          as stDate,
                  t6.edDate                                          as edDate,
                  isNull(t6.diff,cast(0 as int))                     as diff,
+               isNull(t6.flatcost,cast(0 as decimal(20,10)))       as flatCost,
                  case
                  when t6.costmethod     like '[Cc][Pp][Cc]%' and t6.diff > 0 and t6.cost < t6.planned_cost and t6.clksRunTot < t6.planned_amt then t6.cost
                  when t6.diff > 0 and t6.cost < t6.planned_cost and t6.impsRunTot < t6.planned_amt then t6.cost
@@ -136,218 +144,229 @@ t7.rev      as rev,
 
              from (
                       select
-                          t5.dcmmonth                                     as dcmmonth,
-                          t5.dcmDate                                      as dcmDate,
-                          t5.cost_id                                      as cost_id,
-                          t5.plce_id                                      as plce_id,
-                          t5.costmethod                                   as costmethod,
-                          t5.dvjoinkey                                    as dvjoinkey,
-                          t5.mtjoinkey                                    as mtjoinkey,
-                          t5.ivjoinkey                                    as ivjoinkey,
-                          t5.campaign        as campaign,
-                          t5.campaign_id                                  as campaign_id,
-                          t5.placement                                    as placement,
-                          t5.placement_id                                 as placement_id,
-                          t5.dv_map                                       as dv_map,
-                          t5.rate                                         as rate,
-                          t5.PackageCat                                   as PackageCat,
-                          t5.stDate                                       as stDate,
-                          t5.edDate                                       as edDate,
-                          isNull(t5.diff,cast(0 as decimal(20,10)))       as diff,
-                          case
-                          when t5.cost is null then cast(0 as decimal(20,10))
-                          when t5.diff > 0 and t5.costmethod like '[Cc][Pp][Cc]%' and t5.clks > t5.planned_amt then isNull(t5.cost,cast(0 as decimal(20,10))) - isNull(t5.lagCost,cast(0 as decimal(20,10)))
-                          when t5.diff > 0 and t5.Imps > t5.planned_amt then isNull(t5.cost,cast(0 as decimal(20,10))) - isNull(t5.lagCost,cast(0 as decimal(20,10)))
-                          else isNull(t5.cost,cast(0 as decimal(20,10)))
-                          end                                             as cost,
-                          isNull(t5.lagCost,cast(0 as decimal(20,10)))    as lagCost,
-                          isNull(t5.costRunTot,cast(0 as decimal(20,10))) as costRunTot,
-                          isNull(t5.costRemain,cast(0 as decimal(20,10))) as costRemain,
-                          lag(isNull(t5.costRemain,cast(0 as decimal(20,10))),1,0) over (partition by t5.cost_id
-                              order by t5.dcmDate,plce_id)                as lagCostRemain,
-                          isNull(t5.Imps,cast(0 as int))                  as Imps,
-                          isNull(t5.impsRunTot,cast(0 as int))            as impsRunTot,
-                          isNull(t5.impsRemain,cast(0 as int))            as impsRemain,
-                          isNull(t5.planned_amt,cast(0 as int))           as planned_amt,
-                          isNull(t5.planned_cost,cast(0 as int))          as planned_cost,
-                          t5.billimps                                     as billimps,
-                          t5.dlvrimps                                     as dlvrimps,
-                          t5.dfa_imps                                     as dfa_imps,
-                          t5.iv_imps                                      as iv_imps,
-                          t5.dv_imps                                      as dv_imps,
-                          t5.mt_imps                                      as mt_imps,
-                          isNull(t5.clks,cast(0 as int))                  as clks,
-                          isNull(t5.clksRunTot,cast(0 as int))            as clksRunTot,
-                          isNull(t5.clksRemain,cast(0 as int))            as clksRemain,
-                          t5.vew_con  as vew_con,
-t5.clk_con  as clk_con,
-t5.vew_tix  as vew_tix,
-t5.clk_tix  as clk_tix,
-t5.vew_rev  as vew_rev,
-t5.clk_rev  as clk_rev,
-t5.rev      as rev,
-                          t5.con                                         as con,
-                          t5.tix                                          as tix
+                        t5.dcmmonth                                     as dcmmonth,
+                        t5.dcmDate                                      as dcmDate,
+                        t5.cost_id                                      as cost_id,
+                        t5.plce_id                                      as plce_id,
+                        t5.costmethod                                   as costmethod,
+                        t5.dvjoinkey                                    as dvjoinkey,
+                        t5.mtjoinkey                                    as mtjoinkey,
+                        t5.ivjoinkey                                    as ivjoinkey,
+                        t5.campaign                                     as campaign,
+                        t5.campaign_id                                  as campaign_id,
+                        t5.placement                                    as placement,
+                        t5.placement_id                                 as placement_id,
+                        t5.dv_map                                       as dv_map,
+                        t5.rate                                         as rate,
+                        t5.PackageCat                                   as PackageCat,
+                        t5.stDate                                       as stDate,
+                        t5.edDate                                       as edDate,
+                        isNull(t5.diff,cast(0 as decimal(20,10)))       as diff,
+                        t5.flatcost as flatcost,
+                        case
+                        when t5.cost is null then cast(0 as decimal(20,10))
+                        when t5.diff > 0 and t5.costmethod like '[Cc][Pp][Cc]%' and t5.clks > t5.planned_amt then isNull(t5.cost,cast(0 as decimal(20,10))) - isNull(t5.lagCost,cast(0 as decimal(20,10)))
+                        when t5.diff > 0 and t5.Imps > t5.planned_amt then isNull(t5.cost,cast(0 as decimal(20,10))) - isNull(t5.lagCost,cast(0 as decimal(20,10)))
+                        else isNull(t5.cost,cast(0 as decimal(20,10)))
+                        end                                             as cost,
+                        isNull(t5.lagCost,cast(0 as decimal(20,10)))    as lagCost,
+                        isNull(t5.costRunTot,cast(0 as decimal(20,10))) as costRunTot,
+                        isNull(t5.costRemain,cast(0 as decimal(20,10))) as costRemain,
+                        lag(isNull(t5.costRemain,cast(0 as decimal(20,10))),1,0) over (partition by t5.cost_id
+                          order by t5.dcmDate,plce_id)                as lagCostRemain,
+                        isNull(t5.Imps,cast(0 as int))                  as Imps,
+                        isNull(t5.impsRunTot,cast(0 as int))            as impsRunTot,
+                        isNull(t5.impsRemain,cast(0 as int))            as impsRemain,
+                        isNull(t5.planned_amt,cast(0 as int))           as planned_amt,
+                        isNull(t5.planned_cost,cast(0 as int))          as planned_cost,
+                        t5.billimps                                     as billimps,
+                        t5.dlvrimps                                     as dlvrimps,
+                        t5.dfa_imps                                     as dfa_imps,
+                        t5.iv_imps                                      as iv_imps,
+                        t5.dv_imps                                      as dv_imps,
+                        t5.mt_imps                                      as mt_imps,
+                        isNull(t5.clks,cast(0 as int))                  as clks,
+                        isNull(t5.clksRunTot,cast(0 as int))            as clksRunTot,
+                        isNull(t5.clksRemain,cast(0 as int))            as clksRemain,
+                        t5.vew_con                                      as vew_con,
+                        t5.clk_con                                      as clk_con,
+                        t5.vew_tix                                      as vew_tix,
+                        t5.clk_tix                                      as clk_tix,
+                        t5.vew_rev                                      as vew_rev,
+                        t5.clk_rev                                      as clk_rev,
+                        t5.rev                                          as rev,
+                        t5.con                                          as con,
+                        t5.tix                                          as tix
              from (
-                      select
-                          t4.dcmmonth     as dcmmonth,
-                          t4.dcmDate      as dcmDate,
-                          t4.cost_id      as cost_id,
-                          t4.plce_id      as plce_id,
-                          t4.costmethod   as costmethod,
-                          t4.dvjoinkey    as dvjoinkey,
-                          t4.mtjoinkey    as mtjoinkey,
-                          t4.ivjoinkey    as ivjoinkey,
-                          t4.campaign     as campaign,
-                          t4.campaign_id  as campaign_id,
-                          t4.placement    as placement,
-                          t4.placement_id as placement_id,
-                          t4.dv_map       as dv_map,
-                          t4.rate         as rate,
-                          t4.PackageCat   as PackageCat,
-                          t4.stDate       as stDate,
-                          t4.edDate       as edDate,
-                          t4.planned_cost as planned_cost,
-                          t4.planned_amt  as planned_amt,
-                          isNull(t4.ed_diff,cast(0 as decimal(20,10)))                                   as diff,
-                          sum(t4.cost) over (partition by t4.cost_id, t4.plce_id ,t4.dcmDate)            as cost,
-                          lag(t4.cost,1,0) over (partition by t4.cost_id
-                              order by t4.dcmDate, t4.plce_id)                                           as lagCost,
-                          sum(t4.cost) over (partition by t4.cost_id order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row) as costRunTot,
-                          case
-                              when (cast(t4.planned_cost as decimal(20,10)) - sum(t4.cost) over (partition by t4.cost_id order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
-                              else (cast(t4.planned_cost as decimal(20,10)) - sum(t4.cost) over (partition by t4.cost_id order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row))
-                          end                                                                            as costRemain,
+                    select
+                      t4.dcmmonth                                                                               as dcmmonth,
+                      t4.dcmDate                                                                                as dcmDate,
+                      t4.cost_id                                                                                as cost_id,
+                      t4.plce_id                                                                                as plce_id,
+                      t4.costmethod                                                                             as costmethod,
+                      t4.dvjoinkey                                                                              as dvjoinkey,
+                      t4.mtjoinkey                                                                              as mtjoinkey,
+                      t4.ivjoinkey                                                                              as ivjoinkey,
+                      t4.campaign                                                                               as campaign,
+                      t4.campaign_id                                                                            as campaign_id,
+                      t4.placement                                                                              as placement,
+                      t4.placement_id                                                                           as placement_id,
+                      t4.dv_map                                                                                 as dv_map,
+                      t4.rate                                                                                   as rate,
+                      t4.PackageCat                                                                             as PackageCat,
+                      t4.stDate                                                                                 as stDate,
+                      t4.edDate                                                                                 as edDate,
+                      t4.planned_cost                                                                           as planned_cost,
+                      t4.planned_amt                                                                            as planned_amt,
+                      isNull(t4.ed_diff,cast(0 as decimal(20,10)))                                              as diff,
+                      t4.flatcost as flatcost,
+                      sum(t4.cost) over (partition by t4.cost_id,t4.plce_id,t4.dcmDate)                         as cost,
+                      lag(t4.cost,1,0) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id)                                                       as lagCost,
+                      sum(t4.cost) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id asc range between unbounded preceding and current row) as costRunTot,
+                      case
+                      when (cast(t4.planned_cost as decimal(20,10)) - sum(t4.cost) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
+                      else (cast(t4.planned_cost as decimal(20,10)) - sum(t4.cost) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id asc range between unbounded preceding and current row))
+                      end                                                                                       as costRemain,
 
-                          sum(t4.billimps) over (partition by t4.cost_id, t4.plce_id, t4.dcmDate)                  as Imps,
-                          sum(t4.billimps) over (partition by t4.cost_id
-                              order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row)      as impsRunTot,
-                          case
-                              when (cast(t4.planned_amt as decimal(20,10)) - sum(t4.billimps) over (partition by t4.cost_id order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
-                              else (cast(t4.planned_amt as decimal(20,10)) - sum(t4.billimps) over (partition by t4.cost_id order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row))
-                          end as impsRemain,
-                          t4.billimps                                 as billimps,
-                          t4.dlvrimps                                 as dlvrimps,
-                          t4.dfa_imps                                 as dfa_imps,
-                          t4.iv_imps                                  as iv_imps,
-                          t4.dv_imps                                  as dv_imps,
-                          t4.mt_imps                                  as mt_imps,
-                          sum(t4.clicks) over (partition by t4.cost_id, t4.plce_id, t4.dcmDate)                  as clks,
-                          sum(t4.clicks) over (partition by t4.cost_id
-                              order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row)      as clksRunTot,
-                          case
-                              when (cast(t4.planned_amt as decimal(20,10)) - sum(t4.clicks) over (partition by t4.cost_id order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
-                              else (cast(t4.planned_amt as decimal(20,10)) - sum(t4.clicks) over (partition by t4.cost_id order by t4.dcmDate, t4.plce_id asc range between unbounded preceding and current row))
-                          end as clksRemain,
-                          t4.vew_con  as vew_con,
-t4.clk_con  as clk_con,
-
-t4.vew_tix  as vew_tix,
-t4.clk_tix  as clk_tix,
-t4.vew_rev  as vew_rev,
-t4.clk_rev  as clk_rev,
-t4.rev      as rev,
-                          t4.con                                    as con,
-                          t4.tix                                    as tix
+                      sum(t4.billimps) over (partition by t4.cost_id,t4.plce_id,t4.dcmDate)                     as Imps,
+                      sum(t4.billimps) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id asc range between unbounded preceding and current row) as impsRunTot,
+                      case
+                      when (cast(t4.planned_amt as decimal(20,10)) - sum(t4.billimps) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
+                      else (cast(t4.planned_amt as decimal(20,10)) - sum(t4.billimps) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id asc range between unbounded preceding and current row))
+                      end                                                                                       as impsRemain,
+                      t4.billimps                                                                               as billimps,
+                      t4.dlvrimps                                                                               as dlvrimps,
+                      t4.dfa_imps                                                                               as dfa_imps,
+                      t4.iv_imps                                                                                as iv_imps,
+                      t4.dv_imps                                                                                as dv_imps,
+                      t4.mt_imps                                                                                as mt_imps,
+                      sum(t4.clicks) over (partition by t4.cost_id,t4.plce_id,t4.dcmDate)                       as clks,
+                      sum(t4.clicks) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id asc range between unbounded preceding and current row) as clksRunTot,
+                      case
+                      when (cast(t4.planned_amt as decimal(20,10)) - sum(t4.clicks) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
+                      else (cast(t4.planned_amt as decimal(20,10)) - sum(t4.clicks) over (partition by t4.cost_id
+                        order by t4.dcmDate,t4.plce_id asc range between unbounded preceding and current row))
+                      end                                                                                       as clksRemain,
+                      t4.vew_con                                                                                as vew_con,
+                      t4.clk_con                                                                                as clk_con,
+                      t4.vew_tix                                                                                as vew_tix,
+                      t4.clk_tix                                                                                as clk_tix,
+                      t4.vew_rev                                                                                as vew_rev,
+                      t4.clk_rev                                                                                as clk_rev,
+                      t4.rev                                                                                    as rev,
+                      t4.con                                                                                    as con,
+                      t4.tix                                                                                    as tix
 
                       from
                           (
-                              select
-                                  t3.dcmmonth     as dcmmonth,
-                                  t3.dcmDate      as dcmDate,
-                                  t3.cost_id      as cost_id,
-                                  t3.plce_id      as plce_id,
-                                  t3.costmethod   as costmethod,
-                                  t3.dvjoinkey    as dvjoinkey,
-                                  t3.mtjoinkey    as mtjoinkey,
-                                  t3.ivjoinkey    as ivjoinkey,
-                                  t3.campaign     as campaign,
-                                  t3.campaign_id  as campaign_id,
-                                  t3.placement    as placement,
-                                  t3.placement_id as placement_id,
-                                  t3.dv_map       as dv_map,
-                                  t3.rate         as rate,
-                                  t3.PackageCat   as PackageCat,
-                                  t3.stDate       as stDate,
-                                  t3.edDate       as edDate,
-                                  t3.planned_cost as planned_cost,
-                                  t3.planned_amt  as planned_amt,
-                                  case
-                                      when t3.dcmDate - t3.stDate   < 0 then 0
-                                      when (t3.edDate - t3.dcmDate) > 0 and t3.costmethod like '[Cc][Pp][Cc]%' and sum(t3.clicks) > t3.planned_amt then t3.planned_cost
-                                      when (t3.edDate - t3.dcmDate) > 0 and sum(t3.billimps) > t3.planned_amt then t3.planned_cost
-                                      when (t3.edDate - t3.dcmDate) > 0 then sum(t3.cost)
-                                      when (t3.edDate - t3.dcmDate) < 0 then 0
-                                      else 0
-                                  end                                       as cost,
-                                  cast(t3.edDate as int) - cast(t3.dcmDate as int) as ed_diff,
-                                  case
-                                      when t3.dcmDate - t3.stDate < 0 then 0
-                                  else sum(t3.billimps) end                        as billimps,
-                                  sum(t3.dlvrimps)                                 as dlvrimps,
-                                  sum(t3.dfa_imps)                                 as dfa_imps,
-                                  sum(t3.iv_imps)                                  as iv_imps,
-                                  sum(t3.dv_imps)                                  as dv_imps,
-                                  sum(t3.mt_imps)                                  as mt_imps,
-                                  sum(t3.clicks)                                    as clicks,
-                                  sum(t3.vew_con)  as vew_con,
-                                    sum(t3.clk_con)  as clk_con,
-                                    sum(t3.vew_tix)  as vew_tix,
-                                    sum(t3.clk_tix)  as clk_tix,
-                                    sum(t3.vew_rev)  as vew_rev,
-                                    sum(t3.clk_rev)  as clk_rev,
-                                    sum(t3.rev    )  as rev,
-                                  sum(t3.con)                                    as con,
-                                  sum(t3.tix)                                    as tix
+                            select
+                              t3.dcmmonth                                      as dcmmonth,
+                              t3.dcmDate                                       as dcmDate,
+                              t3.cost_id                                       as cost_id,
+                              t3.plce_id                                       as plce_id,
+                              t3.costmethod                                    as costmethod,
+                              t3.dvjoinkey                                     as dvjoinkey,
+                              t3.mtjoinkey                                     as mtjoinkey,
+                              t3.ivjoinkey                                     as ivjoinkey,
+                              t3.campaign                                      as campaign,
+                              t3.campaign_id                                   as campaign_id,
+                              t3.placement                                     as placement,
+                              t3.placement_id                                  as placement_id,
+                              t3.dv_map                                        as dv_map,
+                              t3.rate                                          as rate,
+                              t3.PackageCat                                    as PackageCat,
+                              t3.stDate                                        as stDate,
+                              t3.edDate                                        as edDate,
+                              t3.planned_cost                                  as planned_cost,
+                              t3.planned_amt                                   as planned_amt,
+                              case when t3.costmethod like '[Ff]lat' then t3.flatcost/max(t3.cst_count) else 0 end      as flatcost,
+                              case
+                              when t3.dcmDate - t3.stDate < 0 then 0
+                              when (t3.edDate - t3.dcmDate) > 0 and t3.costmethod like '[Cc][Pp][Cc]%' and sum(t3.clicks) > t3.planned_amt then t3.planned_cost
+                              when (t3.edDate - t3.dcmDate) > 0 and sum(t3.billimps) > t3.planned_amt then t3.planned_cost
+                              when (t3.edDate - t3.dcmDate) > 0 then sum(t3.cost)
+                              when (t3.edDate - t3.dcmDate) < 0 then 0
+                              else 0
+                              end                                              as cost,
+                              cast(t3.edDate as int) - cast(t3.dcmDate as int) as ed_diff,
+                              case
+                              when t3.dcmDate - t3.stDate < 0 then 0
+                              else sum(t3.billimps) end                        as billimps,
+                              sum(t3.dlvrimps)                                 as dlvrimps,
+                              sum(t3.dfa_imps)                                 as dfa_imps,
+                              sum(t3.iv_imps)                                  as iv_imps,
+                              sum(t3.dv_imps)                                  as dv_imps,
+                              sum(t3.mt_imps)                                  as mt_imps,
+                              sum(t3.clicks)                                   as clicks,
+                              sum(t3.vew_con)                                  as vew_con,
+                              sum(t3.clk_con)                                  as clk_con,
+                              sum(t3.vew_tix)                                  as vew_tix,
+                              sum(t3.clk_tix)                                  as clk_tix,
+                              sum(t3.vew_rev)                                  as vew_rev,
+                              sum(t3.clk_rev)                                  as clk_rev,
+                              sum(t3.rev)                                      as rev,
+                              sum(t3.con)                                      as con,
+                              sum(t3.tix)                                      as tix
 
                               from
                                   (
 
 select
 
-    [dbo].udf_dateToInt(t2.dcmdate)        as dcmdate,
-    t2.dcmmonth                            as dcmmonth,
-    t2.diff                             as diff,
-    t2.dvjoinkey                           as dvjoinkey,
-    t2.mtjoinkey                           as mtjoinkey,
-    t2.ivjoinkey                           as ivjoinkey,
-    t2.campaign                            as campaign,
-    t2.campaign_id                         as campaign_id,
-    t2.placement                           as placement,
-    t2.plce_id                             as plce_id,
-    t2.placement_id                        as placement_id,
-    t2.dv_map                              as dv_map,
-    t2.packagecat                          as packagecat,
-    t2.cost_id                             as cost_id,
-    t2.costmethod                          as costmethod,
-    [dbo].udf_dateToInt(t2.placementend)   as edDate,
-    [dbo].udf_dateToInt(t2.placementstart) as stDate,
-    t2.planned_amt                         as planned_amt,
-    t2.planned_cost                        as planned_cost,
-    case when t2.costmethod = 'dCPM' then db.dbm_cost
-    else t2.cost end                       as cost,
-    db.dbm_cost                            as dbm_cost,
-    t2.rate                                as rate,
-    case when t2.costmethod = 'dCPM' then db.imps
-    else t2.dlvrimps end                   as dlvrimps,
-    case when t2.costmethod = 'dCPM' then db.imps
-    else t2.billimps end                   as billimps,
-    case when t2.costmethod = 'dCPM' then db.imps
-    else t2.dfa_imps end                   as dfa_imps,
-    t2.iv_imps                             as iv_imps,
-    t2.dv_imps                             as dv_imps,
-    t2.mt_imps                             as mt_imps,
-    case when t2.costmethod = 'dCPM' then db.clicks
-    else t2.clicks end                     as clicks,
-    db.vew_con                             as vew_con,
-    db.clk_con                             as clk_con,
-    db.con                                 as con,
-    db.vew_tix                             as vew_tix,
-    db.clk_tix                             as clk_tix,
-    db.tix                                 as tix,
-    db.vew_rev                             as vew_rev,
-    db.clk_rev                             as clk_rev,
-    db.rev                                 as rev
+  [dbo].udf_dateToInt(t2.dcmdate)        as dcmdate,
+  t2.dcmmonth                            as dcmmonth,
+  t2.diff                                as diff,
+  t2.dvjoinkey                           as dvjoinkey,
+  t2.mtjoinkey                           as mtjoinkey,
+  t2.ivjoinkey                           as ivjoinkey,
+  t2.campaign                            as campaign,
+  t2.campaign_id                         as campaign_id,
+  t2.placement                           as placement,
+  t2.plce_id                             as plce_id,
+  t2.placement_id                        as placement_id,
+  t2.dv_map                              as dv_map,
+  t2.packagecat                          as packagecat,
+  t2.cost_id                             as cost_id,
+  t2.cst_count                           as cst_count,
+  t2.costmethod                          as costmethod,
+  t2.flatcost as flatcost,
+  [dbo].udf_dateToInt(t2.placementend)   as edDate,
+  [dbo].udf_dateToInt(t2.placementstart) as stDate,
+  t2.planned_amt                         as planned_amt,
+  t2.planned_cost                        as planned_cost,
+  case when t2.costmethod = 'dCPM' then db.dbm_cost
+  else t2.cost end                       as cost,
+  db.dbm_cost                            as dbm_cost,
+  t2.rate                                as rate,
+  case when t2.costmethod = 'dCPM' then db.imps
+  else t2.dlvrimps end                   as dlvrimps,
+  case when t2.costmethod = 'dCPM' then db.imps
+  else t2.billimps end                   as billimps,
+  case when t2.costmethod = 'dCPM' then db.imps
+  else t2.dfa_imps end                   as dfa_imps,
+  t2.iv_imps                             as iv_imps,
+  t2.dv_imps                             as dv_imps,
+  t2.mt_imps                             as mt_imps,
+  case when t2.costmethod = 'dCPM' then db.clicks
+  else t2.clicks end                     as clicks,
+  db.vew_con                             as vew_con,
+  db.clk_con                             as clk_con,
+  db.con                                 as con,
+  db.vew_tix                             as vew_tix,
+  db.clk_tix                             as clk_tix,
+  db.tix                                 as tix,
+  db.vew_rev                             as vew_rev,
+  db.clk_rev                             as clk_rev,
+  db.rev                                 as rev
 
 
 -- ============================================================================================================================================
@@ -375,10 +394,12 @@ from (
              t1.site_dcm                                                                as site_dcm,
              t1.site_id_dcm                                                             as site_id_dcm,
              t1.costmethod                                                              as costmethod,
-             sum(1) over (partition by t1.cost_id,t1.plce_id
-                 order by
-                     t1.dcmmonth asc range between unbounded preceding and current row) as newcount,
-             t1.plce_id                                                         as plce_id,
+--           Count of # times cost_id appears per day. Important b/c planned_amt and planned_cost are listed at
+--         cost_id level.
+             sum(1) over (partition by t1.cost_id,t1.dcmdate
+             order by
+             t1.dcmmonth asc range between unbounded preceding and current row)         as cst_count,
+         t1.plce_id                                                                 as plce_id,
              t1.placement                                                               as placement,
              t1.placement_id                                                            as placement_id,
              t1.placementend                                                            as placementend,
@@ -386,8 +407,8 @@ from (
              t1.dv_map                                                                  as dv_map,
              t1.planned_amt                                                             as planned_amt,
              t1.planned_cost                                                            as planned_cost,
--- flat.flatcost as flatcost,
---  logic excludes flat fees
+        flat.flatcost as flatcost,
+  --  logic excludes flat fees
              case
              --       zeros out cost for placements traffic before specified start date or after specified end date
              when ((t1.dv_map = 'N' or t1.dv_map = 'Y') and (t1.eddate - t1.dcmmatchdate < 0 or t1.dcmmatchdate - t1.stdate < 0)
@@ -440,7 +461,6 @@ from (
 
              else cast(0 as decimal(20,10)) end                                         as cost,
              t1.rate                                                                    as rate,
-             sum(t1.incrflatcost)                                                       as incrflatcost,
 --       total impressions as reported by 1.) dcm for "n," 2.) dv for "y," or moat for "m"
              sum(case
                  when t1.dv_map = 'Y' and (len(isnull(mt.joinkey,'')) > 0) then mt.total_impressions
@@ -481,7 +501,7 @@ from (
 -- =========================================================================================================================
 
                  select
-    dcmreport.dcmdate                                                          as dcmdate,
+    dcmreport.dcmdate             as dcmdate,
                      cast(month(cast(dcmreport.dcmdate as date)) as int)                        as dcmmonth,
                      [dbo].udf_dateToInt(dcmreport.dcmdate)                                     as dcmmatchdate,
                      dcmreport.campaign                                                         as campaign,
@@ -519,14 +539,14 @@ from (
 --                      sum(dcmreport.tix)                                                         as tix,
 
                      case when cast(month(prisma.placementend) as int) - cast(month(cast(dcmreport.dcmdate as date)) as
-                                                                              int) <= 0 then 0
+                  int) <= 0 then 0
                      else cast(month(prisma.placementend) as int) - cast(month(cast(dcmreport.dcmdate as date)) as
                                                                          int) end               as diff,
 
                      case
                      when prisma.costmethod = 'Flat' or prisma.costmethod = 'CPC' or prisma.costmethod = 'CPCV' or prisma.costmethod = 'DCPM'
                          then 'N'
---                   live intent for sfo-sin campaign is email (not subject to viewab.), but mistakenly labeled with "y"
+--                   live intent for sfo-sin campaign is email (not subject to viewability), but mistakenly labeled with "Y"
                      when
                          dcmreport.campaign_id = '9923634' -- sfo-sin
                              and dcmreport.site_id_dcm = '1853564' -- live intent
@@ -603,8 +623,7 @@ from
 select *
 from diap01.mec_us_united_20056.dfa2_activity
 where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2017-01-01''
-and upper(substring(other_data, (instr(other_data,''u3='')+3), 3)) != ''MIL''
-and substring(other_data, (instr(other_data,''u3='')+3), 5) != ''Miles''
+and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue != 0
 and total_conversions != 0
 and activity_id = 978826
@@ -802,10 +821,8 @@ cast(report.date as date)
                  on
                      left(t1.placement,6) + '_' + [dbo].udf_sitekey(t1.site_dcm) + '_'
                          + cast(t1.dcmdate as varchar(10)) = iv.joinkey
---          where t1.costmethod != 'Flat'
---       and (t1.cost_id = 'P6SF6Y' or t1.cost_id = 'P8H1HG')
---                  and t1.cost_id = 'P8FSSK'
-                     where t1.campaign not like 'BidManager%Campaign%'
+
+         where t1.campaign not like 'BidManager%Campaign%'
              and t1.site_dcm not like '%DfaSite%'
 
          group by
@@ -834,8 +851,8 @@ cast(report.date as date)
              ,dv.joinkey
              ,mt.joinkey
              ,iv.joinkey
--- ,flat.flatcost
              ,t1.costmethod
+       ,flat.flatcost
 
      ) as t2
                                                left join (
@@ -845,11 +862,7 @@ cast(report.date as date)
                       on [dbo].udf_dateToInt(t2.dcmdate) = db.dcmdate
                       and t2.plce_id = db.plce_id
 
-
-
                                   ) as t3
-
-
 
                               group by
                                   t3.dcmmonth,
@@ -870,6 +883,7 @@ cast(report.date as date)
                                   t3.placement,
                                   t3.placement_id,
                                   t3.dv_map,
+                                t3.flatcost,
                                   t3.plce_id
                           ) as t4
 where t4.costmethod != 'Flat'
