@@ -28,8 +28,7 @@ from (
                 (select
                    t9.user_id,
                   t9.imp,
---                   t9.path_1 || '->' || t9.path_2 || '->' || t9.path_3 || '->' || t9.path_4 || '->' || t9.path_5 as path
-                t9.path_1 || '->' || t9.path_2 || '->' || t9.path_3  as path
+                  t9.path_1 || '->' || t9.path_2 || '->' || t9.path_3  as path
 
                  from (select
                          t8.user_id,
@@ -57,22 +56,6 @@ from (
                          when t8.path_3 = 5 then 'Travel Spike'
                          when t8.path_3 = 6 then 'Viant'
                          when t8.path_3 = 7 then 'Xaxis' else 'xxx' end as path_3
---
---                         case when t8.path_4 = 1 then 'Adara'
---                         when t8.path_4 = 2 then 'Amobee'
---                         when t8.path_4 = 3 then 'Google'
---                         when t8.path_4 = 4 then 'Internet Brands'
---                         when t8.path_4 = 5 then 'Travel Spike'
---                         when t8.path_4 = 6 then 'Viant'
---                         when t8.path_4 = 7 then 'Xaxis' else 'xxx' end as path_4,
---
---                         case when t8.path_5 = 1 then 'Adara'
---                         when t8.path_5 = 2 then 'Amobee'
---                         when t8.path_5 = 3 then 'Google'
---                         when t8.path_5 = 4 then 'Internet Brands'
---                         when t8.path_5 = 5 then 'Travel Spike'
---                         when t8.path_5 = 6 then 'Viant'
---                         when t8.path_5 = 7 then 'Xaxis' else 'xxx' end as path_5
 
                        from (
 
@@ -81,8 +64,6 @@ from (
                                 sum(t7.path_1) as path_1,
                                 sum(t7.path_2) as path_2,
                                 sum(t7.path_3) as path_3,
---                                sum(t7.path_4) as path_4,
---                                sum(t7.path_5) as path_5,
                                  sum(t7.imp) as imp
 
                               from (
@@ -118,64 +99,6 @@ from (
                                        when regexp_like(t6.path_3,'xaxis.*','ib') then 7
                                        else 0 end as path_3
 
---                                       case
---                                       when regexp_like(t6.path_4,'adar.*','ib') then 1
---                                       when regexp_like(t6.path_4,'amobee.*','ib') then 2
---                                       when regexp_like(t6.path_4,'google.*','ib') then 3
---                                       when regexp_like(t6.path_4,'internet.*','ib') then 4
---                                       when regexp_like(t6.path_4,'travel.*','ib') then 5
---                                       when regexp_like(t6.path_4,'viant.*','ib') then 6
---                                       when regexp_like(t6.path_4,'xaxis.*','ib') then 7
---                                       else 0 end as path_4,
---
---                                       case
---                                       when regexp_like(t6.path_5,'adar.*','ib') then 1
---                                       when regexp_like(t6.path_5,'amobee.*','ib') then 2
---                                       when regexp_like(t6.path_5,'google.*','ib') then 3
---                                       when regexp_like(t6.path_5,'internet.*','ib') then 4
---                                       when regexp_like(t6.path_5,'travel.*','ib') then 5
---                                       when regexp_like(t6.path_5,'viant.*','ib') then 6
---                                       when regexp_like(t6.path_5,'xaxis.*','ib') then 7
---                                       else 0 end as path_5
-                                     --                                 case when t6.path_1 = 'Adara' then 1
-                                     --                                 when t6.path_1 = 'Amobee' then 2
-                                     --                                 when t6.path_1 = 'Google' then 3
-                                     --                                 when t6.path_1 = 'Internet Brands' then 4
-                                     --                                 when t6.path_1 = 'Travel Spike' then 5
-                                     --                                 when t6.path_1 = 'Viant' then 6
-                                     --                                 when t6.path_1 = 'Xaxis' then 7 else 0 end as path_1,
-                                     --
-                                     --                                 case when t6.path_2 = 'Adara' then 1
-                                     --                                 when t6.path_2 = 'Amobee' then 2
-                                     --                                 when t6.path_2 = 'Google' then 3
-                                     --                                 when t6.path_2 = 'Internet Brands' then 4
-                                     --                                 when t6.path_2 = 'Travel Spike' then 5
-                                     --                                 when t6.path_2 = 'Viant' then 6
-                                     --                                 when t6.path_2 = 'Xaxis' then 7 else 0 end as path_2,
-                                     --
-                                     --                                 case when t6.path_3 = 'Adara' then 1
-                                     --                                 when t6.path_3 = 'Amobee' then 2
-                                     --                                 when t6.path_3 = 'Google' then 3
-                                     --                                 when t6.path_3 = 'Internet Brands' then 4
-                                     --                                 when t6.path_3 = 'Travel Spike' then 5
-                                     --                                 when t6.path_3 = 'Viant' then 6
-                                     --                                 when t6.path_3 = 'Xaxis' then 7 else 0 end as path_3,
-                                     --
-                                     --                                 case when t6.path_4 = 'Adara' then 1
-                                     --                                 when t6.path_4 = 'Amobee' then 2
-                                     --                                 when t6.path_4 = 'Google' then 3
-                                     --                                 when t6.path_4 = 'Internet Brands' then 4
-                                     --                                 when t6.path_4 = 'Travel Spike' then 5
-                                     --                                 when t6.path_4 = 'Viant' then 6
-                                     --                                 when t6.path_4 = 'Xaxis' then 7 else 0 end as path_4,
-                                     --
-                                     --                                 case when t6.path_5 = 'Adara' then 1
-                                     --                                 when t6.path_5 = 'Amobee' then 2
-                                     --                                 when t6.path_5 = 'Google' then 3
-                                     --                                 when t6.path_5 = 'Internet Brands' then 4
-                                     --                                 when t6.path_5 = 'Travel Spike' then 5
-                                     --                                 when t6.path_5 = 'Viant' then 6
-                                     --                                 when t6.path_5 = 'Xaxis' then 7 else 0 end as path_5
 
                                      from (
                                             select
@@ -187,8 +110,6 @@ from (
                               case when t5.tp_rank = 3 then t5.site_dcm else 'zzz' end as path_1,
                               case when t5.tp_rank = 2 then t5.site_dcm else 'zzz' end as path_2,
                               case when t5.tp_rank = 1 then t5.site_dcm else 'zzz' end as path_3
---                              case when t5.tp_rank = 2 then t5.site_dcm else 'zzz' end as path_4,
---                              case when t5.tp_rank = 1 then t5.site_dcm else 'zzz' end as path_5
 
                                             from (
                                                    select
@@ -340,14 +261,9 @@ from (
                                                      t4.user_id,
                                                      t4.tp_rank
                                                  ) as t5
---                                     group by
---                                       t5.user_id,
---                                       t5.site_dcm,
---                                       t5.tp_rank
 
                                           ) as t6
                                    ) as t7
---  where t7.user_id = 'AMsySZbAqdsOvZSqwZf-POJxzM2g'
                               group by
                                 t7.user_id
 
