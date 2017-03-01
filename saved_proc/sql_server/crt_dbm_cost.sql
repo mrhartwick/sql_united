@@ -1,4 +1,4 @@
-CREATE procedure dbo.crt_dbm_cost
+alter procedure dbo.crt_dbm_cost
 as
 if OBJECT_ID('master.dbo.dbm_cost',N'U') is not null
     drop table master.dbo.dbm_cost;
@@ -29,21 +29,21 @@ rev         decimal(20,10)  not null
 insert into master.dbo.dbm_cost
 
 select
-    t2.dcmmatchdate    as dcmdate,
-    t2.campaign        as campaign,
-    t2.campaign_id     as campaign_id,
-    t2.plce_id         as plce_id,
-    t2.placement       as placement,
-    t2.placement_id    as placement_id,
-    sum(t2.dbm_cost)   as dbm_cost,
-    sum(t2.imps)       as imps,
-    sum(t2.clicks)     as clicks,
-    isNull(sum(t2.vew_con),cast(0 as int))             as vew_con,
-    isNull(sum(t2.clk_con),cast(0 as int))             as clk_con,
-    isNull(sum(t2.con),cast(0 as int))             as con,
+    t2.dcmmatchdate                                     as dcmdate,
+    t2.campaign                                         as campaign,
+    t2.campaign_id                                      as campaign_id,
+    t2.plce_id                                          as plce_id,
+    t2.placement                                        as placement,
+    t2.placement_id                                     as placement_id,
+    sum(t2.dbm_cost)                                    as dbm_cost,
+    sum(t2.imps)                                        as imps,
+    sum(t2.clicks)                                      as clicks,
+    isNull(sum(t2.vew_con),cast(0 as int))              as vew_con,
+    isNull(sum(t2.clk_con),cast(0 as int))              as clk_con,
+    isNull(sum(t2.con),cast(0 as int))                  as con,
     isNull(sum(t2.vew_tix) ,cast(0 as int))             as vew_tix,
     isNull(sum(t2.clk_tix) ,cast(0 as int))             as clk_tix,
-    isNull(sum(t2.tix),cast(0 as int))             as tix,
+    isNull(sum(t2.tix),cast(0 as int))                  as tix,
     isNull(sum(t2.vew_rev) ,cast(0 as decimal(20,10)))  as vew_rev,
     isNull(sum(t2.clk_rev) ,cast(0 as decimal(20,10)))  as clk_rev,
     isNull(sum(t2.rev)     ,cast(0 as decimal(20,10)))  as rev
@@ -60,18 +60,18 @@ select
 --     t1.lagplcnbr,
     t1.placement,
     t1.placement_id,
-    sum(t1.lag_dbm_cost)                as dbm_cost,
-    sum(t1.impressions)                 as imps,
-    sum(t1.clicks)                      as clicks,
-    sum(t1.vew_con) + sum(t1.lag_vew_con) as vew_con,
-    sum(t1.clk_con) + sum(t1.lag_clk_con) as clk_con,
+    sum(t1.lag_dbm_cost)                                                          as dbm_cost,
+    sum(t1.impressions)                                                           as imps,
+    sum(t1.clicks)                                                                as clicks,
+    sum(t1.vew_con) + sum(t1.lag_vew_con)                                         as vew_con,
+    sum(t1.clk_con) + sum(t1.lag_clk_con)                                         as clk_con,
     sum(t1.vew_con) + sum(t1.lag_vew_con) + sum(t1.clk_con) + sum(t1.lag_clk_con) as con,
-    sum(t1.vew_tix) + sum(t1.lag_vew_tix)   as vew_tix,
-    sum(t1.clk_tix) + sum(t1.lag_clk_tix)   as clk_tix,
+    sum(t1.vew_tix) + sum(t1.lag_vew_tix)                                         as vew_tix,
+    sum(t1.clk_tix) + sum(t1.lag_clk_tix)                                         as clk_tix,
     sum(t1.vew_tix) + sum(t1.lag_vew_tix) + sum(t1.clk_tix) + sum(t1.lag_clk_tix) as tix,
-    sum(t1.vew_rev) + sum(t1.lag_vew_rev)   as vew_rev,
-    sum(t1.clk_rev) + sum(t1.lag_clk_rev)   as clk_rev,
-    sum(t1.rev) + sum(t1.lag_rev) as rev
+    sum(t1.vew_rev) + sum(t1.lag_vew_rev)                                         as vew_rev,
+    sum(t1.clk_rev) + sum(t1.lag_clk_rev)                                         as clk_rev,
+    sum(t1.rev) + sum(t1.lag_rev)                                                 as rev
 
 
 from (select
@@ -101,13 +101,10 @@ from (select
           lag(sum(dcmreport.vew_tix),1,0) over ( order by dcmreport.dcmdate asc,dcmreport.plce_id asc,dcmreport.site_id_dcm desc) as lag_vew_tix,
           sum(dcmreport.clk_tix)                                                                   as clk_tix,
           lag(sum(dcmreport.clk_tix),1,0) over ( order by dcmreport.dcmdate asc,dcmreport.plce_id asc,dcmreport.site_id_dcm desc) as lag_clk_tix,
-
           sum(dcmreport.vew_rev)                                                                   as vew_rev,
           lag(sum(dcmreport.vew_rev),1,0) over ( order by dcmreport.dcmdate asc,dcmreport.plce_id asc,dcmreport.site_id_dcm desc) as lag_vew_rev,
-
           sum(dcmreport.clk_rev)                                                                   as clk_rev,
           lag(sum(dcmreport.clk_rev),1,0) over ( order by dcmreport.dcmdate asc,dcmreport.plce_id asc,dcmreport.site_id_dcm desc) as lag_clk_rev,
-
           sum(dcmreport.rev)                                                                   as rev,
           lag(sum(dcmreport.rev),1,0) over ( order by dcmreport.dcmdate asc,dcmreport.plce_id asc,dcmreport.site_id_dcm desc) as lag_rev
 
@@ -163,8 +160,7 @@ from
 select *
 from diap01.mec_us_united_20056.dfa2_activity
 where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date) > ''2017-01-01''
-and upper(substring(other_data,(instr(other_data,''u3='') + 3),3)) != ''MIL''
-and substring(other_data,(instr(other_data,''u3='') + 3),5) != ''Miles''
+and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue != 0
 and total_conversions != 0
 and activity_id = 978826
@@ -334,17 +330,6 @@ group by
     ,dcmreport.plce_id
     ,dcmreport.placement
     ,dcmreport.placement_id
---      ,prisma.packagecat
---      ,prisma.rate
---      ,prisma.costmethod
---      ,prisma.cost_id
---      ,prisma.planned_amt
---      ,prisma.planned_cost
---      ,prisma.placementend
---      ,prisma.placementstart
---      ,prisma.stdate
---      ,prisma.eddate
---      ,prisma.dv_map
 
      ) as t1
 
@@ -358,7 +343,6 @@ group by
     t1.site_dcm,
     t1.site_id_dcm,
     t1.plce_id,
---     t1.lagplcnbr,
     t1.placement,
     t1.placement_id
 
