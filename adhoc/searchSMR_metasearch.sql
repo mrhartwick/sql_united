@@ -16,23 +16,42 @@ set @report_st = '2017-01-01';
 
 select
 -- 	cast(fld1.date as date)     as "date",
-	fld1.week1                  as "week",
-	fld1.placement_id,
--- 	p1.placement,
-	s1.site_dcm,
-	fld1.siteid_dcm,
-	fld1.campaign_id,
-	c1.campaign,
-	sum(fld1.total_revenue)     as total_revenue,
-	sum(fld1.transaction_count) as transaction_count,
-	sum(number_of_tickets)      as number_of_tickets
+	fld1.week1                  as Week,
+	null                        as [Search Engine],
+	null                        as [Search Engine ID],
+	'Metasearch'                as Network,
+	c1.campaign                 as Campaign,
+	fld1.campaign_id            as [Campaign ID],
+	null                        as Keyword,
+	null                        as [Keyword ID],
+	null                        as [Ad Group],
+	null                        as [Ad Group ID],
+--    p1.placement,
+--    fld1.placement_id,
+	s1.site_dcm                 as Site,
+	fld1.siteid_dcm             as [Site ID],
+	null                        as [Ad ID],
+	null                        as [Match Type],
+	0                           as Impressions,
+	0                           as Clicks,
+	0                           as [Avg Position],
+	0                           as Actions,
+	0                           as Visits,
+	sum(fld1.total_revenue)     as Revenue,
+	sum(fld1.transaction_count) as Conversions,
+	sum(number_of_tickets)      as Tickets
 
 from (
 
 	     select
 		     cast(fld0.activity_date as date)                                                as "date",
 		     cast(dateadd(week,datediff(week,0,cast(fld0.Activity_Date as date)),0) as date) as "week1",
-		     fld0.placement_id,
+             fld0.pdsearch_engineaccount_id,
+	         fld0.pdsearch_ad_id,
+	         fld0.pdsearch_adgroup_id,
+             fld0.pdsearch_campaign_id,
+             fld0.pdsearch_keyword_id,
+-- 	         fld0.placement_id,
 		     fld0.campaign_id,
 		     fld0.siteid_dcm,
 		     fld0.currency,
@@ -58,22 +77,50 @@ from (
 -- 		     and fld0.campaign_id = '10740194' -- TMK Search 2017
 	     group by
 		     cast(fld0.activity_date as date),
-		     fld0.placement_id,
+             fld0.pdsearch_engineaccount_id,
+	         fld0.pdsearch_ad_id,
+	         fld0.pdsearch_adgroup_id,
+             fld0.pdsearch_campaign_id,
+             fld0.pdsearch_keyword_id,
+-- 		     fld0.placement_id,
 		     fld0.siteid_dcm,
 		     fld0.campaign_id,
 		     fld0.currency
      ) as fld1
 
-	left join openQuery(verticaunited,
-	                    'select  campaign_id, cast(campaign as varchar(4000)) as campaign from diap01.mec_us_united_20056.dfa2_campaigns
-			 ') as c1
-		on cast(fld1.Campaign_ID as int) = c1.campaign_id
+-- 	left join openQuery(verticaunited,
+-- 	                    'select  campaign_id, cast(campaign as varchar(4000)) as campaign from diap01.mec_us_united_20056.dfa2_campaigns
+-- 			 ') as c1
+-- 		on cast(fld1.Campaign_ID as int) = c1.campaign_id
 
+
+	      left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Campaign as c1
+		      on fld1.Campaign_ID = c1.campaign_id
+
+-- 	      left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Site as s1
+-- 		      on fld1.siteid_dcm = s1.site_id_dcm
 
 	left join openQuery(verticaunited,
 	                    'select  site_id_dcm, cast(site_dcm as varchar(4000)) as site_dcm from diap01.mec_us_united_20056.dfa2_sites
 			 ') as s1
 		on cast(fld1.siteid_dcm as int) = s1.site_id_dcm
+
+--        JOINS in place but will bring back nulls (except placement)
+-- 	      left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Placement as p1
+-- 		      on fld1.placement_id = p1.placement_id
+
+
+-- 	      left join [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.ualus_dim_paid_searchcampaign as c1
+-- 		      on fld1.pdsearch_campaign_id = c1.paid_search_campaign_id
+
+-- 	      left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Paid_SearchKeyword as k1
+-- 		      on fld1.pdsearch_keyword_id = k1.Paid_Search_Keyword_ID
+--
+-- 	      left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_SearchAdGroup as ad1
+-- 		      on fld1.pdsearch_adgroup_id = ad1.Paid_Search_AdGroup_ID
+--
+-- 	      left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Paid_SearchEngine as e1
+-- 		      on fld1.pdsearch_engineaccount_id = e1.Paid_SearchEngine_ID
 
 -- Wait and see if they need placement
 
@@ -97,9 +144,13 @@ where c1.campaign like '%[Tt]argeted_[Mm]arketing_[Ss]earch%'
 
 group by
 	cast(fld1.date as date),
-	fld1.placement_id,
+-- 	fld1.placement_id,
+-- 	fld1.pdsearch_engineaccount_id,
+-- 	e1.Paid_SearchEngine,
 	fld1.siteid_dcm,
 	s1.site_dcm,
+-- 	k1.paid_search_keyword,
+-- 	fld1.pdsearch_keyword_id,
 	c1.campaign,
 	fld1.week1,
 -- 	p1.placement,
