@@ -159,7 +159,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date) > ''2017-01-01''
+where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date) > ''2016-07-15''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue != 0
 and total_conversions != 0
@@ -204,7 +204,7 @@ cast((sum(dbm_media_cost_usd) / 1000000000) as decimal(20,10))            as dbm
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2017-01-01''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2016-07-15''
 and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
 and (advertiser_id <> 0)
 -- and dbm_advertiser_id = 649134
@@ -239,7 +239,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2017-01-01''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2016-07-15''
 and (advertiser_id <> 0)
 and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
 -- and dbm_advertiser_id = 649134

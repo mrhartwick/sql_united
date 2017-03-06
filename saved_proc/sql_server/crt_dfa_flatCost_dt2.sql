@@ -76,7 +76,7 @@ insert into master.dbo.dfa_flatCost_dt2
                  f2.dcmDate                                             as dcmDate,
                  f2.Cost_ID                                             as Cost_ID,
                  f2.dcmYrMo                                             as dcmYrMo,
-                 f2.prsCostMethod                                       as prsCostMethod,
+                 f2.prsCostMethod               as prsCostMethod,
                  f2.PackageCat                                          as PackageCat,
                  f2.prsRate                                             as prsRate,
                  f2.prsStYrMo                                           as prsStYrMo,
@@ -122,7 +122,7 @@ insert into master.dbo.dfa_flatCost_dt2
                           -- ranged within each Cost_ID, we retrieve flatCost for the previous day
                           lag(f1.flatcost,1,0) over (partition by f1.Cost_ID
                               order by f1.dcmDate)                                                       as lagCost,
-                          -- this field not strictly necessary in this block, as it's duplicated in flatCostRemain;
+                    -- this field not strictly necessary in this block, as it's duplicated in flatCostRemain;
                           -- but used in logic of f3; this is a running total of the flatCost field
                           sum(f1.flatCost) over (
                           partition by f1.Cost_ID                -- grouped by Cost_ID
@@ -169,7 +169,7 @@ insert into master.dbo.dfa_flatCost_dt2
                       from
                           (
                               select
-                                  f0.dcmmonth            as dcmmonth,
+                                  f0.dcmmonth         as dcmmonth,
                                   f0.dcmDate                                       as dcmDate,
                                   f0.dcmyear                                       as dcmyear,
                                   f0.dcmYrMo                                       as dcmYrMo,
@@ -274,7 +274,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2017-01-01''
+where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2016-07-15''
 -- and upper(substring(other_data, (instr(other_data,''u3='')+3), 3)) != ''mil''
 -- and substring(other_data, (instr(other_data,''u3='')+3), 5) != ''miles''
 -- and total_revenue != 0
@@ -304,7 +304,7 @@ cast(timestamp_trunc(to_timestamp(ti.event_time / 1000000), ''SS'') as date) as 
 from  (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2016-07-15''
 and (advertiser_id <> 0)
 ) as ti
 
@@ -329,7 +329,7 @@ select
 from  (
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2016-07-15''
 and (advertiser_id <> 0)
 ) as tc
 

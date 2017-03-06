@@ -15,6 +15,7 @@ create table master.dbo.dfa_cost_dt2
   prsStDate     int            not null,
   prsEdDate     int            not null,
   diff          bigint         not null,
+  flatcost      decimal(20,10) not null,
   cost          decimal(20,10) not null,
   lagCost       decimal(20,10) not null,
   lagCostRemain decimal(20,10) not null,
@@ -55,8 +56,9 @@ insert into master.dbo.dfa_cost_dt2
     t7.stDate        as prsStDate,
     t7.edDate        as prsEdDate,
     t7.diff          as diff,
-    case when t7.costmethod like '[Ff]lat' then t7.flatcost else t7.cost end as cost,
---    t7.cost          as cost,
+    t7.flatcost      as flatcost,
+    t7.cost          as cost,
+    -- case when t7.costmethod like '[Ff]lat' then t7.flatcost else t7.cost end as cost,
     t7.lagCost       as lagCost,
     t7.costRunTot    as costRunTot,
     t7.costRemain    as costRemain,
@@ -378,7 +380,7 @@ from (
 -- @report_ed date;
 -- -- --
 -- set @report_ed = '2017-01-31';
--- set @report_st = '2017-01-01';
+-- set @report_st = '2016-07-15';
 
          select
              cast(t1.dcmdate as date)                                                   as dcmdate,
@@ -622,7 +624,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2017-01-01''
+where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2016-07-15''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue != 0
 and total_conversions != 0
@@ -656,7 +658,7 @@ cast(timestamp_trunc(to_timestamp(ti.event_time / 1000000), ''SS'') as date) as 
 from  (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2016-07-15''
 
 and (advertiser_id <> 0)
 ) as ti
@@ -684,7 +686,7 @@ from  (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2016-07-15''
 and (advertiser_id <> 0)
 ) as tc
 
