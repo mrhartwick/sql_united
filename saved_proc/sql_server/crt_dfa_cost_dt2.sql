@@ -729,9 +729,8 @@ from diap01.mec_us_united_20056.dfa2_sites
 on report.site_id_dcm = directory.site_id_dcm
 
 where not regexp_like(placements.placement,''.do\s*not\s*use.'',''ib'')
-and not regexp_like(campaign.campaign,''.2016.'',''ib'')
+-- and not regexp_like(campaign.campaign,''.2016.'',''ib'')
 and not regexp_like(campaign.campaign,''BidManager_Campaign.'',''ib'')
--- and report.site_id_dcm !=''1485655''
 group by
 cast(report.date as date)
 -- , cast(month(cast(report.date as date)) as int)

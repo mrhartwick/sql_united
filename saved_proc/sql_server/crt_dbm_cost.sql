@@ -113,26 +113,26 @@ from (select
                select *
                from openquery(verticaunited,'
 select
-cast(report.date as date)    as dcmdate,
+cast(r1.date as date)    as dcmdate,
 campaign.campaign            as campaign,
-report.campaign_id           as campaign_id,
-report.site_id_dcm           as site_id_dcm,
+r1.campaign_id           as campaign_id,
+r1.site_id_dcm           as site_id_dcm,
 directory.site_dcm           as site_dcm,
 left(placements.placement,6) as plce_id,
 placements.placement         as placement,
-report.placement_id          as placement_id,
-sum(report.impressions)      as impressions,
-sum(report.dbm_cost)         as dbm_cost,
-sum(report.clicks)           as clicks,
-sum(report.vew_conv) as vew_conv,
-sum(report.clk_conv) as clk_conv,
-sum(report.vew_tix) as vew_tix,
-sum(report.clk_tix) as clk_tix,
-sum(cast(report.vew_rev as decimal (10,2))) as vew_rev,
-sum(cast(report.clk_rev as decimal (10,2))) as clk_rev,
-sum(cast(report.revenue as decimal (10,2))) as rev
--- sum(report.conv)             as conv,
--- sum(report.tix)              as tix
+r1.placement_id          as placement_id,
+sum(r1.impressions)      as impressions,
+sum(r1.dbm_cost)         as dbm_cost,
+sum(r1.clicks)           as clicks,
+sum(r1.vew_conv) as vew_conv,
+sum(r1.clk_conv) as clk_conv,
+sum(r1.vew_tix) as vew_tix,
+sum(r1.clk_tix) as clk_tix,
+sum(cast(r1.vew_rev as decimal (10,2))) as vew_rev,
+sum(cast(r1.clk_rev as decimal (10,2))) as clk_rev,
+sum(cast(r1.revenue as decimal (10,2))) as rev
+-- sum(r1.conv)             as conv,
+-- sum(r1.tix)              as tix
 from (
 
 select
@@ -251,7 +251,7 @@ cast(timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date)
 ,tc.site_id_dcm
 ,tc.placement_id
 
-) as report
+) as r1
 
 left join
 (
@@ -260,7 +260,7 @@ cast(campaign as varchar(4000)) as ''campaign'',
 campaign_id                     as ''campaign_id''
 from diap01.mec_us_united_20056.dfa2_campaigns
 ) as campaign
-on report.campaign_id = campaign.campaign_id
+on r1.campaign_id = campaign.campaign_id
 
 left join
 (
@@ -283,9 +283,9 @@ from diap01.mec_us_united_20056.dfa2_placements
 ) as t1
 where r1 = 1
 ) as placements
-on report.placement_id = placements.placement_id
-and report.campaign_id = placements.campaign_id
-and report.site_id_dcm = placements.site_id_dcm
+on r1.placement_id = placements.placement_id
+and r1.campaign_id = placements.campaign_id
+and r1.site_id_dcm = placements.site_id_dcm
 
 left join
 (
@@ -294,20 +294,20 @@ cast(site_dcm as varchar(4000)) as ''site_dcm'',
 site_id_dcm                     as ''site_id_dcm''
 from diap01.mec_us_united_20056.dfa2_sites
 ) as directory
-on report.site_id_dcm = directory.site_id_dcm
+on r1.site_id_dcm = directory.site_id_dcm
 
 where not regexp_like(placements.placement,''.do\s*not\s*use.'',''ib'')
-and not regexp_like(campaign.campaign,''.2016.'',''ib'')
+-- and not regexp_like(campaign.campaign,''.2016.'',''ib'')
 and not regexp_like(placements.placement,''DBM.'',''ib'')
-and (report.site_id_dcm = 1578478 or report.site_id_dcm = 2202011)
+and (r1.site_id_dcm = 1578478 or r1.site_id_dcm = 2202011)
 group by
-cast(report.date as date)
--- , cast(month(cast(report.date as date)) as int)
+cast(r1.date as date)
+-- , cast(month(cast(r1.date as date)) as int)
 ,directory.site_dcm
-,report.site_id_dcm
-,report.campaign_id
+,r1.site_id_dcm
+,r1.campaign_id
 ,campaign.campaign
-,report.placement_id
+,r1.placement_id
 ,placements.placement
 ')
 
