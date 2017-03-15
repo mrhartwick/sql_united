@@ -1,4 +1,4 @@
-alter procedure dbo.crt_dbm_cost
+create procedure dbo.crt_dbm_cost
 as
 if OBJECT_ID('master.dbo.dbm_cost',N'U') is not null
   drop table master.dbo.dbm_cost;
@@ -23,7 +23,10 @@ create table master.dbo.dbm_cost
   tix          int            not null,
   vew_rev      decimal(20,10) not null,
   clk_rev      decimal(20,10) not null,
-  rev          decimal(20,10) not null
+  rev          decimal(20,10) not null,
+  vew_led      int            not null,
+  clk_led      int            not null,
+  led          int            not null,
 );
 
 insert into master.dbo.dbm_cost
@@ -46,7 +49,10 @@ insert into master.dbo.dbm_cost
     isNull(sum(t2.tix),cast(0 as int))                as tix,
     isNull(sum(t2.vew_rev),cast(0 as decimal(20,10))) as vew_rev,
     isNull(sum(t2.clk_rev),cast(0 as decimal(20,10))) as clk_rev,
-    isNull(sum(t2.rev),cast(0 as decimal(20,10)))     as rev
+    isNull(sum(t2.rev),cast(0 as decimal(20,10)))     as rev,
+    isNull(sum(t2.vew_led),cast(0 as int))            as vew_led,
+    isNull(sum(t2.clk_led),cast(0 as int))            as clk_led,
+    isNull(sum(t2.led),cast(0 as int))                as led
 
   from (
          select
@@ -91,7 +97,17 @@ insert into master.dbo.dbm_cost
              order by t1.dcmdate asc,t1.plce_id asc,t1.campaign_id desc range between unbounded preceding and current row) as clk_rev,
            t1.rev                                                                                                   as rev1,
            sum(t1.rev) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.campaign_id desc range between unbounded preceding and current row) as rev
+             order by t1.dcmdate asc,t1.plce_id asc,t1.campaign_id desc range between unbounded preceding and current row) as rev,
+
+           t1.vew_led                                                                                               as vew_led1,
+           sum(t1.vew_led) over (partition by t1.dcmdate,t1.plce_id
+             order by t1.dcmdate asc,t1.plce_id asc,t1.campaign_id desc range between unbounded preceding and current row) as vew_led,
+           t1.clk_led                                                                                               as clk_led1,
+           sum(t1.clk_led) over (partition by t1.dcmdate,t1.plce_id
+             order by t1.dcmdate asc,t1.plce_id asc,t1.campaign_id desc range between unbounded preceding and current row) as clk_led,
+           t1.led                                                                                                   as led1,
+           sum(t1.led) over (partition by t1.dcmdate,t1.plce_id
+             order by t1.dcmdate asc,t1.plce_id asc,t1.campaign_id desc range between unbounded preceding and current row) as led
 
 
          from (select
@@ -110,9 +126,12 @@ insert into master.dbo.dbm_cost
                  sum(dcmreport.dbm_cost)                             as dbm_cost,
                  sum(dcmreport.impressions)                          as impressions,
                  sum(dcmreport.clicks)                               as clicks,
-                 sum(dcmreport.vew_conv)                             as vew_con,
-                 sum(dcmreport.clk_conv)                             as clk_con,
-                 sum(dcmreport.clk_conv) + sum(dcmreport.vew_conv)   as con,
+                 sum(dcmreport.vew_led)                        as vew_led,
+                 sum(dcmreport.clk_led)                        as clk_led,
+                 sum(dcmreport.led)                            as led,
+                 sum(dcmreport.vew_con)                             as vew_con,
+                 sum(dcmreport.clk_con)                             as clk_con,
+                 sum(dcmreport.clk_con) + sum(dcmreport.vew_con)   as con,
                  sum(dcmreport.vew_tix)                              as vew_tix,
                  sum(dcmreport.clk_tix)                              as clk_tix,
                  sum(dcmreport.clk_tix) + sum(dcmreport.vew_tix)     as tix,
@@ -137,14 +156,17 @@ r1.placement_id          as placement_id,
 sum(r1.impressions)      as impressions,
 sum(r1.dbm_cost)         as dbm_cost,
 sum(r1.clicks)           as clicks,
-sum(r1.vew_conv) as vew_conv,
-sum(r1.clk_conv) as clk_conv,
+sum(r1.vew_led) as vew_led,
+sum(r1.clk_led) as clk_led,
+sum(r1.vew_led) + sum(r1.clk_led) as led,
+sum(r1.vew_con) as vew_con,
+sum(r1.clk_con) as clk_con,
 sum(r1.vew_tix) as vew_tix,
 sum(r1.clk_tix) as clk_tix,
 sum(cast(r1.vew_rev as decimal (10,2))) as vew_rev,
 sum(cast(r1.clk_rev as decimal (10,2))) as clk_rev,
-sum(cast(r1.revenue as decimal (10,2))) as rev
--- sum(r1.conv)             as conv,
+sum(cast(r1.rev as decimal (10,2))) as rev
+-- sum(r1.con)             as con,
 -- sum(r1.tix)              as tix
 from (
 
@@ -156,17 +178,18 @@ ta.placement_id  as placement_id,
 0                as impressions,
 0                as dbm_cost,
 0      as clicks,
-sum(case when ta.conversion_id = 1 then 1 else 0 end ) as clk_conv,
+sum(case when activity_id = 1086066 and ta.conversion_id = 1 then 1 else 0 end) as clk_led,
+sum(case when ta.conversion_id = 1 then 1 else 0 end ) as clk_con,
 sum(case when ta.conversion_id = 1 then ta.total_conversions else 0 end ) as clk_tix,
 sum(case when ta.conversion_id = 1 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as clk_rev,
-sum(case when ta.conversion_id = 2 then 1 else 0 end ) as vew_conv,
+sum(case when activity_id = 1086066 and ta.conversion_id = 2 then 1 else 0 end) as vew_led,
+sum(case when ta.conversion_id = 2 then 1 else 0 end ) as vew_con,
 sum(case when ta.conversion_id = 2 then ta.total_conversions else 0 end ) as vew_tix,
 sum(case when ta.conversion_id = 2 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as vew_rev,
-sum(ta.total_revenue * 1000000/rates.exchange_rate) as revenue
+sum(ta.total_revenue * 1000000/rates.exchange_rate) as rev
 -- sum(case when ta.conversion_id = 1 or ta.conversion_id = 2 then 1
--- else 0 end)      as conv,
+-- else 0 end)      as con,
 -- sum(case when ta.conversion_id = 1 or ta.conversion_id = 2 then ta.total_conversions
--- else 0 end)      as tix
 
 from
 (
@@ -176,10 +199,10 @@ where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as d
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue != 0
 and total_conversions != 0
-and activity_id = 978826
+and activity_id = 978826 or activity_id = 1086066
 and (advertiser_id <> 0)
 and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
--- and dbm_advertiser_id = 649134
+and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
 
 left join diap01.mec_us_mecexchangerates_20067.exchange_rates as rates
@@ -203,14 +226,16 @@ ti.placement_id as placement_id,
 count(*)        as impressions,
 cast((sum(dbm_media_cost_usd) / 1000000000) as decimal(20,10))            as dbm_cost,
 0               as clicks,
-0 as clk_conv,
+0 as clk_led,
+0 as clk_con,
 0 as clk_tix,
 0 as clk_rev,
-0 as vew_conv,
+0 as vew_led,
+0 as vew_con,
 0 as vew_tix,
 0 as vew_rev,
-0 as revenue
--- 0               as conv,
+0 as rev
+-- 0               as con,
 -- 0               as tix
 
 
@@ -238,14 +263,16 @@ tc.placement_id as placement_id,
 0               as impressions,
 0               as dbm_cost,
 count(*)        as clicks,
-0 as clk_conv,
+0 as clk_led,
+0 as clk_con,
 0 as clk_tix,
 0 as clk_rev,
-0 as vew_conv,
+0 as vew_led,
+0 as vew_con,
 0 as vew_tix,
 0 as vew_rev,
-0 as revenue
--- 0               as conv,
+0 as rev
+-- 0               as con,
 -- 0               as tix
 
 from (

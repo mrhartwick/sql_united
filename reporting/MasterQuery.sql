@@ -224,6 +224,9 @@ select
         sum(cst.vew_rev)                                                              as vew_rev,
         sum(cst.vew_tix)                                                              as vew_tix
 
+
+
+
        from
          (
 -- =========================================================================================================================
@@ -259,12 +262,18 @@ select
            cast(prs.rate as decimal(10,2))        as rate,
            sum(t1.impressions)                    as impressions,
            sum(t1.clicks)                         as clicks,
+           sum(t1.vew_led)                        as vew_led,
+           sum(t1.clk_led)                        as clk_led,
+           sum(t1.led)                            as led,
            sum(t1.vew_con)                        as vew_con,
            sum(t1.clk_con)                        as clk_con,
            sum(t1.con)                            as con,
            sum(t1.vew_tix)                        as vew_tix,
            sum(t1.clk_tix)                        as clk_tix,
            sum(t1.tix)                            as tix,
+           sum(t1.vew_rev)                        as vew_rev,
+           sum(t1.clk_rev)                        as clk_rev,
+           sum(t1.rev)                            as rev,
              case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
              else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
 
@@ -317,8 +326,8 @@ select
     from (
            select *
            from openQuery(verticaunited,
-               '
-  select
+
+  'select
 cast(r1.date as date)                      as dcmdate,
 cast(month (cast(r1.date as date)) as int) as reportmonth,
 campaign.campaign                              as campaign,
@@ -330,12 +339,18 @@ p1.placement as placement,
 r1.placement_id as placement_id,
 sum(r1.impressions) as impressions,
 sum(r1.clicks) as clicks,
+sum(r1.vew_led) as vew_led,
+sum(r1.clk_led) as clk_led,
+sum(r1.vew_led) + sum(r1.clk_led) as led,
 sum(r1.vew_con) as vew_con,
 sum(r1.clk_con) as clk_con,
 sum(r1.vew_con) + sum(r1.clk_con) as con,
 sum(r1.vew_tix) as vew_tix,
 sum(r1.clk_tix) as clk_tix,
-sum(r1.vew_tix) + sum(r1.clk_tix) as tix
+sum(r1.vew_tix) + sum(r1.clk_tix) as tix,
+sum(r1.vew_rev) as vew_rev,
+sum(r1.clk_rev) as clk_rev,
+sum(r1.rev) as rev
 from (
 
 
@@ -346,10 +361,15 @@ cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as dat
 ,ta.placement_id as placement_id
 ,0 as impressions
 ,0 as clicks
-,sum(case when ta.conversion_id = 1 then 1 else 0 end ) as clk_con
-,sum(case when ta.conversion_id = 1 then ta.total_conversions else 0 end ) as clk_tix
-,sum(case when ta.conversion_id = 2 then 1 else 0 end ) as vew_con
-,sum(case when ta.conversion_id = 2 then ta.total_conversions else 0 end ) as vew_tix
+,sum(case when activity_id = 1086066 and ta.conversion_id = 1 then 1 else 0 end) as clk_led
+,sum(case when activity_id = 978826 and ta.conversion_id = 1 then 1 else 0 end ) as clk_con
+,sum(case when activity_id = 978826 and ta.conversion_id = 1 then ta.total_conversions else 0 end ) as clk_tix
+,sum(case when ta.conversion_id = 1 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as clk_rev
+,sum(case when activity_id = 1086066 and ta.conversion_id = 2 then 1 else 0 end) as vew_led
+,sum(case when activity_id = 978826  and ta.conversion_id = 2 then 1 else 0 end ) as vew_con
+,sum(case when activity_id = 978826  and ta.conversion_id = 2 then ta.total_conversions else 0 end ) as vew_tix
+,sum(case when ta.conversion_id = 2 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as vew_rev
+,sum(ta.total_revenue * 1000000/rates.exchange_rate) as rev
 
 from
 (
@@ -359,11 +379,15 @@ where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as 
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue <> 0
 and total_conversions <> 0
-and activity_id = 978826
+and activity_id = 978826 or activity_id = 1086066
 and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
+
+left join diap01.mec_us_mecexchangerates_20067.exchange_rates as rates
+on upper ( substring (other_data,(instr(other_data,''u3='')+3),3)) = upper (rates.currency)
+and cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) = rates.date
 
 group by
 -- ta.click_time
@@ -383,10 +407,15 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 ,ti.placement_id as placement_id
 ,count (*) as impressions
 ,0 as clicks
+,0 as clk_led
 ,0 as clk_con
 ,0 as clk_tix
+,0 as clk_rev
+,0 as vew_led
 ,0 as vew_con
 ,0 as vew_tix
+,0 as vew_rev
+,0 as rev
 
 from (
 select *
@@ -413,10 +442,15 @@ cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date ) as
 ,tc.placement_id as placement_id
 ,0 as impressions
 ,count (*) as clicks
+,0 as clk_led
 ,0 as clk_con
 ,0 as clk_tix
+,0 as clk_rev
+,0 as vew_led
 ,0 as vew_con
 ,0 as vew_tix
+,0 as vew_rev
+,0 as rev
 
 from (
 
