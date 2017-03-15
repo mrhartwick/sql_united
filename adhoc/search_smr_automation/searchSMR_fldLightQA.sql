@@ -34,7 +34,7 @@ select
   c1.paid_search_campaign     as paid_search_campaign,
   fld1.pdsearch_campaign_id,
 --           k1.paid_search_keyword                                                 as keyword,
-  k1.keyword                  as keyword,
+  k1.paid_search_keyword as keyword,
   fld1.pdsearch_keyword,
   fld1.pdsearch_keyword_id,
   fld1.currency               as currency,
@@ -113,8 +113,8 @@ from (select
 --        left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Paid_SearchKeyword as k1
 --          on std1.pdsearch_keyword_id = k1.Paid_Search_Keyword_ID
 
-  left join master.dbo.sch_keyword2 as k1
-    on cast(fld1.pdsearch_keyword_id as bigint) = k1.keyword_id
+  left join master.dbo.sch_keyword_2 as k1
+    on cast(fld1.pdsearch_keyword_id as bigint) = k1.paid_search_keyword_id
 
 
 --                                 left join master.dbo.sch_keyword as k1
@@ -143,7 +143,7 @@ group by
   c1.paid_search_campaign,
   fld1.pdsearch_keyword,
 --           k1.paid_search_keyword,
-  k1.keyword,
+  k1.paid_search_keyword,
   fld1.pdsearch_advertiser_id,
   fld1.siteid_dcm,
   fld1.pdsearch_ad_id,
