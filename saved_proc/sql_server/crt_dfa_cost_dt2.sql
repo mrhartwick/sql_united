@@ -1,4 +1,4 @@
-alter procedure dbo.crt_dfa_cost_dt2
+CREATE procedure dbo.crt_dfa_cost_dt2
 as
 if OBJECT_ID('master.dbo.dfa_cost_dt2',N'U') is not null
     drop table master.dbo.dfa_cost_dt2;
@@ -42,7 +42,10 @@ create table master.dbo.dfa_cost_dt2
   clk_rev       decimal(20,10) not null,
   rev           decimal(20,10) not null,
   con           int            not null,
-  tix           int            not null
+  tix           int            not null,
+  vew_led       int            not null,
+  clk_led       int            not null,
+  led           int            not null
 );
 
 insert into master.dbo.dfa_cost_dt2
@@ -84,7 +87,10 @@ insert into master.dbo.dfa_cost_dt2
     t7.clk_rev       as clk_rev,
     t7.rev           as rev,
     t7.con           as con,
-    t7.tix           as tix
+    t7.tix           as tix,
+    t7.vew_led       as vew_led,
+    t7.clk_led       as clk_led,
+    t7.led           as led
     from (
 
 
@@ -142,7 +148,10 @@ insert into master.dbo.dfa_cost_dt2
                  isNull(t6.clk_rev,cast(0 as decimal(20,10)))       as clk_rev,
                  isNull(t6.rev,cast(0 as decimal(20,10)))           as rev,
                  isNull(t6.con,cast(0 as int))                      as con,
-                 isNull(t6.tix,cast(0 as int))                      as tix
+                 isNull(t6.tix,cast(0 as int))                      as tix,
+                 isNull(t6.vew_led,cast(0 as decimal(20,10)))       as vew_led,
+                 isNull(t6.clk_led,cast(0 as decimal(20,10)))       as clk_led,
+                 isNull(t6.led,cast(0 as decimal(20,10)))           as led
 
              from (
                       select
@@ -198,7 +207,10 @@ insert into master.dbo.dfa_cost_dt2
                         t5.clk_rev                                      as clk_rev,
                         t5.rev                                          as rev,
                         t5.con                                          as con,
-                        t5.tix                                          as tix
+                        t5.tix                                          as tix,
+                        t5.vew_led                                      as vew_led,
+                        t5.clk_led                                      as clk_led,
+                        t5.led                                          as led
              from (
                     select
                       t4.dcmmonth                                                                               as dcmmonth,
@@ -266,7 +278,10 @@ insert into master.dbo.dfa_cost_dt2
                       t4.clk_rev                                                                                as clk_rev,
                       t4.rev                                                                                    as rev,
                       t4.con                                                                                    as con,
-                      t4.tix                                                                                    as tix
+                      t4.tix                                                                                    as tix,
+                      t4.vew_led                                                                                as vew_led,
+                      t4.clk_led                                                                                as clk_led,
+                      t4.led                                                                                    as led
 
                       from
                           (
@@ -317,7 +332,10 @@ insert into master.dbo.dfa_cost_dt2
                               sum(t3.clk_rev)                                  as clk_rev,
                               sum(t3.rev)                                      as rev,
                               sum(t3.con)                                      as con,
-                              sum(t3.tix)                                      as tix
+                              sum(t3.tix)                                      as tix,
+                              sum(t3.vew_led)                                  as vew_led,
+                              sum(t3.clk_led)                                  as clk_led,
+                              sum(t3.led)                                      as led
 
                               from
                                   (
@@ -360,6 +378,7 @@ select
   t2.mt_imps                             as mt_imps,
   case when t2.costmethod = 'dCPM' then db.clicks
   else t2.clicks end                     as clicks,
+-- bring in DBM metrics
   db.vew_con                             as vew_con,
   db.clk_con                             as clk_con,
   db.con                                 as con,
@@ -368,7 +387,10 @@ select
   db.tix                                 as tix,
   db.vew_rev                             as vew_rev,
   db.clk_rev                             as clk_rev,
-  db.rev                                 as rev
+  db.rev                                 as rev,
+  db.vew_led                             as vew_led,
+  db.clk_led                             as clk_led,
+  db.led                                 as led
 
 
 -- ============================================================================================================================================
@@ -624,7 +646,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2016-07-15''
+where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2017-01-01''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue != 0
 and total_conversions != 0
@@ -658,7 +680,7 @@ cast(timestamp_trunc(to_timestamp(ti.event_time / 1000000), ''SS'') as date) as 
 from  (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2016-07-15''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
 
 and (advertiser_id <> 0)
 ) as ti
@@ -686,7 +708,7 @@ from  (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2016-07-15''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
 and (advertiser_id <> 0)
 ) as tc
 

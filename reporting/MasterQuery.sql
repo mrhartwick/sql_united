@@ -31,8 +31,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-01-24';
-set @report_st = '2017-01-01';
+set @report_ed = '2017-03-14';
+set @report_st = '2017-03-08';
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -84,6 +84,9 @@ select
   t3.planned_amt                                                                                       as "planned amt",
  t3.planned_cost                                                                                       as "planned cost",
   case when t3.costmethod like '[Ff]lat' then t3.flatcost/max(t3.newcount) else sum(t3.cost) end      as cost,
+  case when sum(t3.clk_led) = 0 then 0 else sum(t3.cost)/sum(f2.clk_led) end   as clk_cpl,
+  case when sum(t3.vew_led) = 0 then 0 else sum(t3.cost)/sum(f2.vew_led) end   as vew_cpl,
+  case when sum(t3.tot_led) = 0 then 0 else sum(t3.cost)/sum(f2.tot_led) end   as cpl,
   sum(t3.dlvrimps)                                                                                     as "delivered impressions",
   sum(t3.billimps)                                                                                     as "billable impressions",
   sum(t3.cnslimps)                                                                                     as "dfa impressions",
@@ -99,7 +102,7 @@ select
   sum(t3.clk_tix)                                                               as clk_tix,
   sum(t3.tot_rev)                                                                                      as revenue,
   sum(t3.vew_rev)                                                                as vew_rev,
-  sum(t3.clk_rev)                                                               as clck_thru_rev,
+  sum(t3.clk_rev)                                                               as clk_thru_rev,
   sum(t3.billrevenue)                                                                                  as "billable revenue",
   sum(t3.adjsrevenue)                                                                                  as "adjusted (final) revenue"
 from (
@@ -109,8 +112,8 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-01-24';
--- set @report_st = '2017-01-01';
+-- set @report_ed = '2017-03-14';
+-- set @report_st = '2017-03-08';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -214,15 +217,18 @@ select
         sum(case
             when (len(isnull(iv.joinkey,'')) > 0) then iv.click_thrus
             else t2.clicks end)                                                       as clicks,
-        sum(cst.clk_con)                                                              as clk_con,
-        sum(cst.clk_rev)                                                              as clk_rev,
-        sum(cst.clk_tix)                                                              as clk_tix,
-        sum(cst.con)                                                                  as tot_con,
-        sum(cst.rev)                                                                  as tot_rev,
-        sum(cst.tix)                                                                  as tot_tix,
-        sum(cst.vew_con)                                                              as vew_con,
-        sum(cst.vew_rev)                                                              as vew_rev,
-        sum(cst.vew_tix)                                                              as vew_tix
+        sum(case when t2.costmethod = 'dCPM' then cst.clk_con else  t2.clk_con end)      as clk_con,
+        sum(case when t2.costmethod = 'dCPM' then cst.clk_rev else  t2.clk_rev end)      as clk_rev,
+        sum(case when t2.costmethod = 'dCPM' then cst.clk_tix else  t2.clk_tix end)      as clk_tix,
+        sum(case when t2.costmethod = 'dCPM' then cst.con     else  t2.con     end)      as tot_con,
+        sum(case when t2.costmethod = 'dCPM' then cst.rev     else  t2.rev     end)      as tot_rev,
+        sum(case when t2.costmethod = 'dCPM' then cst.tix     else  t2.tix     end)      as tot_tix,
+        sum(case when t2.costmethod = 'dCPM' then cst.vew_con else  t2.vew_con end)      as vew_con,
+        sum(case when t2.costmethod = 'dCPM' then cst.vew_rev else  t2.vew_rev end)      as vew_rev,
+        sum(case when t2.costmethod = 'dCPM' then cst.vew_tix else  t2.vew_tix end)      as vew_tix,
+        sum(case when t2.costmethod = 'dCPM' then cst.clk_led else  t2.clk_led end)      as clk_led,
+        sum(case when t2.costmethod = 'dCPM' then cst.vew_led else  t2.vew_led end)      as vew_led,
+        sum(case when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led,
 
 
 
@@ -375,7 +381,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-01-24''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-03-08'' and ''2017-03-14''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue <> 0
 and total_conversions <> 0
@@ -420,7 +426,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-01-24''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-08'' and ''2017-03-14''
 and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -456,7 +462,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-01-24''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-08'' and ''2017-03-14''
 and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
