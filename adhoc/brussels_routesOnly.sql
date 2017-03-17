@@ -306,7 +306,7 @@ from (
 -- --
 -- SET @report_ed = '2016-10-21';
 -- SET @report_st = '2016-10-10';
-                                 select
+                select
                      dcmReport.dcmDate as dcmDate,
                      cast(month(cast(dcmReport.dcmDate as date)) as int) as dcmmonth,
                      [dbo].udf_dateToInt(dcmreport.dcmdate) as dcmmatchdate,
@@ -333,10 +333,10 @@ from (
 
 --              Flat.flatCostRemain                                                               AS flatCostRemain,
 --              Flat.impsRemain                                                                   AS impsRemain,
-                     sum(( cast(dcmReport.Impressions as decimal(10,2)) / nullif(cast(Prisma.Planned_Amt as decimal(10,2)),0) ) * cast(Prisma.Rate as
-                                                                                                                             decimal(10,2)))                as incrFlatCost,
+                     sum(( cast(dcmReport.imps as decimal(10,2)) /
+                         nullif(cast(Prisma.Planned_Amt as decimal(10,2)),0) ) * cast(Prisma.Rate as decimal(10,2))) as incrFlatCost,
                      cast(Prisma.Rate as decimal(10,2))                                   as Rate,
-                     sum(dcmReport.Impressions)                                           as impressions,
+                     sum(dcmReport.imps)                                           as impressions,
                      sum(dcmReport.Clicks)                                                as clicks,
                      -- sum(dcmReport.View_Thru_Conv)                                        as View_Thru_Conv,
                      -- sum(dcmReport.Click_Thru_Conv)                                       as Click_Thru_Conv,
@@ -348,7 +348,7 @@ from (
                      sum(dcmReport.tix) as tickets,
                      sum(cast(dcmReport.vt_rev as decimal(10,2)))              as vt_rev,
                      sum(cast(dcmReport.ct_rev as decimal(10,2)))             as ct_rev,
-                     sum(cast(dcmReport.ct_rev as decimal(10,2))) + sum(cast(dcmReport.vt_rev as decimal(10,2)))as revenue,
+                     sum(cast(dcmReport.ct_rev as decimal(10,2))) + sum(cast(dcmReport.vt_rev as decimal(10,2))) as revenue,
                      case when cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) <= 0 then 0
                      else cast(month(Prisma.PlacementEnd) as int) - cast(month(cast(dcmReport.dcmDate as date)) as int) end as diff,
 
@@ -373,7 +373,7 @@ from (
 --                   designates all Xaxis placements as "Y." Not always true.
 --                    when dcmReport.Site_ID = '1592652' then 'Y'
 
---                   FlipBoard unable to implement MOAT tags; must bill off of DFA Impressions
+--                   FlipBoard unable to implement MOAT tags; must bill off of DFA imps
                      when dcmReport.Site_ID = '2937979' then 'N'
 --                   All Targeted Marketing subject
                      when dcmReport.order_id = '9639387' then 'Y'
@@ -401,15 +401,13 @@ from (
                                'TMK'
                          then 'Acquisition'
                      else 'Non-Acquisition' end as campaignType
+                       -- ==========================================================================================================================================================
 
-
--- ==========================================================================================================================================================
-
--- openQuery function call must not exceed 8,000 characters; no room for comments inside the function
-        FROM (
-                 SELECT *
-                 FROM openQuery(VerticaUnited,
-                                'select
+                       -- openQuery function call must not exceed 8,000 characters; no room for comments inside the function
+                       from (
+                                select *
+                                from openQuery(VerticaUnited,
+                                               'select
 cast(rpt.date as date) as dcmdate,
 cast(month (cast(rpt.date as date)) as int) as reportmonth,
 cp1.buy as buy,
@@ -428,107 +426,28 @@ sum(rpt.vt_rev) as vt_rev
 
 from (
 select
-cast (c9.click_time as date ) as "date",
+c9.date as "date",
 c9.order_id as order_id,
 c9.site_id as site_id,
 c9.page_id as page_id,
 0 as imps,
 0 as clicks,
-sum(case when c9.event_id=1 or c9.event_id=2 then 1 else 0 end ) as con,
-sum(case when c9.event_id=1 or c9.event_id=2 then c9.quantity else 0 end ) as tix,
-sum(case when c9.event_id=1 then 1 else 0 end ) as ct_rev,
-sum(case when c9.event_id=2 then 1 else 0 end ) as vt_rev
+sum(c9.con) as con,
+sum(c9.tix) as tix,
+sum(c9.ct_rev) as ct_rev,
+sum(c9.vt_rev) as vt_rev
 
 from (
 select
-*,
-case
-when (j1.mkt=''AUS'' and (regexp_like(c1.route_1,''.*AUS.*'',''b'') or regexp_like(c1.route_2,''.*AUS.*'',''b'')))
-or (j1.mkt=''BOS'' and (regexp_like(c1.route_1,''.*BOS.*'',''b'') or regexp_like(c1.route_2,''.*BOS.*'',''b'')))
-or (j1.mkt=''HAR'' and (regexp_like(c1.route_1,''.*BDL.*'',''b'') or regexp_like(c1.route_2,''.*BDL.*'',''b'')))
-or (j1.mkt=''JCK'' and (regexp_like(c1.route_1,''.*JAX.*'',''b'') or regexp_like(c1.route_2,''.*JAX.*'',''b'')))
-or (j1.mkt=''MKE'' and (regexp_like(c1.route_1,''.*MKE.*'',''b'') or regexp_like(c1.route_2,''.*MKE.*'',''b'')))
-or (j1.mkt=''PIT'' and (regexp_like(c1.route_1,''.*PIT.*'',''b'') or regexp_like(c1.route_2,''.*PIT.*'',''b'')))
-or (j1.mkt=''RIC'' and (regexp_like(c1.route_1,''.*RIC.*'',''b'') or regexp_like(c1.route_2,''.*RIC.*'',''b'')))
-or (j1.mkt=''STL'' and (regexp_like(c1.route_1,''.*STL.*'',''b'') or regexp_like(c1.route_2,''.*STL.*'',''b''))) then 1
-else 0 end as rank
-from (select
-*,
-case when regexp_like(c0.other_data,''(u5=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'')
-and regexp_like(c0.other_data,''(u7=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'')
-then regexp_substr(c0.other_data,''(u5=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'',3) || regexp_substr(c0.other_data,''(u7=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'',3)
-when regexp_like(c0.other_data,''(u5=)([A-Z][A-Z][A-Z])\;'',''ib'')
-and regexp_like(c0.other_data,''(u7=)([A-Z][A-Z][A-Z])\;'',''ib'')
-then regexp_substr(c0.other_data,''(u5=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'',2) || regexp_substr(c0.other_data,''(u7=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'',2)
-when regexp_like(c0.other_data,''(u5=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'')
-and regexp_like(c0.other_data,''(u7=)([A-Z][A-Z][A-Z])\;'',''ib'')
-then regexp_substr(c0.other_data,''(u5=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'',3) || regexp_substr(c0.other_data,''(u7=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'',3)
-when regexp_like(c0.other_data,''(u5=)([A-Z][A-Z][A-Z])\;'',''ib'')
-and regexp_like(c0.other_data,''(u7=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'')
-then regexp_substr(c0.other_data,''(u5=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'',2) || regexp_substr(c0.other_data,''(u7=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'',3) end as route_1,
-case when regexp_like(c0.other_data,''(u6=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'') and
-regexp_like(c0.other_data,''(u8=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'')
-then regexp_substr(c0.other_data,''(u6=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'',3) || regexp_substr(c0.other_data,''(u8=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'',3)
-when regexp_like(c0.other_data,''(u6=)([A-Z][A-Z][A-Z])\;'',''ib'') and
-regexp_like(c0.other_data,''(u8=)([A-Z][A-Z][A-Z])\;'',''ib'')
-then regexp_substr(c0.other_data,''(u6=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'',2) || regexp_substr(c0.other_data,''(u8=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'',2)
-when regexp_like(c0.other_data,''(u6=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'') and
-regexp_like(c0.other_data,''(u8=)([A-Z][A-Z][A-Z])\;'',''ib'')
-then regexp_substr(c0.other_data,''(u6=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'',3) || regexp_substr(c0.other_data,''(u8=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'',3)
-when regexp_like(c0.other_data,''(u6=)([A-Z][A-Z][A-Z])\;'',''ib'') and
-regexp_like(c0.other_data,''(u8=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'')
-then regexp_substr(c0.other_data,''(u6=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'',2) || regexp_substr(c0.other_data,''(u8=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'',3) end as route_2
-from diap01.mec_us_united_20056.dfa_activity as c0
-where (cast(c0.click_time as date) between ''2016-05-16'' and ''2016-07-25'')
-and not regexp_like( substring (c0.other_data,(instr(c0.other_data,''u3='') + 3),5),''mil.*'',''ib'')
-and c0.revenue <> 0
-and c0.quantity <> 0
-and c0.activity_type=''ticke498''
-and c0.activity_sub_type=''unite820''
-and c0.order_id=9639387
-and c0.advertiser_id <> 0
-) as c1
-left join
-(
-select
-cast (t1.plc as varchar (4000)) as plc,
-case when (regexp_like(t1.plc,''.*austin.*'',''ib'')) then ''AUS''
-when (regexp_like(t1.plc,''.*hartford.*'',''ib'')) then ''HAR''
-when (regexp_like(t1.plc,''.*jacksonville.*'',''ib'')) then ''JCK''
-when (regexp_like(t1.plc,''.*milwaukee.*'',''ib'')) then ''MKE''
-when (regexp_like(t1.plc,''.*pittsburgh.*'',''ib'')) then ''PIT''
-when (regexp_like(t1.plc,''.*richmond.*'',''ib'')) then ''RIC''
-when (regexp_like(t1.plc,''.*boston.*'',''ib'')) then ''BOS''
-when (regexp_like(t1.plc,''.*stlouis.*'',''ib'')) then ''STL'' else ''no mkt'' end as mkt,
-t1.page_id as page_id2,
-t1.buy_id as buy_id,
-t1.site_id as site_id2
-from (select
-p2.order_id as buy_id,
-p2.site_id,
-p2.page_id,
-p2.site_placement as plc,
-cast(p2.start_date as date) as thisDate,
-row_number() over (partition by p2.order_id,p2.site_id,p2.page_id order by cast(p2.start_date as date)desc) as r1
-from diap01.mec_us_united_20056.dfa_page as p2
-) as t1
-where t1.r1=1
-) as j1
-on c1.page_id=j1.page_id2
-and c1.order_id=j1.buy_id
-and c1.site_ID=j1.site_id2
+*   from diap01.mec_us_united_20056.ual_bru_activity
 
 ) as c9
 
-left join diap01.mec_us_mecexchangerates_20067.exchange_rates as rates
-on upper(substring(c9.Other_Data,(INSTR(c9.Other_Data,''u3='')+3),3))= upper(Rates.Currency)
-and cast(c9.Click_Time as date)=Rates.DATE
-where c9.rank=1
 group by
-cast(c9.Click_Time as date)
-,c9.order_id
-,c9.site_id
-,c9.page_id
+c9.date,
+c9.order_id,
+c9.site_id,
+c9.page_id
 
 union all
 
@@ -548,8 +467,8 @@ cast(i1.impression_time as date) as "date"
 from (
 select *
 from diap01.mec_us_united_20056.dfa_impression as i2
-where cast(i2.impression_time as date) between ''2016-05-16'' and ''2016-07-25''
-and i2.order_id=9639387
+where cast(i2.impression_time as date) between ''2016-11-07'' and ''2016-12-31''
+and i2.order_id=10505745
 and i2.advertiser_id <> 0
 ) as i1
 group by
@@ -572,8 +491,8 @@ cast(ck.click_time as date) as "Date"
 from (
 select *
 from diap01.mec_us_united_20056.dfa_click as ck1
-where cast(ck1.click_time as date) between ''2016-05-16'' and ''2016-07-25''
-and ck1.order_id=9639387
+where cast(ck1.click_time as date) between ''2016-11-07'' and ''2016-12-31''
+and ck1.order_id=10505745
 and ck1.advertiser_id <> 0
 ) as ck
 group by
@@ -617,7 +536,7 @@ cast (rpt.Date as date )
 ,j2.plc
 ')
 
-             ) AS dcmReport
+                            ) as dcmReport
 
 
             LEFT JOIN
