@@ -1,4 +1,4 @@
-CREATE procedure dbo.crt_dbm_cost
+alter procedure dbo.crt_dbm_cost
 as
 if OBJECT_ID('master.dbo.dbm_cost',N'U') is not null
   drop table master.dbo.dbm_cost;
@@ -68,46 +68,46 @@ insert into master.dbo.dbm_cost
            t1.placement_id,
            t1.dbm_cost                                                                                              as dbm_cost1,
            sum(t1.dbm_cost) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as dbm_cost,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as dbm_cost,
            t1.impressions                                                                                           as imps,
            t1.clicks                                                                                                as clicks,
            t1.vew_con                                                                                               as vew_con1,
            sum(t1.vew_con) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as vew_con,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as vew_con,
            t1.clk_con                                                                                               as clk_con1,
            sum(t1.clk_con) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as clk_con,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as clk_con,
            t1.con                                                                                                   as con1,
            sum(t1.con) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as con,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as con,
            t1.vew_tix                                                                                               as vew_tix1,
            sum(t1.vew_tix) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as vew_tix,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as vew_tix,
            t1.clk_tix                                                                                               as clk_tix1,
            sum(t1.clk_tix) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as clk_tix,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as clk_tix,
            t1.tix                                                                                                   as tix1,
            sum(t1.tix) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as tix,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as tix,
            t1.vew_rev                                                                                               as vew_rev1,
            sum(t1.vew_rev) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as vew_rev,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as vew_rev,
            t1.clk_rev                                                                                               as clk_rev1,
            sum(t1.clk_rev) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as clk_rev,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as clk_rev,
            t1.rev                                                                                                   as rev1,
            sum(t1.rev) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as rev,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as rev,
 
            t1.vew_led                                                                                               as vew_led1,
            sum(t1.vew_led) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as vew_led,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as vew_led,
            t1.clk_led                                                                                               as clk_led1,
            sum(t1.clk_led) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as clk_led,
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as clk_led,
            t1.led                                                                                                   as led1,
            sum(t1.led) over (partition by t1.dcmdate,t1.plce_id
-             order by t1.dcmdate asc,t1.plce_id asc,t1.site_id_dcm desc range between unbounded preceding and current row) as led
+             order by t1.dcmdate asc,t1.plce_id asc,t1.site_rank desc range between unbounded preceding and current row) as led
 
 
          from (select
@@ -118,6 +118,7 @@ insert into master.dbo.dbm_cost
                  dcmreport.campaign_id                               as campaign_id,
                  dcmreport.site_dcm                                  as site_dcm,
                  dcmreport.site_id_dcm                               as site_id_dcm,
+               case when dcmreport.site_dcm like 'Google%' then 1 else 2 end as site_rank,
                  case when dcmReport.plce_id in ('PBKB7J','PBKB7H','PBKB7K') then 'PBKB7J'
                  else dcmReport.plce_id end                          as plce_id,
                  case when dcmReport.placement like 'PBKB7J%' or dcmReport.placement like 'PBKB7H%' or dcmReport.placement like 'PBKB7K%' or dcmReport.placement = 'United 360 - Polaris 2016 - Q4 - Amobee' then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID'
@@ -139,8 +140,6 @@ insert into master.dbo.dbm_cost
                  sum(dcmreport.clk_rev)                              as clk_rev,
                  sum(dcmreport.rev)                                  as rev
 
-
-               -- openquery function call must not exceed 8,000 characters; no room for comments inside the function
                from (
                       select *
                       from openquery(verticaunited,'
@@ -354,12 +353,6 @@ cast(r1.date as date)
                     ) as dcmreport
 
 
--- left join
--- (select * from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].summarytable) as prisma
--- on dcmreport.placement_id = prisma.adserverplacementid
--- where prisma.costmethod != 'Flat'
--- and prisma.cost_id = 'P8FSSK'
-
          group by
            dcmreport.dcmdate
            ,cast(month(cast(dcmreport.dcmdate as date)) as int)
@@ -372,19 +365,6 @@ cast(r1.date as date)
            ,dcmreport.placement_id
 
               ) as t1
-
-
---
--- group by
---     t1.dcmdate,
---     t1.dcmmatchdate,
---     t1.campaign,
---     t1.campaign_id,
---     t1.site_dcm,
---     t1.site_id_dcm,
---     t1.plce_id,
---     t1.placement,
---     t1.placement_id
 
        ) as t2
 
