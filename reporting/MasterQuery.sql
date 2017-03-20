@@ -25,14 +25,14 @@
 -- exec master.dbo.crt_dbm_cost go
 -- exec master.dbo.crt_dfa_cost_dt2 go
 
--- -- exec master.dbo.crt__dfa_costTbl_dt1 go
+-- exec master.dbo.crt__dfa_costTbl_dt1 go
 
 
 declare @report_st date
 declare @report_ed date
 --
 set @report_ed = '2017-03-14';
-set @report_st = '2017-03-08';
+set @report_st = '2017-01-01';
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -84,9 +84,10 @@ select
   t3.planned_amt                                                                                       as "planned amt",
  t3.planned_cost                                                                                       as "planned cost",
   case when t3.costmethod like '[Ff]lat' then t3.flatcost/max(t3.newcount) else sum(t3.cost) end      as cost,
-  case when sum(t3.clk_led) = 0 then 0 else sum(t3.cost)/sum(f2.clk_led) end   as clk_cpl,
-  case when sum(t3.vew_led) = 0 then 0 else sum(t3.cost)/sum(f2.vew_led) end   as vew_cpl,
-  case when sum(t3.tot_led) = 0 then 0 else sum(t3.cost)/sum(f2.tot_led) end   as cpl,
+  case when sum(t3.clk_led) = 0 then 0 else sum(t3.cost)/sum(t3.clk_led) end   as clk_cpl,
+  case when sum(t3.vew_led) = 0 then 0 else sum(t3.cost)/sum(t3.vew_led) end   as vew_cpl,
+  case when sum(t3.tot_led) = 0 then 0 else sum(t3.cost)/sum(t3.tot_led) end   as cpl,
+  sum(t3.tot_led) as leads,
   sum(t3.dlvrimps)                                                                                     as "delivered impressions",
   sum(t3.billimps)                                                                                     as "billable impressions",
   sum(t3.cnslimps)                                                                                     as "dfa impressions",
@@ -113,7 +114,7 @@ from (
 -- @report_ed date;
 -- --
 -- set @report_ed = '2017-03-14';
--- set @report_st = '2017-03-08';
+-- set @report_st = '2017-01-01';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -228,7 +229,7 @@ select
         sum(case when t2.costmethod = 'dCPM' then cst.vew_tix else  t2.vew_tix end)      as vew_tix,
         sum(case when t2.costmethod = 'dCPM' then cst.clk_led else  t2.clk_led end)      as clk_led,
         sum(case when t2.costmethod = 'dCPM' then cst.vew_led else  t2.vew_led end)      as vew_led,
-        sum(case when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led,
+        sum(case when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led
 
 
 
@@ -381,7 +382,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-03-08'' and ''2017-03-14''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-14''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue <> 0
 and total_conversions <> 0
@@ -426,7 +427,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-08'' and ''2017-03-14''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-14''
 and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -462,7 +463,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-08'' and ''2017-03-14''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-14''
 and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
