@@ -1,0 +1,17 @@
+Notes on Learning SQL
+
+I have no formal computer science education or training. I'm entirely self-taught. I take some pride in that, simply because I've come a long way since I began, and I've learned some bankable skills. But I can't recommend the self-taught path in general. It's hard, and it's slow. I taught myself the things that were immediately useful to me, and theory rarely has utility in the task at hand. So if you're looking for programming fundamentals, I'm not the guy for that. I wish I had more of it, because it's incredibly interesting, and it's useful across languages.
+
+I write or have written VBA, FOCUS, WebFOCUS, JavaScript, Java, HTML, CSS, SQL, PHP, Python, and R. I'm pretty good at SQL because I've used it the most. I'm OK in JavaScript, and I can usually figure out what Python code is doing.
+
+First thing to know is that every programming language has rules - words you're allowed to use, syntax that must be followed, and things that can and can't be done.
+
+Coding is easy. Programming concepts - thinking in the form of computer logic - is hard to learn on your own.
+
+Look at as much code as you can. I learned 90% of what I know from other people's work. Looking at code helps you understand what's possible.
+
+StackOverflow is a fantastic resource, with limits. Complex examples are thin on the ground on StackOverflow. And in order to make full use of what you find there, you first need to know what you're looking for, which is often half the reason you're looking for answers. You're pretty sure the problem can be solved with your programming language, but you don't know where to start. In cases like that, StackOverflow can be less helpful.
+
+Looking at code written by people at MEC will be more relevant to you than anything you find on the web, with the added bonus of being able to ask questions of the person who wrote it.
+
+We should be taking more ownership of the data that we work with; not less. We're doing ourselves a disservice by outsourcing data management to DI. They're the folks that figure out how to get our data into a place we can access it. They're primary concern is creating processes that are solid and repeatable and ensuring data integrity. It's not their job to know or understand the stories in the data. That's our job. You can't fully understand what is possible until you understand how it's put together. You can't know what's in it until you use it.
