@@ -47,53 +47,51 @@ select
   t1.user_id,
     t1.dcmdate,
     t1.dcmmatchdate,
+
 --     t1.campaign,
     t1.campaign_id,
---     t1.site_dcm,
---     t1.site_id_dcm,
+    t1.site_dcm,
+    t1.site_id_dcm,
     t1.plce_id,
 --     t1.lagplcnbr,
 --     t1.placement,
     t1.placement_id,
+         t1.site_rank,
 
 t1.dbm_cost    as dbm_cost1,
-sum(t1.dbm_cost) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as dbm_cost,
+sum(t1.dbm_cost) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as dbm_cost,
 t1.impressions as imps,
 t1.clicks      as clicks,
 t1.con         as con1,
-sum(t1.con) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as con,
+sum(t1.con) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as con,
 t1.vew_con         as vew_con1,
-sum(t1.vew_con) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as vew_con,
+sum(t1.vew_con) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as vew_con,
 t1.clk_con         as clk_con1,
-sum(t1.clk_con) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as clk_con,
+sum(t1.clk_con) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as clk_con,
 t1.tix         as tix1,
-sum(t1.tix) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as tix,
+sum(t1.tix) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as tix,
 t1.vew_tix         as vew_tix1,
-sum(t1.vew_tix) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as vew_tix,
+sum(t1.vew_tix) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as vew_tix,
 t1.clk_tix         as clk_tix1,
-sum(t1.clk_tix) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as clk_tix,
+sum(t1.clk_tix) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as clk_tix,
 t1.rev         as rev1,
-sum(t1.rev) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as rev,
+sum(t1.rev) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as rev,
 t1.vew_rev         as vew_rev1,
-sum(t1.vew_rev) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as vew_rev,
+sum(t1.vew_rev) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as vew_rev,
 t1.clk_rev         as clk_rev1,
-sum(t1.clk_rev) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.campaign_id asc range between unbounded preceding and current row) as clk_rev
+sum(t1.clk_rev) over (partition by t1.user_id, t1.dcmdate, t1.plce_id order by t1.user_id, t1.dcmdate, t1.plce_id, t1.site_rank desc range between unbounded preceding and current row) as clk_rev
 
 
 from (select
     dcmreport.user_id as user_id,
           dcmreport.dcmdate                                                                    as dcmdate,
-          diap01.mec_us_united_20056.udf_dateToInt(dcmreport.dcmdate)                                               as dcmmatchdate,
+          diap01.mec_us_united_20056.udf_dateToInt(dcmreport.dcmdate)                          as dcmmatchdate,
 --           dcmreport.campaign                                                                   as campaign,
           dcmreport.campaign_id                                                                as campaign_id,
---           dcmreport.site_dcm                                                                   as site_dcm,
---           dcmreport.site_id_dcm                                                                as site_id_dcm,
-          case when dcmReport.plce_id in ('PBKB7J','PBKB7H','PBKB7K') then 'PBKB7J'
-          else dcmReport.plce_id end                                                           as plce_id,
-
---               order by dcmreport.user_id asc, dcmreport.dcmdate asc,dcmreport.plce_id asc, dcmreport.site_id_dcm desc) as lagplcnbr,
---           case when dcmReport.placement like 'PBKB7J%' or dcmReport.placement like 'PBKB7H%' or dcmReport.placement like 'PBKB7K%' or dcmReport.placement = 'United 360 - Polaris 2016 - Q4 - Amobee' then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID'
---           else dcmReport.placement end                                                         as placement,
+          dcmreport.site_dcm                                                                   as site_dcm,
+          dcmreport.site_id_dcm                                                                as site_id_dcm,
+          case when dcmreport.site_dcm like 'Google%' then 1 else 2 end as site_rank,
+          dcmReport.plce_id                                                            as plce_id,
           dcmreport.placement_id                                                               as placement_id,
           sum(dcmreport.dbm_cost)                                                              as dbm_cost,
           sum(dcmreport.impressions)                                                           as impressions,
@@ -116,7 +114,7 @@ cast(r1.date as date)    as dcmdate,
 -- campaign.campaign            as campaign,
 r1.campaign_id           as campaign_id,
 r1.site_id_dcm           as site_id_dcm,
--- directory.site_dcm           as site_dcm,
+directory.site_dcm           as site_dcm,
 left(placements.placement,6) as plce_id,
 -- placements.placement         as placement,
 r1.placement_id          as placement_id,
@@ -156,7 +154,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date) between '2016-07-15' and '2016-12-31'
+where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date) between '2016-07-15' and '2016-07-15'
 and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
 and (total_revenue * 1000000) <> 0
 and total_conversions <> 0
@@ -198,19 +196,16 @@ cast((sum(dbm_media_cost_usd) / 1000000000) as decimal(20,10))            as dbm
 0 as vew_tix,
 0 as vew_rev,
 0 as revenue
--- 0               as conv,
--- 0               as tix
 
 
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-07-15' and '2016-12-31'
-and (campaign_id = 9639387 or campaign_id = 8958859)  -- TMK 2016
-and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-07-15' and '2016-07-15'
+and (campaign_id = 9639387 or campaign_id = 8958859)  -- TMK 2016 & ghost campaign
+and (site_id_dcm = 1578478 or site_id_dcm = 2202011)  -- real & ghost site
 and user_id <> '0'
 and (advertiser_id <> 0)
--- and dbm_advertiser_id = 649134
 ) as ti
 group by
 ti.user_id
@@ -237,14 +232,12 @@ count(*)        as clicks,
 0 as vew_tix,
 0 as vew_rev,
 0 as revenue
--- 0               as conv,
--- 0               as tix
 
 from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-07-15' and '2016-12-31'
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-07-15' and '2016-07-15'
 and (advertiser_id <> 0)
 and user_id <> '0'
 and (campaign_id = 9639387 or campaign_id = 8958859)  -- TMK 2016
@@ -260,15 +253,6 @@ tc.user_id
 ,tc.placement_id
 
 ) as r1
-
--- left join
--- (
--- select
--- cast(campaign as varchar(4000)) as 'campaign',
--- campaign_id                     as 'campaign_id'
--- from diap01.mec_us_united_20056.dfa2_campaigns
--- ) as campaign
--- on r1.campaign_id = campaign.campaign_id
 
 left join
 (
@@ -295,14 +279,15 @@ on r1.placement_id = placements.placement_id
 and r1.campaign_id = placements.campaign_id
 and r1.site_id_dcm = placements.site_id_dcm
 
--- left join
--- (
--- select
--- cast(site_dcm as varchar(4000)) as 'site_dcm',
--- site_id_dcm                     as 'site_id_dcm'
--- from diap01.mec_us_united_20056.dfa2_sites
--- ) as directory
--- on r1.site_id_dcm = directory.site_id_dcm
+
+left join
+(
+select
+cast(site_dcm as varchar(4000)) as 'site_dcm',
+site_id_dcm                     as 'site_id_dcm'
+from diap01.mec_us_united_20056.dfa2_sites
+) as directory
+on r1.site_id_dcm = directory.site_id_dcm
 
 where not regexp_like(placements.placement,'.do\s*not\s*use.','ib')
 -- and not regexp_like(campaign.campaign,'.2016.','ib')
@@ -311,7 +296,7 @@ and (r1.site_id_dcm = 1578478 or r1.site_id_dcm = 2202011)
 group by
 r1.user_id
 ,cast(r1.date as date)
--- ,directory.site_dcm
+,directory.site_dcm
 ,r1.site_id_dcm
 ,r1.campaign_id
 -- ,campaign.campaign
@@ -321,43 +306,21 @@ r1.user_id
 
            ) as dcmreport
 
--- where dcmreport.placement_id = 130937845
---           and dcmreport.dcmdate  = '2016-07-15'
--- left join
--- (select * from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].summarytable) as prisma
--- on dcmreport.placement_id = prisma.adserverplacementid
--- where prisma.costmethod <> 'Flat'
--- and prisma.cost_id = 'P8FSSK'
-
 group by
   dcmreport.user_id
     ,dcmreport.dcmdate
 --     ,dcmreport.campaign
     ,dcmreport.campaign_id
---     ,dcmreport.site_dcm
---     ,dcmreport.site_id_dcm
+    ,dcmreport.site_dcm
+    ,dcmreport.site_id_dcm
     ,dcmreport.plce_id
 --     ,dcmreport.placement
     ,dcmreport.placement_id
 
      ) as t1
 
--- where t1.site_id_dcm = 1578478
-
--- group by
---  t1.user_id,
---     t1.dcmdate,
---     t1.dcmmatchdate,
--- --     t1.campaign,
--- --     t1.campaign_id,
--- --     t1.site_dcm,
--- --     t1.site_id_dcm,
---     t1.plce_id,
--- --     t1.placement,
---     t1.placement_id
-
      ) as t2
-where t2.campaign_id = 9639387
+where t2.site_rank = 1
 group by
   t2.user_id
 --     t2.dcmmatchdate,
