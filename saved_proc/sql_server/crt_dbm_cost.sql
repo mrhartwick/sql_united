@@ -186,9 +186,6 @@ sum(case when ta.conversion_id = 2 then 1 else 0 end ) as vew_con,
 sum(case when ta.conversion_id = 2 then ta.total_conversions else 0 end ) as vew_tix,
 sum(case when ta.conversion_id = 2 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as vew_rev,
 sum(ta.total_revenue * 1000000/rates.exchange_rate) as rev
--- sum(case when ta.conversion_id = 1 or ta.conversion_id = 2 then 1
--- else 0 end)      as con,
--- sum(case when ta.conversion_id = 1 or ta.conversion_id = 2 then ta.total_conversions
 
 from
 (
@@ -198,7 +195,7 @@ where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as d
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue != 0
 and total_conversions != 0
-and activity_id = 978826 or activity_id = 1086066
+and (activity_id = 978826 or activity_id = 1086066)
 and (advertiser_id <> 0)
 and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
 and (length(isnull(event_sub_type,'''')) > 0)

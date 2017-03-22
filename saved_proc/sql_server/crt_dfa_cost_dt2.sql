@@ -378,7 +378,7 @@ select
   t2.mt_imps                             as mt_imps,
   case when t2.costmethod = 'dCPM' then db.clicks
   else t2.clicks end                     as clicks,
--- bring in DBM metrics
+-- bring in DBM metrics; these metrics will be used in the master query for dCPM placements only
   db.vew_con                             as vew_con,
   db.clk_con                             as clk_con,
   db.con                                 as con,
