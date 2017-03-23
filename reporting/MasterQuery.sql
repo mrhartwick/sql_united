@@ -521,7 +521,7 @@ where not regexp_like(placement,''.do\s* not \s*use.'',''ib'')
 and  regexp_like(campaign.campaign,''.*2017.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
-and r1.site_id_dcm <>''1485655''
+-- and r1.site_id_dcm <>''1485655''
 group by
 cast (r1.date as date )
 -- , cast(month(cast(r1.date as date)) as int)
