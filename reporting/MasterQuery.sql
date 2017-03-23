@@ -31,7 +31,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-03-14';
+set @report_ed = '2017-03-22';
 set @report_st = '2017-01-01';
 
 --
@@ -110,7 +110,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-03-14';
+-- set @report_ed = '2017-03-22';
 -- set @report_st = '2017-01-01';
 
 select
@@ -344,7 +344,7 @@ select
            select *
            from openQuery(verticaunited,
 
-  'select
+ ' select
 cast(r1.date as date)                      as dcmdate,
 cast(month (cast(r1.date as date)) as int) as reportmonth,
 campaign.campaign                              as campaign,
@@ -392,12 +392,12 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-14''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-22''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and total_revenue <> 0
 and total_conversions <> 0
-and activity_id = 978826 or activity_id = 1086066
-and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+and (activity_id = 978826 or activity_id = 1086066)
+-- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
@@ -437,8 +437,8 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-14''
-and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-22''
+-- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
 ) as ti
@@ -473,8 +473,8 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-14''
-and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-22''
+-- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
 
@@ -517,7 +517,8 @@ from diap01.mec_us_united_20056.dfa2_sites
 on r1.site_id_dcm = directory.site_id_dcm
 
 where not regexp_like(placement,''.do\s* not \s*use.'',''ib'')
-and not regexp_like(campaign.campaign,''.*2016.*'',''ib'')
+-- and not regexp_like(campaign.campaign,''.*2016.*'',''ib'')
+and  regexp_like(campaign.campaign,''.*2017.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
 and r1.site_id_dcm <>''1485655''
