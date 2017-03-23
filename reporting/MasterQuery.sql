@@ -84,9 +84,6 @@ select
   t3.planned_amt                                                                                       as "planned amt",
  t3.planned_cost                                                                                       as "planned cost",
   case when t3.costmethod like '[Ff]lat' then t3.flatcost/max(t3.newcount) else sum(t3.cost) end      as cost,
-  -- case when sum(t3.clk_led) = 0 then 0 else sum(t3.cost)/sum(t3.clk_led) end   as clk_cpl,
-  -- case when sum(t3.vew_led) = 0 then 0 else sum(t3.cost)/sum(t3.vew_led) end   as vew_cpl,
-  -- case when sum(t3.tot_led) = 0 then 0 else sum(t3.cost)/sum(t3.tot_led) end   as cpl,
   sum(t3.tot_led) as leads,
   sum(t3.dlvrimps)                                                                                     as "delivered impressions",
   sum(t3.billimps)                                                                                     as "billable impressions",
@@ -538,7 +535,7 @@ cast (r1.date as date )
         and t1.campaign not like '%[_]UK[_]%'
         and t1.campaign not like '%2016%'
         and t1.campaign not like '%2015%'
---         and t1.campaign_id != 10698273
+        and t1.campaign_id != 10698273
     group by
        t1.dcmdate
       ,cast(month(cast(t1.dcmdate as date)) as int)
