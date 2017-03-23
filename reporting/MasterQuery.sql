@@ -234,12 +234,7 @@ select
        from
          (
 -- =========================================================================================================================
--- --
--- declare @report_st date,
--- @report_ed date;
--- --
--- set @report_ed = '2016-10-21';
--- set @report_st = '2016-10-10';
+
         select
            t1.dcmdate as dcmdate,
            cast(month(cast(t1.dcmdate as date)) as int) as dcmmonth,
