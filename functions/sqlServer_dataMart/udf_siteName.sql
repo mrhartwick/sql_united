@@ -70,6 +70,7 @@ AS
 				when @site_name like '[Tt]ravelocity%' then 'Travelocity'
 				when @site_name like '[Tt]riggit%' then 'Triggit'
 				when @site_name like '[Tt]rip%[Aa]dvisor%' then 'Trip Advisor'
+				when @site_name like '%[Uu]ber%' then 'United'
 				when @site_name like '%[Uu]ndertone%' then 'Undertone'
 				when @site_name like '[Uu]nited%' then 'United'
 				when @site_name like '[Vv]erve%' then 'VerveMobile'

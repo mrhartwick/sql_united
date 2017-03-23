@@ -30,6 +30,7 @@ as
                                  when @campaignID = 10812738 then 'Marketing Fund 2017'
                                  when @campaignID = 10918234 then 'Win NY 2017'
                                  when @campaignID = 10942240 then 'China Onshore 2017'
+                                 when @campaignID = 11069476 then 'Trade 2017'
                                  else @campaignName end;
         return @finalCampaignName
     end
