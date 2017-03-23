@@ -143,90 +143,103 @@ select
     sum(cst.flatcost)                                                          as flatcost_chk,
     sum(cst.cost)                                                              as cost,
     t2.rate                                                                    as rate,
+
+--  Billable revenue without United discounts applied
     sum(case
---         not subject to viewability
-             when (t2.dv_map = 'N')
+--         not subject to viewability, DBM
+             when (t2.dv_map = 'N' and t2.costmethod = 'dCPM')
                then cast((cst.vew_rev) + cst.clk_rev as decimal(10,2))
 
+--         not subject to viewability
+             when (t2.dv_map = 'N')
+               then cast((t2.vew_rev) + t2.clk_rev as decimal(10,2))
+
 --         subject to viewability with flag; mt source
              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
                then cast(
-             (((cst.vew_rev) *
+             (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0)))) + cst.clk_rev as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; dv source
              when (t2.dv_map = 'Y')
                then cast(
-             (((cst.vew_rev) *
+             (((t2.vew_rev) *
                 (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0)))) + cst.clk_rev as decimal(10,2))
+                            nullif(cast(dv.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; moat source
              when (t2.dv_map = 'M')
                then cast(
-             (((cst.vew_rev) *
+             (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0)))) + cst.clk_rev as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as billrevenue,
 
+
+--         Billable revenue with United discounts applied
                sum(case
-             when (t2.dv_map = 'N')
+--         not subject to viewability, DBM
+             when (t2.dv_map = 'N' and t2.costmethod = 'dCPM')
                then cast((cst.vew_rev * .2 * .15) + cst.clk_rev as decimal(10,2))
+
+--         not subject to viewability
+             when (t2.dv_map = 'N')
+               then cast((t2.vew_rev * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability with flag; mt source
              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
                then cast(
-             (((cst.vew_rev) *
+             (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + cst.clk_rev as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; dv source
              when (t2.dv_map = 'Y')
                then cast(
-             (((cst.vew_rev) *
+             (((t2.vew_rev) *
                 (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) * .2 * .15) + cst.clk_rev as decimal(10,2))
+                            nullif(cast(dv.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; moat source
              when (t2.dv_map = 'M')
                then cast(
-             (((cst.vew_rev) *
+             (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + cst.clk_rev as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as adjsrevenue,
 
-        sum(cst.dlvrimps)                                                             as dlvrimps,
-        sum(cst.billimps)                                                             as billimps,
+    sum(cst.dlvrimps)                                                             as dlvrimps,
+    sum(cst.billimps)                                                             as billimps,
 --      dcm impressions (for comparison (qa) to dcm console)
-        sum(cst.dfa_imps)                                                             as cnslimps,
-        sum(iv.impressions)                                                           as iv_impressions,
-        sum(cst.iv_imps)                                                              as iv_impressions_chk,
-        sum(iv.click_thrus)                                                           as iv_clicks,
-        sum(iv.all_completion)                                                        as iv_completes,
-        sum(cast(dv.total_impressions as int))                                        as dv_impressions,
-        sum(cst.dv_imps)                                                              as dv_impressions_chk,
-        sum(dv.groupm_passed_impressions)                                             as dv_viewed,
-        sum(cast(dv.groupm_billable_impressions as decimal(10,2)))                    as dv_groupmpayable,
-        sum(cast(mt.total_impressions as int))                                        as mt_impressions,
-        sum(cst.mt_imps)                                                              as mt_impressions_chk,
-        sum(mt.groupm_passed_impressions)                                             as mt_viewed,
-        sum(cast(mt.groupm_billable_impressions as decimal(10,2)))                    as mt_groupmpayable,
-        sum(case
-            when (len(isnull(iv.joinkey,'')) > 0) then iv.click_thrus
-            else t2.clicks end)                                                       as clicks,
-        sum(case when t2.costmethod = 'dCPM' then cst.clk_con else  t2.clk_con end)      as clk_con,
-        sum(case when t2.costmethod = 'dCPM' then cst.clk_rev else  t2.clk_rev end)      as clk_rev,
-        sum(case when t2.costmethod = 'dCPM' then cst.clk_tix else  t2.clk_tix end)      as clk_tix,
-        sum(case when t2.costmethod = 'dCPM' then cst.con     else  t2.con     end)      as tot_con,
-        sum(case when t2.costmethod = 'dCPM' then cst.rev     else  t2.rev     end)      as tot_rev,
-        sum(case when t2.costmethod = 'dCPM' then cst.tix     else  t2.tix     end)      as tot_tix,
-        sum(case when t2.costmethod = 'dCPM' then cst.vew_con else  t2.vew_con end)      as vew_con,
-        sum(case when t2.costmethod = 'dCPM' then cst.vew_rev else  t2.vew_rev end)      as vew_rev,
-        sum(case when t2.costmethod = 'dCPM' then cst.vew_tix else  t2.vew_tix end)      as vew_tix,
-        sum(case when t2.costmethod = 'dCPM' then cst.clk_led else  t2.clk_led end)      as clk_led,
-        sum(case when t2.costmethod = 'dCPM' then cst.vew_led else  t2.vew_led end)      as vew_led,
-        sum(case when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led
+    sum(cst.dfa_imps)                                                             as cnslimps,
+    sum(iv.impressions)                                                           as iv_impressions,
+    sum(cst.iv_imps)                                                              as iv_impressions_chk,
+    sum(iv.click_thrus)                                                           as iv_clicks,
+    sum(iv.all_completion)                                                        as iv_completes,
+    sum(cast(dv.total_impressions as int))                                        as dv_impressions,
+    sum(cst.dv_imps)                                                              as dv_impressions_chk,
+    sum(dv.groupm_passed_impressions)                                             as dv_viewed,
+    sum(cast(dv.groupm_billable_impressions as decimal(10,2)))                    as dv_groupmpayable,
+    sum(cast(mt.total_impressions as int))                                        as mt_impressions,
+    sum(cst.mt_imps)                                                              as mt_impressions_chk,
+    sum(mt.groupm_passed_impressions)                                             as mt_viewed,
+    sum(cast(mt.groupm_billable_impressions as decimal(10,2)))                    as mt_groupmpayable,
+    sum(case
+        when (len(isnull(iv.joinkey,'')) > 0) then iv.click_thrus
+        else t2.clicks end)                                                       as clicks,
+    sum(case when t2.costmethod = 'dCPM' then cst.clk_con else  t2.clk_con end)      as clk_con,
+    sum(case when t2.costmethod = 'dCPM' then cst.clk_rev else  t2.clk_rev end)      as clk_rev,
+    sum(case when t2.costmethod = 'dCPM' then cst.clk_tix else  t2.clk_tix end)      as clk_tix,
+    sum(case when t2.costmethod = 'dCPM' then cst.con     else  t2.con     end)      as tot_con,
+    sum(case when t2.costmethod = 'dCPM' then cst.rev     else  t2.rev     end)      as tot_rev,
+    sum(case when t2.costmethod = 'dCPM' then cst.tix     else  t2.tix     end)      as tot_tix,
+    sum(case when t2.costmethod = 'dCPM' then cst.vew_con else  t2.vew_con end)      as vew_con,
+    sum(case when t2.costmethod = 'dCPM' then cst.vew_rev else  t2.vew_rev end)      as vew_rev,
+    sum(case when t2.costmethod = 'dCPM' then cst.vew_tix else  t2.vew_tix end)      as vew_tix,
+    sum(case when t2.costmethod = 'dCPM' then cst.clk_led else  t2.clk_led end)      as clk_led,
+    sum(case when t2.costmethod = 'dCPM' then cst.vew_led else  t2.vew_led end)      as vew_led,
+    sum(case when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led
 
 
 
@@ -234,7 +247,12 @@ select
        from
          (
 -- =========================================================================================================================
-
+-- --
+-- declare @report_st date,
+-- @report_ed date;
+-- --
+-- set @report_ed = '2016-10-21';
+-- set @report_st = '2016-10-10';
         select
            t1.dcmdate as dcmdate,
            cast(month(cast(t1.dcmdate as date)) as int) as dcmmonth,
