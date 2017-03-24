@@ -32,7 +32,7 @@ declare @report_st date
 declare @report_ed date
 --
 set @report_ed = '2017-03-22';
-set @report_st = '2017-01-01';
+set @report_st = '2017-03-12';
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -83,7 +83,8 @@ select
   t3.rate                                                                                              as rate,
   t3.planned_amt                                                                                       as "planned amt",
  t3.planned_cost                                                                                       as "planned cost",
-  case when t3.costmethod like '[Ff]lat' then t3.flatcost/max(t3.newcount) else sum(t3.cost) end      as cost,
+    t3.planned_cost/max(t3.amt_count) as planned_cost,
+  case when t3.costmethod like '[Ff]lat' then t3.flatcost/max(t3.flat_count) else sum(t3.cost) end      as cost,
   sum(t3.tot_led) as leads,
   sum(t3.dlvrimps)                                                                                     as "delivered impressions",
   sum(t3.billimps)                                                                                     as "billable impressions",
@@ -111,7 +112,7 @@ from (
 -- @report_ed date;
 -- --
 -- set @report_ed = '2017-03-22';
--- set @report_st = '2017-01-01';
+-- set @report_st = '2017-03-12';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -129,7 +130,9 @@ select
     t2.site_id_dcm                                                             as site_id_dcm,
     t2.costmethod                                                              as costmethod,
     sum(1) over (partition by t2.cost_id,t2.dcmmatchdate
-        order by t2.dcmmonth asc range between unbounded preceding and current row) as newcount,
+        order by t2.dcmmonth asc range between unbounded preceding and current row) as flat_count,
+    sum(1) over (partition by t2.cost_id
+        order by t2.dcmmonth asc range between unbounded preceding and current row) as amt_count,
     t2.plce_id                                                                 as plce_id,
 --     cst.plce_id as dbm_plce_id,
     t2.placement                                                               as placement,
@@ -392,7 +395,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-22''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-03-12'' and ''2017-03-22''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
@@ -432,7 +435,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-22''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-12'' and ''2017-03-22''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -466,7 +469,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-22''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-12'' and ''2017-03-22''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
@@ -648,6 +651,7 @@ group by
   ,cst.plce_id
   ,t2.costmethod
   ,flt.flatcost
+
      ) as t3
 
 
@@ -661,7 +665,7 @@ group by
   ,t3.cost_id
   ,t3.campaign
   ,t3.campaign_id
-  ,t3.newcount
+--   ,t3.newcount
   ,t3.site_dcm
   ,t3.site_id_dcm
   ,t3.costmethod
