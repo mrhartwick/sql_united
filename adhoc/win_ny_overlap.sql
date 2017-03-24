@@ -20,9 +20,10 @@
 --              Uber, NYTimes, NY Magazine
 --              and site_id_dcm in (3247316, 3246841, 1267159)
                  and site_id_dcm =
+                 1485655 -- Forbes
 --               3247316 -- Uber
 --               3246841 -- NYTimes
-                 1267159 -- NY Magazine
+--               1267159 -- NY Magazine
                  and user_id <> '0'
                  and (advertiser_id <> 0)
 -- group by user_id
@@ -48,4 +49,3 @@
             a.user_id = b.user_id
 
 );
-
