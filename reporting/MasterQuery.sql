@@ -648,7 +648,6 @@ group by
   ,cst.plce_id
   ,t2.costmethod
   ,flt.flatcost
-
      ) as t3
 
 
