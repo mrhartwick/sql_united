@@ -165,8 +165,6 @@ sum(r1.clk_tix) as clk_tix,
 sum(cast(r1.vew_rev as decimal (10,2))) as vew_rev,
 sum(cast(r1.clk_rev as decimal (10,2))) as clk_rev,
 sum(cast(r1.rev as decimal (10,2))) as rev
--- sum(r1.con)             as con,
--- sum(r1.tix)              as tix
 from (
 
 select
@@ -178,12 +176,12 @@ ta.placement_id  as placement_id,
 0                as dbm_cost,
 0      as clicks,
 sum(case when activity_id = 1086066 and ta.conversion_id = 1 then 1 else 0 end) as clk_led,
-sum(case when ta.conversion_id = 1 then 1 else 0 end ) as clk_con,
-sum(case when ta.conversion_id = 1 then ta.total_conversions else 0 end ) as clk_tix,
+sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then 1 else 0 end ) as clk_con,
+sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as clk_tix,
 sum(case when ta.conversion_id = 1 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as clk_rev,
 sum(case when activity_id = 1086066 and ta.conversion_id = 2 then 1 else 0 end) as vew_led,
-sum(case when ta.conversion_id = 2 then 1 else 0 end ) as vew_con,
-sum(case when ta.conversion_id = 2 then ta.total_conversions else 0 end ) as vew_tix,
+sum(case when activity_id = 978826  and ta.conversion_id = 2 and ta.total_revenue <> 0 then 1 else 0 end ) as vew_con,
+sum(case when activity_id = 978826  and ta.conversion_id = 2 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as vew_tix,
 sum(case when ta.conversion_id = 2 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as vew_rev,
 sum(ta.total_revenue * 1000000/rates.exchange_rate) as rev
 
@@ -193,8 +191,8 @@ select *
 from diap01.mec_us_united_20056.dfa2_activity
 where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date) > ''2017-01-01''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
-and total_revenue != 0
-and total_conversions != 0
+-- and total_revenue != 0
+-- and total_conversions != 0
 and (activity_id = 978826 or activity_id = 1086066)
 and (advertiser_id <> 0)
 and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
