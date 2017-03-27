@@ -62,7 +62,8 @@ select
   -- friendly campaign name
   [dbo].udf_campaignname(t3.campaign_id, t3.campaign)                             as campaign,
   -- dcm campaign id
-  t3.campaign_id                                                                                          as "campaign id",
+  t3.campaign_id
+  --campaign type: Acquisition, Branding/Routes, Added Value                                                                                       as "campaign id",
   case when campaign_id = '10742878' then 'Acquisition'
         when campaign_id = '10918234' OR campaign_id= '10942240' OR campaign_id='10768497' OR campaign_id='11069476' then 'Branding/Routes'
         when campaign_id = '10740457' OR campaign_id='10812738' then 'Added Value'
