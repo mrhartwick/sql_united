@@ -1,6 +1,6 @@
 select
 
-final.month as "month"
+final.month                                                  as  Month
 -- ,final.campaign                                               as campaign
 -- ,final.campaign_id                                            as campaign_id
 ,final.site                                                   as site
@@ -31,7 +31,7 @@ from (
             cast(report.date as date)      as "Date"
            ,report.Month as "Month"
            ,report.campaign                as campaign
-           ,report.buy_id                  as campaign_id
+           ,report.campaign_id             as campaign_id
            ,report.site                    as site
            ,report.placement               as placement
            ,report.placement_id            as placement_id
@@ -51,19 +51,24 @@ from (
 		   ,sum(report.view_thru_tickets) + sum(report.click_thru_tickets) as tickets
            ,report.other_data
 
+
+
+
+
         from (
 
                 select
 
-                     cast(conversions.Click_Time as date) as "Date"
-                   , cast(month(cast(conversions.Click_Time as date)) as int) as "Month"
-                   , campaign.buy                            as campaign
-                   , conversions.order_id                    as buy_id
-                   , directory.directory_site                as site
-                   , conversions.site_id                     as site_id
+                     cast (timestamp_trunc(to_timestamp(conversions.interaction_time / 1000000),'SS') as date ) as "Date"
+                   , cast (timestamp_trunc(to_timestamp(conversions.interaction_time / 1000000),'MM') as date ) as "Month"
+                   , campaign.campaign                            as campaign
+                   , conversions.campaign_id                    as campaign_id
+                   , directory.site_dcm                as site
+                   , conversions.site_id_dcm                     as site_id
                    , placements.site_placement               as placement
-                   , conversions.page_id                     as placement_id
+                   , conversions.placement_id                    as placement_id
                    ,conversions.other_data
+
 
 --                    , cast(subString(conversions.other_data,( INSTR(conversions.other_data,'u9=') + 3 ),10) as date) as traveldate_1
                      ,case when REGEXP_LIKE(conversions.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;','') then
@@ -135,56 +140,56 @@ from (
 --                    then 'round-trip'
 --                      else 'one-way' end                           as flighttype
 
-                   , sum(case when event_id = 1 then 1 else 0 end) as click_thru_conv
-                   , sum(case when event_id = 1 then conversions.quantity else 0 end) as click_thru_tickets
-                   , sum(case when event_id = 2 then 1 else 0 end) as view_thru_conv
-                   , sum(case when event_id = 2 then conversions.quantity else 0 end) as view_thru_tickets
+                   , sum(case when conversion_id = 1 then 1 else 0 end) as click_thru_conv
+                   , sum(case when conversion_id = 1 then conversions.total_conversions else 0 end) as click_thru_tickets
+                   , sum(case when conversion_id = 2 then 1 else 0 end) as view_thru_conv
+                   , sum(case when conversion_id = 2 then conversions.total_conversions else 0 end) as view_thru_tickets
 
                 from (
 
                         select *
-                        from mec.unitedus.dfa_activity
-                        where cast(Click_Time as date) between '2016-04-18' and '2016-10-21'
+                        from diap01.mec_us_united_20056.dfa2_activity
+                        where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date ) between '2017-01-01' and '2017-03-21'
 
-                              and activity_type = 'ticke498'
-                              and activity_sub_type = 'unite820'
-                            and revenue != 0
-                        and quantity != 0
-                              and order_id in (9639387) -- TMK 2016
+						and activity_id = 978826
+                            and total_revenue <> 0
+                        and total_conversions <> 0
+                              and campaign_id in (10742878) -- TMK 2017
 
 
                               and advertiser_id <> 0
 
-                                   and    UPPER(subString(other_data,( INSTR(other_data,'u3=') + 3 ),3)) != 'MIL'
-                      and subString(other_data,( INSTR(other_data,'u3=') + 3 ),5) != 'Miles'
+					and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
 
                      ) as conversions
 
 --         LEFT JOIN Cross_Client_Resources.EXCHANGE_RATES AS Rates
 --                 ON UPPER(subString(Other_Data, (INSTR(Other_Data,'u3=')+3), 3)) = UPPER(Rates.Currency)
---                 AND cast(Conversions.Click_Time as date) = Rates.DATE
+--                 and cast (timestamp_trunc(to_timestamp(conversions.interaction_time / 1000000),'SS') as date ) = rates.date
 
 
-                   left join mec.unitedus.dfa_campaign as campaign
-                      on conversions.order_id = campaign.order_id
+
+
+                   left join diap01.mec_us_united_20056.dfa2_campaigns as campaign
+                      on conversions.campaign_id = campaign.campaign_id
 
 left join
 (
-select  site_placement as site_placement,  max(page_id) as page_id, order_id as order_id, site_id as site_id
-from mec.UnitedUS.dfa_page_name
+select  site_placement as site_placement,  max(page_id) as page_id, order_id as campaign_id, site_id as site_id
+from diap01.mec_us_united_20056.dfa_page
 		group by site_placement, order_id, site_id
 ) as Placements
 
-ON conversions.page_id = Placements.page_id
-and conversions.order_id = Placements.order_id
-and conversions.site_ID  = placements.site_id
+ON conversions.placement_id= Placements.page_id
+and conversions.campaign_id = Placements.campaign_id
+and conversions.site_id_dcm  = placements.site_id
 
---                    left join mec.unitedus.dfa_page_name as placements
---                       on conversions.page_id = placements.page_id
---                          and conversions.order_id = placements.order_id
+--                    left join diap01.mec_us_united_20056.dfa_page as placements
+--                       on conversions.placement_id= placements.page_id
+--                          and conversions.campaign_id = placements.campaign_id
 
-                   left join mec.unitedus.dfa_site as directory
-                      on conversions.site_id = directory.site_id
+                   left join diap01.mec_us_united_20056.dfa2_sites as directory
+                      on conversions.site_id_dcm = directory.site_id_dcm
 
 --                 where placements.site_placement like '%Strategy%'
 
@@ -192,14 +197,17 @@ and conversions.site_ID  = placements.site_id
 
 --                        and
 
-                group by cast(conversions.Click_Time as date)
-                   ,conversions.order_id
-                   ,conversions.site_id
-                   ,conversions.page_id
+                group by cast (timestamp_trunc(to_timestamp(conversions.interaction_time / 1000000),'SS') as date )
+                  ,cast (timestamp_trunc(to_timestamp(conversions.interaction_time / 1000000),'MM') as date )
+                   ,conversions.campaign_id
+                   ,conversions.site_id_dcm
+                   ,conversions.placement_id
                    ,conversions.other_data
                    ,placements.site_placement
-                   ,directory.directory_site
-                   ,campaign.buy
+                   ,directory.site_dcm
+                   ,campaign.campaign
+
+
 
              ) as report
 
@@ -210,7 +218,7 @@ and conversions.site_ID  = placements.site_id
            cast(report.date as date)
             ,report.Month
            ,report.site
-           ,report.buy_id
+           ,report.campaign_id
            ,report.campaign
            ,report.placement_id
            ,report.placement
@@ -235,16 +243,16 @@ and conversions.site_ID  = placements.site_id
 
 group by
 
--- cast(final.date as date)
-final.month
--- ,final.site
+cast(final.date as date)
+,final.month
+,final.site
 -- ,final.campaign_id
 ,final.campaign
 -- ,final.placement_id
 -- ,final.placement
 -- ,final.flighttype
 ,final.route
--- ,final.traveldate_1
+,final.traveldate_1
 -- ,final.route_1
 -- ,final.route_2
 -- ,final.other_data
