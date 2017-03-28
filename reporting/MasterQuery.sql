@@ -212,10 +212,13 @@ select
                             nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as adjsrevenue,
 
-    sum(cst.dlvrimps)                                                             as dlvrimps,
-    sum(cst.billimps)                                                             as billimps,
+--     sum(cst.dlvrimps)                                                             as dlvrimps,
+    sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
+--     sum(cst.billimps)                                                             as billimps,
+    sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.billimps end) as billimps,
 --      dcm impressions (for comparison (qa) to dcm console)
-    sum(cst.dfa_imps)                                                             as cnslimps,
+--     sum(cst.dfa_imps)                                                             as cnslimps,
+    sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dfa_imps end) as cnslimps,
     sum(iv.impressions)                                                           as iv_impressions,
     sum(cst.iv_imps)                                                              as iv_impressions_chk,
     sum(iv.click_thrus)                                                           as iv_clicks,
