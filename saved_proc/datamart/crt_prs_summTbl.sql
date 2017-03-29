@@ -1,8 +1,8 @@
-alter PROCEDURE dbo.crt_prs_summTbl
-AS
-IF OBJECT_ID('DM_1161_UnitedAirlinesUSA.dbo.prs_summ',N'U') IS NOT NULL
-	DROP TABLE dbo.prs_summ;
-CREATE TABLE dbo.prs_summ
+alter procedure dbo.crt_prs_summtbl
+as
+if object_id('dm_1161_unitedairlinesusa.dbo.prs_summ',N'U') is not null
+	drop table dbo.prs_summ;
+create table dbo.prs_summ
 (
 	PlacementId         int            NOT NULL,
 	AdserverPlacementId int,
@@ -30,204 +30,151 @@ CREATE TABLE dbo.prs_summ
 INSERT INTO dbo.prs_summ
 
 	SELECT DISTINCT
-		final.PlacementId                                                                                       AS PlacementId,
-		final.AdserverPlacementId                                                                               AS AdserverPlacementId,
-		final.AdserverCampaignId                                                                                AS AdserverCampaignId,
-		final.PlacementNumber                                                                                   AS PlacementNumber,
-		final.PlacementName                                                                                     AS PlacementName,
-		final.CampaignName                                                                                      AS CampaignName,
-		final.PlannedCost                                                                                       AS Planned_Cost,
-		final.PlannedUnits                                                                                      AS Planned_Amt,
-		final.ParentId                                                                                          AS ParentId,
-		final.PackageCat                                                                                        AS PackageCat,
-		final.PlacementStart                                                                                    AS PlacementStart,
-		final.PlacementEnd                                                                                      AS PlacementEnd,
-		final.stYrMo                                                                                            AS stYrMo,
-		final.edYrMo                                                                                            AS edYrMo,
-		final.stDate                                                                                            AS stDate,
-		final.edDate                                                                                            AS edDate,
-		final.DV_Map                                                                                            AS DV_Map,
-		isNull(final.Rate, cast(0 AS decimal(20,10))) AS Rate,
-		final.PackageName                                                                                       AS PackageName,
-		final.Cost_ID                                                                                           AS Cost_ID,
-		final.CostMethod                                                                                        AS CostMethod
+		t3.placementid                                                                                       as placementid,
+		t3.adserverplacementid                                                                               as adserverplacementid,
+		t3.adservercampaignid                                                                                as adservercampaignid,
+		t3.placementnumber                                                                                   as placementnumber,
+		t3.placementname                                                                                     as placementname,
+		t3.campaignname                                                                                      as campaignname,
+		t3.plannedcost                                                                                       as planned_cost,
+		t3.plannedunits                                                                                      as planned_amt,
+		t3.parentid                                                                                          as parentid,
+		t3.packagecat                                                                                        as packagecat,
+		t3.placementstart                                                                                    as placementstart,
+		t3.placementend                                                                                      as placementend,
+		t3.styrmo                                                                                            as styrmo,
+		t3.edyrmo                                                                                            as edyrmo,
+		t3.stdate                                                                                            as stdate,
+		t3.eddate                                                                                            as eddate,
+		t3.dv_map                                                                                            as dv_map,
+		isnull(t3.rate, cast(0 as decimal(20,10))) as rate,
+		t3.packagename                                                                                       as packagename,
+		t3.cost_id                                                                                           as cost_id,
+		t3.costmethod                                                                                        as costmethod
 	FROM (
 
 			 select distinct
-				 t1.PlacementId,
-				 t1.AdserverPlacementId,
-				 t1.AdserverCampaignId,
-				 t1.PlacementNumber,
-				 t1.PlacementName,
-				 t2.CampaignName,
-				 amt.PlannedCost,
-				 amt.PlannedUnits,
-				 t1.ParentId,
-				 t2.PackageCat,
-				 cast(t1.PlacementStartDate as
-					  date)                                 as PlacementStart,
-				 cast(t1.PlacementEndDate as
-					  date)      as PlacementEnd,
+				 t1.placementid,
+				 t1.adserverplacementid,
+				 t1.adservercampaignid,
+				 t1.placementnumber,
+				 t1.placementname,
+				 t2.campaignname,
+				 amt.plannedcost,
+				 amt.plannedunits,
+				 t1.parentid,
+				 t2.packagecat,
+				 cast(t1.placementstartdate as
+					  date)                                 as placementstart,
+				 cast(t1.placementenddate as
+					  date)      as placementend,
 
-				 [dbo].udf_dateToInt(t1.PlacementStartDate) as stDate,
-				 [dbo].udf_dateToInt(t1.PlacementEndDate)   as edDate,
-				 [dbo].udf_yrmoToInt(t1.PlacementStartDate) as stYrMo,
-				 [dbo].udf_yrmoToInt(t1.PlacementEndDate)   as edYrMo,
-				 vew.CustomColumnValue                      as DV_Map,
-				 isNull(t2.Rate,cast(0 as decimal(20,10)))  as Rate,
-				 pak.PackageName,
-				 pak.Cost_ID,
-				 t2.CostMethod
+				 [dbo].udf_datetoint(t1.placementstartdate) as stdate,
+				 [dbo].udf_datetoint(t1.placementenddate)   as eddate,
+				 [dbo].udf_yrmotoint(t1.placementstartdate) as styrmo,
+				 [dbo].udf_yrmotoint(t1.placementenddate)   as edyrmo,
+				 vew.customcolumnvalue                      as dv_map,
+				 isnull(t2.rate,cast(0 as decimal(20,10)))  as rate,
+				 pak.packagename,
+				 pak.cost_id,
+				 t2.costmethod
 			 from (
 					  select distinct
-						  PlacementId,
-						  cast(AdserverPlacementId as int) as AdserverPlacementId,
-						  cast(AdserverCampaignId as int)  as AdserverCampaignId,
-						  ParentId,
-						  PlacementNumber,
-						  PlacementName,
-						  PlacementStartDate,
-						  PlacementEndDate,
-						  PackageType
-					  from DM_1161_UnitedAirlinesUSA.dbo.DFID037723_PrismaAdvancedPlacementDetails_Extracted) as t1
+						  placementid,
+						  cast(adserverplacementid as int) as adserverplacementid,
+						  cast(adservercampaignid as int)  as adservercampaignid,
+						  parentid,
+						  placementnumber,
+						  placementname,
+						  placementstartdate,
+						  placementenddate,
+						  packagetype
+					  from dm_1161_unitedairlinesusa.dbo.dfid037723_prismaadvancedplacementdetails_extracted) as t1
 
 				 outer apply (
 								 select distinct
-									 PlacementId,
-									 ParentId,
-									 isNull(cast(Rate as decimal(20,10)),0) as Rate,
-									 CostMethod,
-									 CampaignName,
-									 PackageType                            as PackageCat
-								 from DM_1161_UnitedAirlinesUSA.dbo.DFID037722_PrismaPlacementDetails_Extracted as t2
-								 where t1.PlacementId = t2.PlacementId) as t2
+									 placementid,
+									 parentid,
+									 isnull(cast(rate as decimal(20,10)),0) as rate,
+									 costmethod,
+									 campaignname,
+									 packagetype                            as packagecat
+								 from dm_1161_unitedairlinesusa.dbo.dfid037722_prismaplacementdetails_extracted as t2
+								 where t1.placementid = t2.placementid) as t2
 
 				 outer apply (
 								 select
-									 PlacementId,
-									 CustomColumnValue
-								 from DM_1161_UnitedAirlinesUSA.dbo.prs_view as vew
+									 placementid,
+									 customcolumnvalue
+								 from dm_1161_unitedairlinesusa.dbo.prs_view as vew
 
-								 where t1.PlacementId = vew.PlacementId) as vew
-
-				 outer apply (
-								 select
-									 ParentId,
-									 PackageName,
-									 Cost_ID
-								 from DM_1161_UnitedAirlinesUSA.dbo.prs_packages as pak
-								 where t1.ParentId = pak.ParentId) as pak
+								 where t1.placementid = vew.placementid) as vew
 
 				 outer apply (
 								 select
-									 ParentId,
-									 PlannedCost,
-									 PlannedUnits,
-									 PlacementStartDate
+									 parentid,
+									 packagename,
+									 cost_id
+								 from dm_1161_unitedairlinesusa.dbo.prs_packages as pak
+								 where t1.parentid = pak.parentid) as pak
 
-								 from DM_1161_UnitedAirlinesUSA.[dbo].prs_amt as amt
+				 outer apply (
+								 select
+									 parentid,
+									 plannedcost,
+									 plannedunits,
+									 placementstartdate
 
-								 where t1.ParentId = amt.ParentId
--- 				                       AND cast(t1.AdserverPlacementId AS int) = amt.AdserverPlacementId
+								 from dm_1161_unitedairlinesusa.[dbo].prs_amt as amt
+
+								 where t1.parentid = amt.parentid
+-- 				                       and cast(t1.adserverplacementid as int) = amt.adserverplacementid
 							 ) as amt
 
--- 			The same as above, using JOIN syntax
+		           where cast(t1.placementstartdate as date) >= '2016-01-01'
+							and (len(isnull(t2.campaignname,'')) > 0)
 
--- 			LEFT JOIN (
--- 				            SELECT DISTINCT
--- 					            PlacementId,
--- 					            ParentId,
--- 					            Rate,
--- 					            CostMethod,
--- 					            CampaignName,
--- 					            PackageType AS PackageCat
--- 				            -- 				             CASE WHEN PlacementId = ParentId and PackageType != 'Standalone'
--- 				            -- 					             THEN 'Package'
--- 				            -- -- 					             when PackageType = 'Standalone'
--- 				            -- -- 					             then 'Package'
--- 				            -- 				             ELSE PackageType END AS PackageCat
--- 				            FROM DM_1161_UnitedAirlinesUSA.dbo.DFID037722_PrismaPlacementDetails_Extracted
--- -- 			         where CampaignName NOT LIKE '%DO_NOT_USE%' and CampaignName NOT LIKE '%DONOTUSE%' and CampaignName NOT LIKE 'DO_NOT_USE%'
---
--- 			          ) AS t2
--- 				       on t1.PlacementId = t2.PlacementId
---
--- 			LEFT JOIN (
--- 				            SELECT
--- 					            PlacementId,
--- 					            CustomColumnValue
--- 				            FROM DM_1161_UnitedAirlinesUSA.dbo.ViewTable) AS vew
---
--- 				            on t1.PlacementId = vew.PlacementId
---
--- 			LEFT JOIN (
--- 				            SELECT
--- 					            ParentId,
--- 					            PackageName,
--- 					            Cost_ID
--- 				            FROM DM_1161_UnitedAirlinesUSA.dbo.packageTable) AS pak
--- 				            on t1.ParentId = pak.ParentId
---
--- 			LEFT JOIN (
--- 				            SELECT
--- 					            ParentId,
--- 					            PlannedUnits,
--- 					            PlacementStartDate
---
--- 				            FROM DM_1161_UnitedAirlinesUSA.[dbo].plannedAmtTable) AS amt
---
--- 				            on t1.ParentId = amt.ParentId
+		     group by
+			     t1.placementid,
+			     t1.adserverplacementid,
+			     t1.adservercampaignid,
+			     t1.placementnumber,
+			     t1.placementname,
+			     t2.campaignname,
+			     amt.plannedcost,
+			     amt.plannedunits,
+			     t1.parentid,
+			     t2.packagecat,
+			     t1.placementstartdate,
+			     t1.placementenddate,
+			     vew.customcolumnvalue,
+			     t2.rate,
+			     pak.packagename,
+			     pak.cost_id,
+			     t2.costmethod ) as t3
 
--- 		     WHERE ( t1.PlacementName NOT LIKE '%DONOTUSE%' OR t1.PlacementName NOT LIKE '%DO_NOT_USE%' )
--- 		           AND ( t2.CampaignName NOT LIKE '%DO_NOT_USE%' OR t2.CampaignName NOT LIKE '%DONOTUSE%' OR t2.CampaignName NOT LIKE 'DO_NOT_USE%' )
--- 		           AND left(pak.Cost_ID,1) = 'P'
--- 		           AND
-		           where cast(t1.PlacementStartDate AS date) >= '2016-01-01'
+	      where t3.styrmo >= '201601'
 
-		     GROUP BY
-			     t1.PlacementId,
-			     t1.AdserverPlacementId,
-			     t1.AdserverCampaignId,
-			     t1.PlacementNumber,
-			     t1.PlacementName,
-			     t2.CampaignName,
-			     amt.PlannedCost,
-			     amt.PlannedUnits,
-			     t1.ParentId,
-			     t2.PackageCat,
-			     t1.PlacementStartDate,
-			     t1.PlacementEndDate,
-			     vew.CustomColumnValue,
-			     t2.Rate,
-			     pak.PackageName,
-			     pak.Cost_ID,
-			     t2.CostMethod ) AS final
 
--- 	WHERE ( final.PlacementName NOT LIKE '%DONOTUSE%' AND final.PlacementName NOT LIKE '%DO_NOT_USE%' )
--- 	      AND ( final.CampaignName NOT LIKE '%DO_NOT_USE%' AND final.CampaignName NOT LIKE '%DONOTUSE%' AND final.CampaignName NOT LIKE 'DO_NOT_USE%' )
--- 	      AND left(final.Cost_ID,1) = 'P' -- Omits all Placements not beginning with "P," our current naming convention. Speeds up the query.
--- 	      AND
-	      where final.stYrMo >= '201601'
-
-	GROUP BY
-		final.PlacementId,
-		final.AdserverPlacementId,
-		final.AdserverCampaignId,
-		final.PlacementNumber,
-		final.PlacementName,
-		final.CampaignName,
-		final.PlannedCost,
-		final.PlannedUnits,
-		final.ParentId,
-		final.PackageCat,
-		final.PlacementStart,
-		final.PlacementEnd,
-		final.stYrMo,
-		final.edYrMo,
-		final.stDate,
-		final.edDate,
-		final.DV_Map,
-		final.Rate,
-		final.PackageName,
-		final.Cost_ID,
-		final.CostMethod
+	group by
+		t3.placementid,
+		t3.adserverplacementid,
+		t3.adservercampaignid,
+		t3.placementnumber,
+		t3.placementname,
+		t3.campaignname,
+		t3.plannedcost,
+		t3.plannedunits,
+		t3.parentid,
+		t3.packagecat,
+		t3.placementstart,
+		t3.placementend,
+		t3.styrmo,
+		t3.edyrmo,
+		t3.stdate,
+		t3.eddate,
+		t3.dv_map,
+		t3.rate,
+		t3.packagename,
+		t3.cost_id,
+		t3.costmethod
