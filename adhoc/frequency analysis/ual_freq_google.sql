@@ -62,7 +62,7 @@ insert into diap01.mec_us_united_20056.ual_freq_dbm_tbl1
 --               timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as impressiontime,
                  event_time as impressiontime,
 --               cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) as impressiontime,
-                 cast((dbm_media_cost_usd / 1000000000) as decimal (20,10)) as cost,
+                 cast((dbm_total_media_cost_usd / 1000000000) as decimal (20,10)) as cost,
 --               count(*) as imp,
                  row_number() over() as imp_nbr
              from
