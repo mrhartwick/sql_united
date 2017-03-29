@@ -1,26 +1,26 @@
-/*   master query QA, dt 2.0
 
-     Version incorporating capped cost and DBM cost
 
- this query is a bit of a hack. non-optimal aspects are necessitated by the particularities of the current tech stack on united.
-  code is most easily read by starting at the "innermost" block, inside the openquery call.
-
-  data must be pulled and reconciled from 1) prisma and moat in datamart, and 2) dfa/dv/moat in vertica*.
-  because of its scale, log-level dfa data (dtf 1.0) must be kept in vertica to preserve performance. dv and moat are stored there as well, mostly for convenience.
-  intermediary summary tables are necessary for this query, so we need to be able to create our own tables and run stored procedures to refresh those tables. but we don't have write access to vertica, so we can't keep routines and tables there.
-  di could do this, but edits to these routines are frequent (esp. in joinkey fields), so keeping this process in-house is more convenient for all parties.
-*/
+--      Version incorporating capped cost and DBM cost
+--
+--  this query is a bit of a hack. non-optimal aspects are necessitated by the particularities of the current tech stack on united.
+--   code is most easily read by starting at the "innermost" block, inside the openquery call.
+--
+--   data must be pulled and reconciled from 1) prisma and moat in datamart, and 2) dfa/dv/moat in vertica*.
+--   because of its scale, log-level dfa data (dtf 1.0) must be kept in vertica to preserve performance. dv and moat are stored there as well, mostly for convenience.
+--   intermediary summary tables are necessary for this query, so we need to be able to create our own tables and run stored procedures to refresh those tables. but we don't have write access to vertica, so we can't keep routines and tables there.
+--   di could do this, but edits to these routines are frequent (esp. in joinkey fields), so keeping this process in-house is more convenient for all parties.
+-- */
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 --
 -- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
--- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
--- exec [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
+-- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
+-- exec [10.2.186.148\SQLINS02,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
 --
--- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
--- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
--- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
+-- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
+-- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
+-- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
 -- exec master.dbo.crt_dfa_flatCost_dt2 go
 -- exec master.dbo.crt_dbm_cost go
 -- exec master.dbo.crt_dfa_cost_dt2 go
@@ -31,8 +31,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-03-22';
-set @report_st = '2017-03-12';
+set @report_ed = '2017-03-21';
+set @report_st = '2017-01-01';
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -62,7 +62,13 @@ select
   -- friendly campaign name
   [dbo].udf_campaignname(t3.campaign_id, t3.campaign)                             as campaign,
   -- dcm campaign id
-  t3.campaign_id                                                                                          as "campaign id",
+  t3.campaign_id
+  --campaign type: Acquisition, Branding/Routes, Added Value                                                                                       as "campaign id",
+  case when campaign_id = '10742878' then 'Acquisition'
+        when campaign_id = '10918234' OR campaign_id= '10942240' OR campaign_id='10768497' OR campaign_id='11069476' then 'Branding/Routes'
+        when campaign_id = '10740457' OR campaign_id='10812738' then 'Added Value'
+        else 'non-Acquisition' end                                                      as "campaign_type",
+
 
 -- preferred, friendly site name; also corresponds to what's used in the joinkey fields across dfa, dv, and moat.
     [dbo].udf_sitename(t3.site_dcm) as "site",
@@ -111,8 +117,8 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-03-22';
--- set @report_st = '2017-03-12';
+-- set @report_ed = '2017-03-21';
+-- set @report_st = '2017-01-01';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -398,7 +404,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-03-12'' and ''2017-03-22''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-21''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
@@ -438,7 +444,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-12'' and ''2017-03-22''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-21''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -472,7 +478,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-12'' and ''2017-03-22''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-21''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
@@ -536,7 +542,7 @@ cast (r1.date as date )
       left join
       (
         select *
-        from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+        from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
       ) as prs
         on t1.placement_id = prs.adserverplacementid
 
@@ -615,7 +621,7 @@ cast (r1.date as date )
 
   left join (
               select *
-              from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+              from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
               where ivdate between @report_st and @report_ed
             ) as iv
       on
