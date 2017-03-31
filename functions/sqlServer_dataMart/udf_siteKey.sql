@@ -7,7 +7,8 @@ AS
     begin
 		declare @finalSiteName varchar(4000)
 		set @finalSiteName = replace(case when ( @site_name like '%[Cc]hicago%[Tt]ribune%' or @site_name like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
-				when ( @site_name like '[Gg][Dd][Nn]%' or @site_name like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' ) then 'Google'
+				when ( @site_name like '[Gg][Dd][Nn]%' or @site_name like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' or @site_name = 'Google') then 'Google'
+				when @site_name like '[Dd]ouble[Cc]lick' then 'Google'
 				when @site_name like '%[Aa]dara%' then 'Adara'
 				when @site_name like '%[Aa]tlantic%' then 'The Atlantic'
 				when @site_name like '%[Bb]usiness_[Ii]nsider%' then 'Business Insider'
