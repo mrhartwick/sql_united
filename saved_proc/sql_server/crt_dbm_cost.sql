@@ -63,10 +63,11 @@ insert into master.dbo.dbm_cost
            t2.site_dcm,
            t2.site_id_dcm,
            t2.plce_id,
+           t2.site_rank,
 --     t2.lagplcnbr,
            t2.placement,
            t2.placement_id,
-           t2.dbm_cost                                                                                              as dbm_cost2,
+           t2.dbm_cost as dbm_cost2,
            sum(t2.dbm_cost) over (partition by t2.dcmdate,t2.plce_id
              order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as dbm_cost,
            t2.impressions                                                                                           as imps,
@@ -195,7 +196,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date) > ''2016-01-01''
+where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date) > ''2017-01-01''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 -- and total_revenue != 0
 -- and total_conversions != 0
@@ -243,7 +244,7 @@ cast((sum(dbm_total_media_cost_usd) / 1000000000) as decimal(20,10))            
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2016-01-01''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2017-01-01''
 and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
 and (advertiser_id <> 0)
 -- and dbm_advertiser_id = 649134
@@ -281,7 +282,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2016-01-01''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2017-01-01''
 and (advertiser_id <> 0)
 and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
 -- and dbm_advertiser_id = 649134
@@ -379,9 +380,9 @@ where prs.costmethod like '[Dd][Cc][Pp][Mm]'
            ,t1.placement_id
 
               ) as t2
-  where t2.site_rank = 1
+--   where t2.site_rank = 1
        ) as t3
-
+where t3.site_rank= 1
 
   group by
     t3.dcmmatchdate,
@@ -390,3 +391,4 @@ where prs.costmethod like '[Dd][Cc][Pp][Mm]'
     t3.plce_id,
     t3.placement,
     t3.placement_id
+go
