@@ -1,4 +1,4 @@
-create table diap01.mec_us_united_20056.ual_freq_dbm_tbl1
+create table diap01.mec_us_united_20056.ual_freq_tbl1
 (
     user_id        varchar(50)    not null,
     conversiontime int            not null,
@@ -9,10 +9,14 @@ create table diap01.mec_us_united_20056.ual_freq_dbm_tbl1
     imp_nbr        int            not null
 );
 
-insert into diap01.mec_us_united_20056.ual_freq_dbm_tbl1
+insert into diap01.mec_us_united_20056.ual_freq_tbl1
 (user_id, conversiontime, revenue, cost, impressiontime, cvr_nbr, imp_nbr)
 
     (
+        /*
+        At the user_id level, find conversions as well as impressions that occur before those conversions
+
+         */
         select
             a.user_id,
             conversiontime,
@@ -44,7 +48,6 @@ insert into diap01.mec_us_united_20056.ual_freq_dbm_tbl1
                  and (advertiser_id <> 0)
                  and user_id <> '0'
                  and (campaign_id = 9639387 or campaign_id = 8958859)
---               and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
                  and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
 
             ) as a,
@@ -60,7 +63,6 @@ insert into diap01.mec_us_united_20056.ual_freq_dbm_tbl1
 
              where cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-07-15' and '2016-12-31'
                  and (campaign_id = 9639387 or campaign_id = 8958859)
---               and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
                  and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
                  and user_id <> '0'
                  and (advertiser_id <> 0)
