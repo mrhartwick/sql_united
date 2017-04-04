@@ -30,13 +30,8 @@
 declare @report_st date
 declare @report_ed date
 --
-<<<<<<< HEAD
-set @report_ed = '2017-03-27';
-set @report_st = '2017-02-14';
-=======
 set @report_ed = '2017-03-28';
 set @report_st = '2017-01-01';
->>>>>>> a3d0c77b7352974e627119cd2c7b00736e925ddf
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -66,22 +61,13 @@ select
 -- friendly campaign name
     [dbo].udf_campaignname(t3.campaign_id,t3.campaign)                                                 as campaign,
 -- dcm campaign id
-<<<<<<< HEAD
-    t3.campaign_id,
---campaign type: Acquisition, Branding/Routes, Added Value                                                                                       as "campaign id",
+    t3.campaign_id                as "campaign id",
+
+campaign type: Acquisition, Branding/Routes, Added Value
     case when campaign_id = '10742878' then 'Acquisition'
     when campaign_id = '10918234' or campaign_id = '10942240' or campaign_id = '10768497' or campaign_id = '11069476' then 'Branding/Routes'
     when campaign_id = '10740457' or campaign_id = '10812738' then 'Added Value'
     else 'non-Acquisition' end                                                                         as "campaign_type",
-=======
-    t3.campaign_id                as "campaign id",
-
--- campaign type: Acquisition, Branding/Routes, Added Value
---     case when campaign_id = '10742878' then 'Acquisition'
---     when campaign_id = '10918234' or campaign_id = '10942240' or campaign_id = '10768497' or campaign_id = '11069476' then 'Branding/Routes'
---     when campaign_id = '10740457' or campaign_id = '10812738' then 'Added Value'
---     else 'non-Acquisition' end                                                                         as "campaign_type",
->>>>>>> a3d0c77b7352974e627119cd2c7b00736e925ddf
 
 
 -- preferred, friendly site name; also corresponds to what's used in the joinkey fields across dfa, dv, and moat.
@@ -103,11 +89,7 @@ select
     t3.rate                                                                                            as rate,
     t3.planned_amt                                                                                     as "planned amt",
     t3.planned_cost                                                                                    as "planned cost",
-<<<<<<< HEAD
     t3.planned_cost / max(t3.amt_count)                                                                as planned_cost,
-=======
-    -- t3.planned_cost / max(t3.amt_count)                                                                as planned_cost,
->>>>>>> a3d0c77b7352974e627119cd2c7b00736e925ddf
     case when t3.costmethod like '[Ff]lat' then t3.flatcost / max(t3.flat_count) else sum(t3.cost) end as cost,
     sum(t3.tot_led)                                                                                    as leads,
     sum(t3.dlvrimps)                                                                                   as "delivered impressions",
@@ -126,11 +108,7 @@ select
     sum(t3.tot_rev)                                                                                    as revenue,
     sum(t3.vew_rev)                                                                                    as vew_rev,
     sum(t3.clk_rev)                                                                                    as clk_thru_rev,
-<<<<<<< HEAD
-    sum(t3.billrevenue)                                                                                as "billable revenue",
-=======
 --     sum(t3.billrevenue)                                                                                as "billable revenue",
->>>>>>> a3d0c77b7352974e627119cd2c7b00736e925ddf
     sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue"
 from (
 
@@ -139,13 +117,8 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
-<<<<<<< HEAD
--- set @report_ed = '2017-03-27';
--- set @report_st = '2017-02-14';
-=======
 -- set @report_ed = '2017-03-28';
 -- set @report_st = '2017-01-01';
->>>>>>> a3d0c77b7352974e627119cd2c7b00736e925ddf
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -434,11 +407,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-<<<<<<< HEAD
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-03-27''
-=======
 where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-28''
->>>>>>> a3d0c77b7352974e627119cd2c7b00736e925ddf
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
@@ -478,11 +447,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-<<<<<<< HEAD
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-03-27''
-=======
 where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-28''
->>>>>>> a3d0c77b7352974e627119cd2c7b00736e925ddf
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -516,11 +481,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-<<<<<<< HEAD
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-03-27''
-=======
 where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-03-28''
->>>>>>> a3d0c77b7352974e627119cd2c7b00736e925ddf
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
