@@ -24,7 +24,7 @@ AS
 				when @site_name like '%[Nn][Bb][Aa]%' then 'NBA'
 				when @site_name like '%[Nn][Ff][Ll]%' then 'NFL'
 				when @site_name like '%[Nn]ast%[Tt]raveler%' then 'CN Traveler'
-				when @site%name like '%[Nn]ew%[Yy]ork%[Tt]imes%' then 'NYTimes'
+				when @site_name like '%[Nn]ew%[Yy]ork%[Tt]imes%' then 'NYTimes'
 				when @site_name like '%[Nn]ew%[Yy]orker%' then 'New Yorker'
 				when @site_name like '%[Pp]eople%' and @site_name like '%[Ee]spa[nñ]ol%' then 'People En Espanol'
 				when @site_name like '%[Pp][Gg][Aa]%[Tt][Oo][Uu][Rr]%' then 'PGATour'
