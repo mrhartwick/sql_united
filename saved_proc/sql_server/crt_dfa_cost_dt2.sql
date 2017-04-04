@@ -1,4 +1,4 @@
-CREATE procedure dbo.crt_dfa_cost_dt2
+alter procedure dbo.crt_dfa_cost_dt2
 as
 if OBJECT_ID('master.dbo.dfa_cost_dt2',N'U') is not null
     drop table master.dbo.dfa_cost_dt2;
@@ -378,7 +378,7 @@ select
   t2.mt_imps                             as mt_imps,
   case when t2.costmethod = 'dCPM' then db.clicks
   else t2.clicks end                     as clicks,
--- bring in DBM metrics; these metrics will be used in the master query for dCPM placements only
+-- bring in DBM metrics
   db.vew_con                             as vew_con,
   db.clk_con                             as clk_con,
   db.con                                 as con,
@@ -567,44 +567,48 @@ from (
                      else cast(month(prisma.placementend) as int) - cast(month(cast(dcmreport.dcmdate as date)) as
                                                                          int) end               as diff,
 
-                     case
-                     when prisma.costmethod = 'Flat' or prisma.costmethod = 'CPC' or prisma.costmethod = 'CPCV' or prisma.costmethod = 'DCPM'
-                         then 'N'
---                   live intent for sfo-sin campaign is email (not subject to viewability), but mistakenly labeled with "Y"
-                     when
-                         dcmreport.campaign_id = '9923634' -- sfo-sin
-                             and dcmreport.site_id_dcm = '1853564' -- live intent
-                         then 'N'
---                   corrections to sme placements
-                     when dcmreport.campaign_id = '10090315' and (dcmreport.site_id_dcm = '1513807' or dcmreport.site_id_dcm = '1592652')
-                         then 'Y'
+           case
+           when prisma.costmethod = 'Flat' or prisma.costmethod = 'CPC' or prisma.costmethod = 'CPCV' or prisma.costmethod = 'dCPM'
+             then 'N'
 
---                   corrections to sfo-sin placements
-                     when dcmreport.campaign_id = '9923634' and dcmreport.site_id_dcm = '1534879' and prisma.costmethod = 'CPM'
-                         then 'N'
---                   designates all xaxis placements as "y." not always true.
---                   when dcmreport.site_id_dcm = '1592652' then 'Y'
+--           live intent for sfo-sin campaign is email (not subject to viewab.), but mistakenly labeled with "y"
+           when
+               dcmreport.campaign_id = '9923634' -- sfo-sin
+             and dcmreport.site_id_dcm = '1853564' -- live intent
+               then 'N'
 
---                   flipboard unable to implement moat tags; must bill off of dfa impressions
-                     when dcmreport.site_id_dcm = '2937979' then 'N'
-                     --           all targeted marketing subject
-                     when dcmreport.campaign_id = '9639387' then 'Y'
+--           corrections to sme placements
+           when dcmreport.campaign_id = '10090315' and (dcmreport.site_id_dcm = '1513807' or dcmreport.site_id_dcm = '1592652')
+             then 'Y'
 
-                     --           designates all sfo-akl placements as "y." not always true. apparently.
-                     --             when dcmreport.campaign_id = '9973506' then 'Y'
+--           corrections to sfo-sin placements
+           when dcmreport.campaign_id = '9923634' and dcmreport.site_id_dcm = '1534879' and prisma.costmethod = 'CPM'
+             then 'N'
+--           designates all xaxis placements as "y." not always true.
+--            when dcmreport.site_id_dcm = '1592652' then 'Y'
 
-                     when Prisma.CostMethod = 'CPMV' and
-                         (dcmReport.placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or dcmReport.placement like '%[Vv][Ii][Dd][Ee][Oo]%' or dcmReport.placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or dcmReport.site_id_dcm = '1995643'
---                             or dcmReport.site_id_dcm = '1474576'
-                             or dcmReport.site_id_dcm = '2854118')
-                         then 'M'
-                     --                      Look for viewability flags Investment began including in placement names 6/16.
-                     when dcmReport.placement like '%[_]DV[_]%' then 'Y'
-                     when dcmReport.placement like '%[_]MOAT[_]%' then 'M'
-                     when dcmReport.placement like '%[_]NA[_]%' then 'N'
-                     --
-                     when Prisma.CostMethod = 'CPMV' and Prisma.DV_Map = 'N' then 'Y'
-                     else Prisma.DV_Map end                                                     as DV_Map
+--           flipboard unable to implement moat tags; must bill off of dfa impressions
+           when dcmreport.site_id_dcm = '2937979' then 'N'
+--           all targeted marketing subject
+           when dcmreport.campaign_id = '9639387' then 'Y'
+
+--           designates all sfo-akl placements as "y." not always true. apparently.
+--             when dcmreport.campaign_id = '9973506' then 'Y'
+
+             when prisma.CostMethod = 'CPMV' and
+                 (dcmreport.placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or dcmreport.placement like '%[Vv][Ii][Dd][Ee][Oo]%' or dcmreport.placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%'
+                     or dcmreport.site_id_dcm = '1995643'     -- Verve
+--              or dcmreport.site_id_dcm = '1474576'
+--               or dcmreport.site_id_dcm = '2854118')    -- TapAd, no longer true
+             )
+                      then 'M'
+--           Look for viewability flags Investment began including in placement names 6/16.
+           when dcmreport.placement like '%[_]DV[_]%' then 'Y'
+           when dcmreport.placement like '%[_]MOAT[_]%' then 'M'
+           when dcmreport.placement like '%[_]NA[_]%' then 'N'
+--
+           when prisma.CostMethod = 'CPMV' and prisma.DV_Map = 'N' then 'Y'
+             else prisma.DV_Map end as DV_Map
 
                  --           prisma.dv_map as dv_map,
 
@@ -623,7 +627,8 @@ report.campaign_id                               as campaign_id,
 report.site_id_dcm as site_id_dcm,
 directory.site_dcm                    as site_dcm,
 left(placements.placement,6) as plce_id,
-placements.placement                   as placement,
+-- placements.placement                              as placement,
+replace(replace(placements.placement ,'','', ''''),''"'','''') as placement,
 report.placement_id                         as placement_id,
 sum(report.impressions)                     as impressions,
 sum(report.clicks)                          as clicks,
@@ -875,7 +880,7 @@ cast(report.date as date)
              ,mt.joinkey
              ,iv.joinkey
              ,t1.costmethod
-       ,flat.flatcost
+             ,flat.flatcost
 
      ) as t2
                                                left join (
