@@ -113,11 +113,11 @@ from (
 
 -- for running the code here instead of at "f3," above
 
-declare @report_st date,
-@report_ed date;
---
-set @report_ed = '2017-03-27';
-set @report_st = '2017-02-14';
+-- declare @report_st date,
+-- @report_ed date;
+-- --
+-- set @report_ed = '2017-03-27';
+-- set @report_st = '2017-02-14';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
