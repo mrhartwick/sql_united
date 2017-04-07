@@ -528,7 +528,8 @@ from diap01.mec_us_united_20056.dfa2_sites
 ) as directory
 on r1.site_id_dcm = directory.site_id_dcm
 
-where not regexp_like(placement,''.?do\s?not\s?use.?'',''ib'')
+where  regexp_like(p1.placement,''P.?'',''ib'')
+and not regexp_like(p1.placement,''.?do\s?not\s?use.?'',''ib'')
 -- and not regexp_like(campaign.campaign,''.*2016.*'',''ib'')
 and  regexp_like(campaign.campaign,''.*2017.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
