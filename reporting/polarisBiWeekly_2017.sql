@@ -25,13 +25,12 @@
 -- exec master.dbo.crt_dbm_cost go
 -- exec master.dbo.crt_dfa_cost_dt2 go
 
--- exec master.dbo.crt__dfa_costTbl_dt1 go
 
 
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-03-27';
+set @report_ed = '2017-03-31';
 set @report_st = '2017-01-23';
 
 --
@@ -370,7 +369,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-23'' and ''2017-03-27''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-23'' and ''2017-03-31''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 and campaign_id in (10768497) -- Polaris 2017
@@ -410,7 +409,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-23'' and ''2017-03-27''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-23'' and ''2017-03-31''
 and campaign_id in (10768497) -- Polaris 2017
 
 and (advertiser_id <> 0)
@@ -444,7 +443,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-23'' and ''2017-03-27''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-23'' and ''2017-03-31''
 and campaign_id in (10768497) -- Polaris 2017
 and (advertiser_id <> 0)
 ) as tc
