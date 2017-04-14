@@ -126,15 +126,31 @@ as
                                          select
                                              t0.mtDate,
                                              case when isnumeric(t0.campaign_id) = 1 then cast(t0.campaign_id as int) else 0 end as campaign_id,
-                                             t0.campaign_label,
+                                             case when t0.campaign_id = '11177760' then 'UNI_United_2017_DIS_Chicago_Fare Sale Test'
+                                                  when t0.campaign_id = '11224605' then 'UNI_United_2017_DIS_San Jose_Fare Sale Test'
+                                                  else t0.campaign_label end as campaign_label,
 --                                              t0.plce_id,
                                              t0.site_id,
-                                             t0.site_label,
+                                             case when t0.site_id = '1190273' then 'Adara'
+                                                  when t0.site_id = '1853562' then 'Amobee'
+                                                  else t0.site_label end as site_label,
                                              case when isnumeric(t0.placement_id) = 1 then cast(t0.placement_id as int) else 0 end as placement_id,
-                                             t0.placement_label,
+
+                                             case when t0.placement_id = '149052533' then 'PG1T4X_UAC_TMK_023_Mobile_ADARA MEDIA_Adara_In Market Chicago Traveler_MOB_MOAT_300x250_Run of Network_Behavioral_P2+_300 x 250_Standard_NV_NA '
+                                                  when t0.placement_id = '149052303' then 'PG1T8K_UAC_TMK_023_Mobile_ADARA MEDIA_Adara_In Market Chicago Traveler_MOB_MOAT_320x50_Run of Network_Behavioral_P2+_320 x 50_Standard_NV_NA'
+                                                  when t0.placement_id = '149050783' then 'PG1T9T_UAC_TMK_023_Mobile_ADARA MEDIA_Adara_In Market Chicago Traveler_MOB_MOAT_300x50_Run of Network_Behavioral_P2+_300 x 50_Standard_NV_NA'
+                                                  when t0.placement_id = '149052304' then 'PG0YXH_UAC_TMK_023_Mobile_AMOBEE_Amobee_MOB_In View_Proximity_Chicago_MOAT_300x250_Run of Network_Behavioral_P25-54_300 x 250_Standard_NV_NA'
+                                                  when t0.placement_id = '149046388' then 'PG0YXN_UAC_TMK_023_Mobile_AMOBEE_Amobee_MOB_In View_Proximity_Chicago_MOAT_320x50_Run of Network_Behavioral_P25-54_320 x 50_Standard_NV_NA'
+                                                  when t0.placement_id = '149457140' then 'PG6TPP_UAC_TMK_024_Mobile_ADARA MEDIA_Adara_In Market San Jose Traveler_MOB_MOAT_300x250_Run of Network_Behavioral_P2+_300 x 250_Standard_NV_NA'
+                                                  when t0.placement_id = '149456642' then 'PG6TPQ_UAC_TMK_024_Mobile_ADARA MEDIA_Adara_In Market San Jose Traveler_MOB_MOAT_320x50_Run of Network_Behavioral_P2+_320 x 50_Standard_NV_NA'
+                                                  when t0.placement_id = '149457620' then 'PG6TPR_UAC_TMK_024_Mobile_ADARA MEDIA_Adara_In Market San Jose Traveler_MOB_MOAT_300x50_Run of Network_Behavioral_P2+_300 x 50_Standard_NV_NA'
+                                                  when t0.placement_id = '149457144' then 'PG6TPF_UAC_TMK_024_Mobile_AMOBEE_Amobee_MOB_In View_Proximity_San Jose_MOAT_300x250_Run of Network_Behavioral_P25-54_300 x 250_Standard_NV_NA'
+                                                  when t0.placement_id = '149457626' then 'PG6TPG_UAC_TMK_024_Mobile_AMOBEE_Amobee_MOB_In View_Proximity_San Jose_MOAT_320x50_Run of Network_Behavioral_P25-54_320 x 50_Standard_NV_NA'
+                                                  else t0.placement_label end as placement_label,
                                              t0.human_impressions,
                                              t0.half_duration_impressions,
                                              t0.groupm_payable_impressions
+
 
                                          from (
                                                   select *
