@@ -31,7 +31,13 @@ as
                                  when @campaignID = 10918234 then 'Win NY 2017'
                                  when @campaignID = 10942240 then 'China Onshore 2017'
                                  when @campaignID = 11069476 then 'Trade 2017'
+                                 when @campaignID = 11152017 then 'Hamburg Co-Op 2017'
+                                 when @campaignID = 11177760 then 'Chicago Fare Sale 2017'
+                                 when @campaignID = 11224605 then 'San Jose Fare Sale 2017'
                                  else @campaignName end;
         return @finalCampaignName
     end
 go
+
+
+
