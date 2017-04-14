@@ -163,6 +163,22 @@ select
              when (t2.dv_map = 'N')
                then cast((t2.vew_rev) + t2.clk_rev as decimal(10,2))
 
+--         Win NY TapAd placements, which Medialets failed to tag
+--         using average viewability rate for Feb, Mar, Apr
+             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
+               then cast(((t2.vew_rev) * .41) + t2.clk_rev as decimal(10,2))
+             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
+               then cast(((t2.vew_rev) * .48) + t2.clk_rev as decimal(10,2))
+             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
+               then cast(((t2.vew_rev) * .56) + t2.clk_rev as decimal(10,2))
+
+             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
+               then cast(((t2.vew_rev) * .41) + t2.clk_rev as decimal(10,2))
+             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
+               then cast(((t2.vew_rev) * .48) + t2.clk_rev as decimal(10,2))
+             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
+               then cast(((t2.vew_rev) * .56) + t2.clk_rev as decimal(10,2))
+
 --         subject to viewability with flag; mt source
              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
                then cast(
@@ -195,6 +211,22 @@ select
 --         not subject to viewability
              when (t2.dv_map = 'N')
                then cast((t2.vew_rev * .2 * .15) + t2.clk_rev as decimal(10,2))
+
+--         Win NY TapAd placements, which Medialets failed to tag
+--         using average viewability rate for Feb, Mar, Apr
+             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
+               then cast(((t2.vew_rev) * .41 * .2 * .15) + t2.clk_rev as decimal(10,2))
+             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
+               then cast(((t2.vew_rev) * .48 * .2 * .15) + t2.clk_rev as decimal(10,2))
+             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
+               then cast(((t2.vew_rev) * .56 * .2 * .15) + t2.clk_rev as decimal(10,2))
+
+             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
+               then cast(((t2.vew_rev) * .41 * .2 * .15) + t2.clk_rev as decimal(10,2))
+             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
+               then cast(((t2.vew_rev) * .48 * .2 * .15) + t2.clk_rev as decimal(10,2))
+             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
+               then cast(((t2.vew_rev) * .56 * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability with flag; mt source
              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
@@ -672,7 +704,6 @@ group by
   ,flt.flatcost
 
      ) as t3
-
 
 group by
   t3.dcmdate

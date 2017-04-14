@@ -31,11 +31,11 @@ select
 from
 
         (
-            select t0.user_id,
-                t0.event_time,
-            c1.campaign,
-            s1.site_dcm
-                from diap01.mec_us_united_20056.dfa2_impression as t0
+            select  t0.user_id,
+                    t0.event_time,
+                    c1.campaign,
+                    s1.site_dcm
+            from diap01.mec_us_united_20056.dfa2_impression as t0
             left join
             (select
                 c0.campaign,
