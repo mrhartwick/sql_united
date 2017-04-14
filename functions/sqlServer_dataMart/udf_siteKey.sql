@@ -44,7 +44,7 @@ AS
 				when @site_name like '[Dd][Aa][Rr][Tt]%Search%Google' then 'DART Search_Google'
 				when @site_name like '[Dd][Aa][Rr][Tt]%Search%MSN' then 'DART Search_MSN'
 				when @site_name like '[Dd][Aa][Rr][Tt]%Search%Other' then 'DART Search_Other'
-				when @site_name like '[Ee]xponential' then 'Exponential'
+				when @site_name like '[Ee]xponential%' then 'Exponential'
 				when @site_name like '[Ff]acebook%' then 'Facebook'
 				when @site_name like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
 				when @site_name like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
