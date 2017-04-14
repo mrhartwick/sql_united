@@ -9,7 +9,7 @@ AS
 		set @finalSiteName = case
 				when ( @site_name like '%[Cc]hicago%[Tt]ribune%' or @site_name like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
 				when ( @site_name like '[Gg][Dd][Nn]%' or @site_name like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' or @site_name = 'Google') then 'Google'
-				when @site_name like '[Dd]ouble[Cc]lick' then 'Google'
+				when @site_name like '[Dd][Oo][Uu][Bb][Ll][Ee][Cc][Ll][Ii][Cc][Kk]' then 'Google'
 				when @site_name like '%[Aa]dara%' then 'Adara'
 				when @site_name like '%[Aa]tlantic%' then 'The Atlantic'
 				when @site_name like '%[Bb]usiness%[Ii]nsider%' then 'Business Insider'
@@ -44,6 +44,7 @@ AS
 				when @site_name like '[Dd][Aa][Rr][Tt]%Search%Google' then 'DART Search_Google'
 				when @site_name like '[Dd][Aa][Rr][Tt]%Search%MSN' then 'DART Search_MSN'
 				when @site_name like '[Dd][Aa][Rr][Tt]%Search%Other' then 'DART Search_Other'
+				when @site_name like '[Ee]xponential' then 'Exponential'
 				when @site_name like '[Ff]acebook%' then 'Facebook'
 				when @site_name like '[Ff]ast%[Cc]ompany%' then 'Fast Company'
 				when @site_name like '[Ff]inancial%[Tt]imes%' then 'FinancialTimes'
