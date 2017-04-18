@@ -117,8 +117,8 @@ insert into master.dbo.dfa_cost_dt2
                  case
                  when t7.costmethod     like '[Cc][Pp][Cc]%' and t7.diff > 0 and t7.cost < t7.planned_cost and t7.clksRunTot < t7.planned_amt then t7.cost
                  when t7.diff > 0 and t7.cost < t7.planned_cost and t7.impsRunTot < t7.planned_amt then t7.cost
-                 when t7.diff > 0 and t7.lagCost = 0 and t7.lagCostRemain = 0 then t7.cost
                  when t7.diff > 0 and t7.costRemain = 0 and t7.lagCostRemain > 0 then t7.lagCostRemain
+                 when t7.diff > 0 and t7.lagCost = 0 and t7.lagCostRemain = 0 then cast(0 as decimal(20,10))
                  when t7.cost = 0 then 0
                  when t7.cost > t7.lagCostRemain then t7.lagCostRemain
                  else t7.cost - t7.lagCostRemain
@@ -737,8 +737,6 @@ cast(report.date as date)
                          on t1.placement_id = prs.adserverplacementid
 --                  where prs.costmethod != 'Flat'
 --     and prs.cost_id = 'P8FSSK'
-
-
 
                  group by
                      t1.dcmdate
