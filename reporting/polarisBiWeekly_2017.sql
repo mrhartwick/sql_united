@@ -61,7 +61,7 @@ select
   t3.dv_map                                                                                            as "dv map",
   t3.rate                                                                                              as rate,
   t3.planned_amt                                                                                       as "planned amt",
- -- t3.planned_cost                                                                                       as "planned cost",
+ t3.planned_cost                                                                                       as "planned cost",
     -- t3.planned_cost/max(t3.amt_count) as planned_cost,
   case when t3.costmethod like '[Ff]lat' then t3.flatcost/max(t3.flat_count) else sum(t3.cost) end      as cost,
   sum(t3.tot_led) as leads,
