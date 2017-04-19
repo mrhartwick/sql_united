@@ -29,5 +29,5 @@ This is a central repository for SQL code on United.
 
 ### Who do I talk to? ###
 
-* Repo owner or admin
+* Send questions or comments to [Matthew Hartwick](mailto:matthew.hartwick@mecglobal.com)
 * Other community or team contact
