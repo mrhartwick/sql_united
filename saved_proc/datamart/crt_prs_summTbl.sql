@@ -16,8 +16,6 @@ create table dbo.prs_summ
 	PackageCat          nvarchar(100),
 	PlacementStart      date           NOT NULL,
 	PlacementEnd        date           NOT NULL,
-	stYrMo              int            NOT NULL,
-	edYrMo              int            NOT NULL,
 	stDate              int            NOT NULL,
 	edDate              int            NOT NULL,
 	DV_Map              nvarchar(1),
@@ -29,7 +27,8 @@ create table dbo.prs_summ
 
 INSERT INTO dbo.prs_summ
 
-	SELECT DISTINCT
+	SELECT
+-- 		DISTINCT
 		t3.placementid                                                                                       as placementid,
 		t3.adserverplacementid                                                                               as adserverplacementid,
 		t3.adservercampaignid                                                                                as adservercampaignid,
@@ -42,8 +41,8 @@ INSERT INTO dbo.prs_summ
 		t3.packagecat                                                                                        as packagecat,
 		t3.placementstart                                                                                    as placementstart,
 		t3.placementend                                                                                      as placementend,
-		t3.styrmo                                                                                            as styrmo,
-		t3.edyrmo                                                                                            as edyrmo,
+-- 		t3.styrmo                                                                                            as styrmo,
+-- 		t3.edyrmo                                                                                            as edyrmo,
 		t3.stdate                                                                                            as stdate,
 		t3.eddate                                                                                            as eddate,
 		t3.dv_map                                                                                            as dv_map,
@@ -53,7 +52,8 @@ INSERT INTO dbo.prs_summ
 		t3.costmethod                                                                                        as costmethod
 	FROM (
 
-			 select distinct
+			 select
+-- 				 distinct
 				 t1.placementid,
 				 t1.adserverplacementid,
 				 t1.adservercampaignid,
@@ -71,8 +71,8 @@ INSERT INTO dbo.prs_summ
 
 				 [dbo].udf_datetoint(t1.placementstartdate) as stdate,
 				 [dbo].udf_datetoint(t1.placementenddate)   as eddate,
-				 [dbo].udf_yrmotoint(t1.placementstartdate) as styrmo,
-				 [dbo].udf_yrmotoint(t1.placementenddate)   as edyrmo,
+-- 				 [dbo].udf_yrmotoint(t1.placementstartdate) as styrmo,
+-- 				 [dbo].udf_yrmotoint(t1.placementenddate)   as edyrmo,
 				 vew.customcolumnvalue                      as dv_map,
 				 isnull(t2.rate,cast(0 as decimal(20,10)))  as rate,
 				 pak.packagename,
@@ -91,7 +91,7 @@ INSERT INTO dbo.prs_summ
 						  packagetype
 					  from dm_1161_unitedairlinesusa.dbo.dfid037723_prismaadvancedplacementdetails_extracted) as t1
 
-				 outer apply (
+				 left join (
 								 select distinct
 									 placementid,
 									 parentid,
@@ -99,37 +99,39 @@ INSERT INTO dbo.prs_summ
 									 costmethod,
 									 campaignname,
 									 packagetype                            as packagecat
-								 from dm_1161_unitedairlinesusa.dbo.dfid037722_prismaplacementdetails_extracted as t2
-								 where t1.placementid = t2.placementid) as t2
+								 from dm_1161_unitedairlinesusa.dbo.dfid037722_prismaplacementdetails_extracted
+								 ) as t2
+				 on t1.placementid = t2.placementid
 
-				 outer apply (
+				 left join (
 								 select
 									 placementid,
 									 customcolumnvalue
-								 from dm_1161_unitedairlinesusa.dbo.prs_view as vew
+								 from dm_1161_unitedairlinesusa.dbo.prs_view
 
-								 where t1.placementid = vew.placementid) as vew
+								 ) as vew
+				 on t1.placementid = vew.placementid
 
-				 outer apply (
+				 left join (
 								 select
 									 parentid,
 									 packagename,
 									 cost_id
-								 from dm_1161_unitedairlinesusa.dbo.prs_packages as pak
-								 where t1.parentid = pak.parentid) as pak
+								 from dm_1161_unitedairlinesusa.dbo.prs_packTbl
+								 ) as pak
+				 on t1.parentid = pak.parentid
 
-				 outer apply (
+				 left join (
 								 select
 									 parentid,
 									 plannedcost,
 									 plannedunits,
 									 placementstartdate
 
-								 from dm_1161_unitedairlinesusa.[dbo].prs_amt as amt
+								 from dm_1161_unitedairlinesusa.[dbo].prs_amt
 
-								 where t1.parentid = amt.parentid
--- 				                       and cast(t1.adserverplacementid as int) = amt.adserverplacementid
 							 ) as amt
+				  on t1.parentid = amt.parentid
 
 		           where cast(t1.placementstartdate as date) >= '2016-01-01'
 							and (len(isnull(t2.campaignname,'')) > 0)
@@ -153,7 +155,7 @@ INSERT INTO dbo.prs_summ
 			     pak.cost_id,
 			     t2.costmethod ) as t3
 
-	      where t3.styrmo >= '201601'
+-- 	      where t3.styrmo >= '201601'
 
 
 	group by
@@ -169,8 +171,8 @@ INSERT INTO dbo.prs_summ
 		t3.packagecat,
 		t3.placementstart,
 		t3.placementend,
-		t3.styrmo,
-		t3.edyrmo,
+-- 		t3.styrmo,
+-- 		t3.edyrmo,
 		t3.stdate,
 		t3.eddate,
 		t3.dv_map,
