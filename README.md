@@ -4,7 +4,7 @@ This is a central repository for SQL code on United.
 
 ### This repository is broken up into sections/folders ###
 
-* __[adhoc](https://bitbucket.org/mrhartwick/sql_united/src/2cfdbf1617c450920ad98abb81e61dde46a313af/adhoc/?at=master)__: random asks and one-offs
+* __[adhoc](https://github.com/mrhartwick/sql_united/tree/master/adhoc)__: random asks and one-offs
 * __[functions](https://bitbucket.org/mrhartwick/sql_united/src/2cfdbf1617c450920ad98abb81e61dde46a313af/functions/?at=master)__: user-defined functions to make life easier and code more readable
 	* __sqlserver_datamart__: functions written in MS SQL-compatible syntax
 	* __vertica__: functions written in Vertica-compatible syntax
