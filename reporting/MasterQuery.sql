@@ -16,8 +16,8 @@
 exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
 exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
 exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
-exec [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
 
+exec [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
 exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
 exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
 exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
@@ -165,83 +165,84 @@ select
 
 --         Win NY TapAd placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .41) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .48) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .56) + t2.clk_rev as decimal(10,2))
-
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .41) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .48) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .56) + t2.clk_rev as decimal(10,2))
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .41) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .48) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .56) + t2.clk_rev as decimal(10,2))
+                    end
 
 --         Win NY Verve placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .59) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .77) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .79) + t2.clk_rev as decimal(10,2))
-
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .59) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .77) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .79) + t2.clk_rev as decimal(10,2))
-
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .59) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .77) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .79) + t2.clk_rev as decimal(10,2))
+                    end
+--
 --         Win NY Forbes placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .38) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .59) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .64) + t2.clk_rev as decimal(10,2))
-
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .38) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .59) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .64) + t2.clk_rev as decimal(10,2))
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .38) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .59) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .64) + t2.clk_rev as decimal(10,2))
+                    end
 
 --         Win NY Ninth Decimal placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .78) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .89) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .68) + t2.clk_rev as decimal(10,2))
-
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .78) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .89) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .68) + t2.clk_rev as decimal(10,2))
-
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .78) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .89) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .68) + t2.clk_rev as decimal(10,2))
+                    end
 --         Win NY NewYorkMagazine placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .54) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .62) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .64) + t2.clk_rev as decimal(10,2))
 
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .54) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .62) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .64) + t2.clk_rev as decimal(10,2))
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .54) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .62) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .64) + t2.clk_rev as decimal(10,2))
+                    end
+
 
 --         subject to viewability with flag; mt source
              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
@@ -265,7 +266,6 @@ select
                             nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as billrevenue,
 
-
 --         Billable revenue with United discounts applied
                sum(case
 --         not subject to viewability, DBM
@@ -278,83 +278,84 @@ select
 
 --         Win NY TapAd placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .41 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .48 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .56 * .2 * .15) + t2.clk_rev as decimal(10,2))
 
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .41 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .48 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .56 * .2 * .15) + t2.clk_rev as decimal(10,2))
-
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .41 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .48 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .56 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    end
 --         Win NY Verve placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .59 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .77 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .79 * .2 * .15) + t2.clk_rev as decimal(10,2))
-
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .59 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .77 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .79 * .2 * .15) + t2.clk_rev as decimal(10,2))
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .59 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .77 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .79 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    end
 
 --         Win NY Forbes placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .38 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .59 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .64 * .2 * .15) + t2.clk_rev as decimal(10,2))
 
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .38 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .59 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .64 * .2 * .15) + t2.clk_rev as decimal(10,2))
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .38 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .59 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .64 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    end
 
 --         Win NY Ninth Decimal placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .78 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .89 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .68 * .2 * .15) + t2.clk_rev as decimal(10,2))
-
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .78 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .89 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .68 * .2 * .15) + t2.clk_rev as decimal(10,2))
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .78 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .89 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .68 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    end
 
 --         Win NY NewYorkMagazine placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .54 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .62 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .64 * .2 * .15) + t2.clk_rev as decimal(10,2))
-
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 2 )
-               then cast(((t2.vew_rev) * .54 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 3 )
-               then cast(((t2.vew_rev) * .62 * .2 * .15) + t2.clk_rev as decimal(10,2))
-             when (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))>0) and t2.dcmmonth = 4 )
-               then cast(((t2.vew_rev) * .64 * .2 * .15) + t2.clk_rev as decimal(10,2))
+             when (
+                    (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))=0)) or
+                    (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))=0))
+                  )
+             then
+                    case
+                    when t2.dcmmonth = 2
+                    then cast(((t2.vew_rev) * .54 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 3
+                    then cast(((t2.vew_rev) * .62 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    when t2.dcmmonth = 4
+                    then cast(((t2.vew_rev) * .64 * .2 * .15) + t2.clk_rev as decimal(10,2))
+                    end
 
 --         subject to viewability with flag; mt source
              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
@@ -721,7 +722,7 @@ cast (r1.date as date )
         and t1.campaign not like '%[_]UK[_]%'
         and t1.campaign not like '%2016%'
         and t1.campaign not like '%2015%'
-        and t1.campaign_id != 10698273
+        and t1.campaign_id != 10698273  -- UK Acquisition 2017
     group by
        t1.dcmdate
       ,cast(month(cast(t1.dcmdate as date)) as int)
