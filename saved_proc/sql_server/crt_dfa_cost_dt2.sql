@@ -400,9 +400,9 @@ from (
 --
 -- declare @report_st date,
 -- @report_ed date;
--- -- --
--- set @report_ed = '2017-01-31';
--- set @report_st = '2016-07-15';
+-- --
+-- set @report_ed = '2017-03-27';
+-- set @report_st = '2017-02-14';
 
          select
              cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -418,12 +418,11 @@ from (
              t2.site_dcm                                                                as site_dcm,
              t2.site_id_dcm                                                             as site_id_dcm,
              t2.costmethod                                                              as costmethod,
---           Count of # times cost_id appears per day. Important b/c planned_amt and planned_cost are listed at
---         cost_id level.
-             sum(1) over (partition by t2.cost_id,t2.dcmdate
-             order by
+--  Count of # times cost_id appears per day. Important b/c planned_amt and planned_cost are listed at
+--    cost_id level.
+             sum(1) over (partition by t2.cost_id,t2.dcmdate order by
              t2.dcmmonth asc range between unbounded preceding and current row)         as cst_count,
-         t2.plce_id                                                                 as plce_id,
+             t2.plce_id                                                                 as plce_id,
              t2.placement                                                               as placement,
              t2.placement_id                                                            as placement_id,
              t2.placementend                                                            as placementend,
@@ -431,77 +430,190 @@ from (
              t2.dv_map                                                                  as dv_map,
              t2.planned_amt                                                             as planned_amt,
              t2.planned_cost                                                            as planned_cost,
-        flat.flatcost as flatcost,
+             flat.flatcost                                                              as flatcost,
   --  logic excludes flat fees
              case
-             --       zeros out cost for placements traffic before specified start date or after specified end date
-             when ((t2.dv_map = 'N' or t2.dv_map = 'Y') and (t2.eddate - t2.dcmmatchdate < 0 or t2.dcmmatchdate - t2.stdate < 0)
-                 and (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE' or t2.costmethod = 'CPC' or
-                 t2.costmethod = 'CPCV'))
-                 then cast(0 as decimal(20,10))
-             --       click source innovid
-             when ((t2.dv_map = 'Y' or t2.dv_map = 'N') and (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0)
-                 and (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV') and (len(isnull(iv.joinkey,'')) > 0))
-                 then cast((sum(cast(iv.click_thrus as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as
+             --  Zeros out cost for placements traffic before specified start date or after specified end date
+             when   (
+                    (t2.dv_map = 'N' or t2.dv_map = 'Y') and
+                    (t2.eddate - t2.dcmmatchdate < 0 or t2.dcmmatchdate - t2.stdate < 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE' or t2.costmethod = 'CPC' or t2.costmethod = 'CPCV')
+                    )
+             then   cast(0 as decimal(20,10))
+
+             --  Click-based cost; source Innovid
+             when   (
+                    (t2.dv_map = 'Y' or t2.dv_map = 'N') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV') and
+                    (len(isnull(iv.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(iv.click_thrus as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
+
+             --  Click-based cost; source DCM
+             when   (
+                    (t2.dv_map = 'Y' or t2.dv_map = 'N') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV')
+                    )
+             then   cast((sum(cast(t2.clicks as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
+
+             --  Impression-based cost; not subject to viewability; Innovid source
+             when   (
+                    (t2.dv_map = 'N') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    (len(isnull(iv.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(iv.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as
                            decimal(20,10))
-             --       click source dcm
-             when ((t2.dv_map = 'Y' or t2.dv_map = 'N') and (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0)
-                 and (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV'))
-                 then cast((sum(cast(t2.clicks as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
 
-             --           impression-based cost; not subject to viewability; innovid source
-             when (t2.dv_map = 'N' and (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                 (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and (len(
-                 isnull(iv.joinkey,'')) > 0))
-                 then cast((sum(cast(iv.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as
-                           decimal(20,10))
+             --  Impression-based cost; not subject to viewability; DCM source
+             when   (
+                    (t2.dv_map = 'N') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE')
+                    )
+             then   cast((sum(cast(t2.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
-             --           impression-based cost; not subject to viewability; dcm source
-             when (t2.dv_map = 'N' and (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                 (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE'))
-                 then cast((sum(cast(t2.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as
-                           decimal(20,10))
+             --  Impression-based cost; subject to viewability with DV flag; DV data present
+             when   (
+                    (t2.dv_map = 'Y') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    (len(isnull(dv.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(dv.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
-             --           impression-based cost; subject to viewability with flag; mt source
-             when (t2.dv_map = 'Y' and (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                 (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and mt.joinkey is not null)
-                 then cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as
-                                                                                               decimal(20,10))) / 1000
-                           as decimal(20,10))
+             --  Impression-based cost; subject to viewability with DV flag; DV data not present; MT data present
+             when   (
+                    (t2.dv_map = 'Y') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    (len(isnull(dv.joinkey,'')) = 0) and
+                    (len(isnull(mt.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
-             --           impression-based cost; subject to viewability; dv source
-             when (t2.dv_map = 'Y' and (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                 (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE'))
-                 then cast((sum(cast(dv.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as
-                                                                                               decimal(20,10))) / 1000
-                           as decimal(20,10))
+             --  Fixes for Win NY, which Medialets failed to tag
+             --  Using average viewability rate for Feb, Mar, Apr
+             --  Impression-based cost; subject to viewability; MT source
+             when   (
+                    (t2.dv_map = 'M') and
+                    (t2.campaign_id = 10918234) and
+                    (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841)) and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    (len(isnull(dv.joinkey,'')) = 0)
+                    )
+             then
+                    case
+                    when  t2.site_id_dcm = 1995643  -- Verve
+                    then
+                            case
+                            when  t2.dcmmonth = 2
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .59) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 3
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .77) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 4
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .79) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end
+                    when  t2.site_id_dcm = 1485655  -- Forbes
+                    then
+                            case
+                            when  t2.dcmmonth = 2
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .38) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 3
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .59) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 4
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .64) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end
+                    when  t2.site_id_dcm = 2854118  -- TapAd
+                    then
+                            case
+                            when  t2.dcmmonth = 2
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .41) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 3
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .48) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 4
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .56) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end
+                    when  t2.site_id_dcm = 1329066  -- Ninth Decimal
+                    then
+                            case
+                            when  t2.dcmmonth = 2
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .78) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 3
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .89) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 4
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .68) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end
+                    when  t2.site_id_dcm = 3246841  -- NY Mag
+                    then
+                            case
+                            when  t2.dcmmonth = 2
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .54) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 3
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .62) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            when  t2.dcmmonth = 4
+                            then  cast((sum(cast(t2.impressions as decimal(20,10)) * .64) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end end
 
-             --           impression-based cost; subject to viewability; moat source
-             when (t2.dv_map = 'M' and (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                 (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE'))
-                 then cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as
-                                                                                               decimal(20,10))) / 1000
-                           as decimal(20,10))
+             --  Impression-based cost; subject to viewability; MT source
+             when   (
+                    (t2.dv_map = 'M') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE')
+                    )
+             then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
-             else cast(0 as decimal(20,10)) end                                         as cost,
+
+
+             else   cast(0 as decimal(20,10)) end                                       as cost,
+
+
              t2.rate                                                                    as rate,
---       total impressions as reported by 1.) dcm for "n," 2.) dv for "y," or moat for "m"
-             sum(case
-                 when t2.dv_map = 'Y' and (len(isnull(mt.joinkey,'')) > 0) then mt.total_impressions
-                 when t2.dv_map = 'Y' then dv.total_impressions
-                 when t2.dv_map = 'M' then mt.total_impressions
-                 when t2.dv_map = 'N' and (len(isnull(iv.joinkey,'')) > 0) then iv.impressions
-                 else t2.impressions end)                                               as dlvrimps,
+             --  total impressions as reported by 1.) dcm for "n," 2.) dv for "y," or moat for "m"
+             sum    (
+                    case
 
---       billable impressions as reported by 1.) dcm for "n," 2.) dv for "y," or moat for "m"
-             sum(case
-                 when t2.dv_map = 'Y' and (len(isnull(mt.joinkey,'')) > 0) then mt.groupm_billable_impressions
-                 when t2.dv_map = 'Y' then dv.groupm_billable_impressions
-                 when t2.dv_map = 'M' then mt.groupm_billable_impressions
-                 when t2.dv_map = 'N' and (len(isnull(iv.joinkey,'')) > 0) then iv.impressions
-                 else t2.impressions end)                                               as billimps,
 
---       dcm impressions (for comparison (qa) to dcm console)
+                    when t2.dv_map = 'Y' and
+                        (len(isnull(dv.joinkey,'')) = 0) and
+                        (len(isnull(mt.joinkey,'')) > 0)
+                    then mt.total_impressions
+
+                    when t2.dv_map = 'Y' then dv.total_impressions
+
+                    when t2.dv_map = 'M' and
+                        (len(isnull(mt.joinkey,'')) = 0) and
+                        (t2.campaign_id = 10918234) and
+                        (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841))
+                    then t2.impressions
+
+                    when t2.dv_map = 'M' then mt.total_impressions
+                    when t2.dv_map = 'N' and (len(isnull(iv.joinkey,'')) > 0) then iv.impressions
+                    else t2.impressions end
+                    )                                               as dlvrimps,
+
+             --  billable impressions as reported by 1.) dcm for "n," 2.) dv for "y," or moat for "m"
+             sum    (
+                    case
+                    when t2.dv_map = 'Y' and
+                        (len(isnull(dv.joinkey,'')) = 0) and
+                        (len(isnull(mt.joinkey,'')) > 0)
+                    then mt.groupm_billable_impressions
+                    when t2.dv_map = 'Y' then dv.groupm_billable_impressions
+                    when t2.dv_map = 'M' and
+                        (len(isnull(mt.joinkey,'')) = 0) and
+                        (t2.campaign_id = 10918234) and
+                        (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841))
+                    then t2.impressions
+                    when t2.dv_map = 'M' then mt.groupm_billable_impressions
+                    when t2.dv_map = 'N' and (len(isnull(iv.joinkey,'')) > 0) then iv.impressions
+                    else t2.impressions end
+                    )                                               as billimps,
+
              sum(t2.impressions)                                                        as dfa_imps,
              sum(iv.impressions)                                                        as iv_imps,
              sum(iv.click_thrus)                                                        as iv_clicks,
@@ -512,60 +624,69 @@ from (
              sum(cast(mt.total_impressions as int))                                     as mt_imps,
              sum(mt.groupm_passed_impressions)                                          as mt_viewed,
              sum(cast(mt.groupm_billable_impressions as decimal(20,10)))                as mt_groupmpayable,
---       clicks
+
              sum(case
                  when (len(isnull(iv.joinkey,'')) > 0) then iv.click_thrus
                  else t2.clicks end)                                                    as clicks
---              sum(t2.con)                                                               as con,
---              sum(t2.tix)                                                                as tix
-
 
          from
              (
 -- =========================================================================================================================
+                  select
+                    t1.dcmdate                                                                            as dcmdate,
+                    cast(month(cast(t1.dcmdate as date)) as int)                                          as dcmmonth,
+                    [dbo].udf_dateToInt(t1.dcmdate)                                                       as dcmmatchdate,
+                    t1.campaign                                                                           as campaign,
+                    t1.campaign_id                                                                        as campaign_id,
+                    t1.site_dcm                                                                           as site_dcm,
+                    t1.site_id_dcm                                                                        as site_id_dcm,
+                    case
+                    when t1.plce_id in ('PBKB7J','PBKB7H','PBKB7K')
+                    then 'PBKB7J'
+                    else t1.plce_id end                                                                   as plce_id,
+                    case
+                    when t1.placement like 'PBKB7J%' or
+                         t1.placement like 'PBKB7H%' or
+                         t1.placement like 'PBKB7K%' or
+                         t1.placement = 'United 360 - Polaris 2016 - Q4 - Amobee'
+                    then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID'
+                    else t1.placement end                                                                 as placement,
+                  --   amobee video 360 placements, tracked differently across dcm, innovid, and moat; this combines the three placements into one
+                    case
+                    when t1.placement_id in (137412510,137412401,137412609)
+                    then 137412609
+                    else t1.placement_id end                                                              as placement_id,
+                    prs.stdate                                                                            as stdate,
+                    case
+                    when t1.campaign_id = 9923634 and
+                         t1.site_id_dcm != 1190258
+                    then 20161022
+                    else prs.eddate end                                                                   as eddate,
+                    prs.packagecat                                                                        as packagecat,
+                    prs.costmethod                                                                        as costmethod,
+                    prs.cost_id                                                                           as cost_id,
+                    prs.planned_amt                                                                       as planned_amt,
+                    prs.planned_cost                                                                      as planned_cost,
+                    prs.placementstart                                                                    as placementstart,
+                    case
+                    when t1.campaign_id = 9923634 and
+                         t1.site_id_dcm != 1190258
+                    then '2016-10-22'
+                    else prs.placementend end                                                             as placementend,
 
-                 select
-    t1.dcmdate             as dcmdate,
-                     cast(month(cast(t1.dcmdate as date)) as int)                        as dcmmonth,
-                     [dbo].udf_dateToInt(t1.dcmdate)                                     as dcmmatchdate,
-                     t1.campaign                                                         as campaign,
-                     t1.campaign_id                                                      as campaign_id,
-                     t1.site_dcm                                                         as site_dcm,
-                     t1.site_id_dcm                                                      as site_id_dcm,
-                     case when t1.plce_id in ('PBKB7J','PBKB7H','PBKB7K') then 'PBKB7J'
-                    else t1.plce_id end                                                           as plce_id,
-                     case when t1.placement like 'PBKB7J%' or t1.placement like 'PBKB7H%' or t1.placement like 'PBKB7K%' or t1.placement = 'United 360 - Polaris 2016 - Q4 - Amobee' then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID'
-          else t1.placement end                                                         as placement,
---        amobee video 360 placements, tracked differently across dcm, innovid, and moat; this combines the three placements into one
-                     case when t1.placement_id in (137412510,137412401,137412609) then 137412609
-                     else t1.placement_id end                                            as placement_id,
-                     prs.stdate                                                              as stdate,
-                     case when t1.campaign_id = 9923634 and t1.site_id_dcm != 1190258 then 20161022
-                     else
-                         prs.eddate end                                                      as eddate,
-                     prs.packagecat                                                          as packagecat,
-                     prs.costmethod                                                          as costmethod,
-                     prs.cost_id                                                             as cost_id,
-                     prs.planned_amt                                                         as planned_amt,
-                     prs.planned_cost                                                        as planned_cost,
-                     prs.placementstart                                                      as placementstart,
-                     case when t1.campaign_id = 9923634 and t1.site_id_dcm != 1190258 then '2016-10-22'
-                     else
-                         prs.placementend end                                                as placementend,
+                    sum((cast(t1.impressions as decimal(20,10)) / nullif(
+                      cast(prs.planned_amt as decimal(20,10)),0)) * cast(prs.rate as
+                                                                           decimal(20,10)))               as incrflatcost,
+                    cast(prs.rate as decimal(20,10))                                                      as rate,
+                    sum(t1.impressions)                                                                   as impressions,
+                    sum(t1.clicks)                                                                        as clicks,
+                  --        sum(t1.con)                                                        as con,
+                  --        sum(t1.tix)                                                         as tix,
 
-                     sum((cast(t1.impressions as decimal(20,10)) / nullif(
-                         cast(prs.planned_amt as decimal(20,10)),0)) * cast(prs.rate as
-                                                                               decimal(20,10))) as incrflatcost,
-                     cast(prs.rate as decimal(20,10))                                        as rate,
-                     sum(t1.impressions)                                                 as impressions,
-                     sum(t1.clicks)                                                      as clicks,
---                      sum(t1.con)                                                        as con,
---                      sum(t1.tix)                                                         as tix,
-
-                     case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as
-                  int) <= 0 then 0
-                     else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as
-                                                                         int) end               as diff,
+                    case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as
+                                                                          int) <= 0 then 0
+                    else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as
+                                                                     int) end                             as diff,
 
                     [dbo].udf_dvMap(t1.campaign_id,t1.site_id_dcm,t1.placement,prs.CostMethod,prs.dv_map) as dv_map
                  -- ==========================================================================================================================================================
@@ -712,7 +833,8 @@ on report.site_id_dcm = directory.site_id_dcm
 
 where not regexp_like(placements.placement,''.do\s*not\s*use.'',''ib'')
 -- and not regexp_like(campaign.campaign,''.2016.'',''ib'')
-and not regexp_like(campaign.campaign,''BidManager_Campaign.'',''ib'')
+and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
+and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
 group by
 cast(report.date as date)
 -- , cast(month(cast(report.date as date)) as int)
@@ -735,7 +857,7 @@ cast(report.date as date)
                          from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
---                  where prs.costmethod != 'Flat'
+--    where prs.costmethod != 'Flat'
 --     and prs.cost_id = 'P8FSSK'
 
                  group by
@@ -864,7 +986,7 @@ cast(report.date as date)
                                   t4.placement,
                                   t4.placement_id,
                                   t4.dv_map,
-                                t4.flatcost,
+                                  t4.flatcost,
                                   t4.plce_id
                           ) as t5
 where t5.costmethod != 'Flat'
