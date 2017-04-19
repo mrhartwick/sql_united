@@ -12,25 +12,25 @@
 -- */
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
+-- -- --
+-- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
 --
-exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
-exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
-
-exec [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
-exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
-exec master.dbo.crt_dfa_flatCost_dt2 go
-exec master.dbo.crt_dbm_cost go
-exec master.dbo.crt_dfa_cost_dt2 go
+-- exec [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
+-- exec master.dbo.crt_dfa_flatCost_dt2 go
+-- exec master.dbo.crt_dbm_cost go
+-- exec master.dbo.crt_dfa_cost_dt2 go
 
 
 
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-03-27';
+set @report_ed = '2017-04-18';
 set @report_st = '2017-02-14';
 
 --
@@ -68,9 +68,10 @@ select
     when campaign_id = '10740457' or campaign_id = '10812738' then 'Added Value'
     else 'non-Acquisition' end                                                                         as "campaign_type",
 
-
+    t3.site_dcm as site_orig,
 -- preferred, friendly site name; also corresponds to what's used in the joinkey fields across dfa, dv, and moat.
     [dbo].udf_sitename(t3.site_dcm)                                                                    as "site",
+
 -- dcm site id
     t3.site_id_dcm                                                                                     as "site id",
 -- reference/optional: package cost/pricing model, from prisma; attributed to all placements within package.
@@ -116,7 +117,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-03-27';
+-- set @report_ed = '2017-04-18';
 -- set @report_st = '2017-02-14';
 
 select
@@ -573,7 +574,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-03-27''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-04-18''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
@@ -613,7 +614,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-03-27''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-04-18''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -647,7 +648,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-03-27''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-04-18''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
@@ -723,6 +724,8 @@ cast (r1.date as date )
         and t1.campaign not like '%2016%'
         and t1.campaign not like '%2015%'
         and t1.campaign_id != 10698273  -- UK Acquisition 2017
+        and t1.campaign_id != 11221036  -- Hong Kong 2017
+
     group by
        t1.dcmdate
       ,cast(month(cast(t1.dcmdate as date)) as int)
