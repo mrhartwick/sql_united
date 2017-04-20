@@ -63,63 +63,65 @@ insert into master.dbo.dbm_cost
            t2.site_dcm,
            t2.site_id_dcm,
            t2.plce_id,
-           t2.site_rank,
+           t2.site_rank_1,
+           t2.site_rank_2,
 --     t2.lagplcnbr,
            t2.placement,
            t2.placement_id,
            t2.dbm_cost as dbm_cost2,
            sum(t2.dbm_cost) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as dbm_cost,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as dbm_cost,
            t2.impressions                                                                                           as imps,
            t2.clicks                                                                                                as clicks,
            t2.vew_con                                                                                               as vew_con1,
            sum(t2.vew_con) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as vew_con,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as vew_con,
            t2.clk_con                                                                                               as clk_con1,
            sum(t2.clk_con) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as clk_con,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as clk_con,
            t2.con                                                                                                   as con1,
            sum(t2.con) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as con,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as con,
            t2.vew_tix                                                                                               as vew_tix1,
            sum(t2.vew_tix) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as vew_tix,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as vew_tix,
            t2.clk_tix                                                                                               as clk_tix1,
            sum(t2.clk_tix) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as clk_tix,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as clk_tix,
            t2.tix                                                                                                   as tix1,
            sum(t2.tix) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as tix,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as tix,
            t2.vew_rev                                                                                               as vew_rev1,
            sum(t2.vew_rev) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as vew_rev,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as vew_rev,
            t2.clk_rev                                                                                               as clk_rev1,
            sum(t2.clk_rev) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as clk_rev,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as clk_rev,
            t2.rev                                                                                                   as rev1,
            sum(t2.rev) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as rev,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as rev,
 
            t2.vew_led                                                                                               as vew_led1,
            sum(t2.vew_led) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as vew_led,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as vew_led,
            t2.clk_led                                                                                               as clk_led1,
            sum(t2.clk_led) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as clk_led,
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as clk_led,
            t2.led                                                                                                   as led1,
            sum(t2.led) over (partition by t2.dcmdate,t2.plce_id
-             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank desc range between unbounded preceding and current row) as led
+             order by t2.dcmdate asc,t2.plce_id asc,t2.site_rank_1 desc, t2.site_rank_2 desc range between unbounded preceding and current row) as led
 
 
          from (select
              t1.dcmdate                                             as dcmdate,
-             cast(month(cast(t1.dcmdate as date)) as int)           as dcmmonth,
+             cast(month(cast(t1.dcmdate as date)) as int )           as dcmmonth,
              [dbo].udf_dateToInt(t1.dcmdate)                        as dcmmatchdate,
              t1.campaign                                            as campaign,
              t1.campaign_id                                         as campaign_id,
              t1.site_dcm                                            as site_dcm,
              t1.site_id_dcm                                         as site_id_dcm,
-             case when t1.site_dcm like 'Google%' then 1 else 2 end as site_rank,
+             case when t1.site_dcm like 'Google%' or t1.site_dcm like 'DOUBLECLICK%' then 1 else 2 end as site_rank_1,
+           row_number() over (partition by t1.dcmdate, t1.plce_id order by t1.placement_id) as site_rank_2,
              case when t1.plce_id in ('PBKB7J','PBKB7H','PBKB7K') then 'PBKB7J'
              else t1.plce_id end                                    as plce_id,
              prs.DV_Map                                             as DV_Map,
@@ -147,30 +149,31 @@ insert into master.dbo.dbm_cost
 
                from (
                       select *
-                      from openquery(verticaunited,'
+                      from openquery(verticaunited,
+'
 select
-cast(r1.date as date)    as dcmdate,
-campaign.campaign            as campaign,
-r1.campaign_id           as campaign_id,
-r1.site_id_dcm           as site_id_dcm,
-directory.site_dcm           as site_dcm,
-left(placements.placement,6) as plce_id,
-placements.placement         as placement,
-r1.placement_id          as placement_id,
-sum(r1.impressions)      as impressions,
-sum(r1.dbm_cost)         as dbm_cost,
-sum(r1.dbm_tot_cost)         as dbm_tot_cost,
-sum(r1.clicks)           as clicks,
-sum(r1.vew_led) as vew_led,
-sum(r1.clk_led) as clk_led,
-sum(r1.vew_led) + sum(r1.clk_led) as led,
-sum(r1.vew_con) as vew_con,
-sum(r1.clk_con) as clk_con,
-sum(r1.vew_tix) as vew_tix,
-sum(r1.clk_tix) as clk_tix,
+cast(r1.date as date)                   as dcmdate,
+campaign.campaign                       as campaign,
+r1.campaign_id                          as campaign_id,
+r1.site_id_dcm                          as site_id_dcm,
+directory.site_dcm                      as site_dcm,
+left(placements.placement,6)            as plce_id,
+placements.placement                    as placement,
+r1.placement_id                         as placement_id,
+sum(r1.impressions)                     as impressions,
+sum(r1.dbm_cost)                        as dbm_cost,
+sum(r1.dbm_tot_cost)                    as dbm_tot_cost,
+sum(r1.clicks)                          as clicks,
+sum(r1.vew_led)                         as vew_led,
+sum(r1.clk_led)                         as clk_led,
+sum(r1.vew_led) + sum(r1.clk_led)       as led,
+sum(r1.vew_con)                         as vew_con,
+sum(r1.clk_con)                         as clk_con,
+sum(r1.vew_tix)                         as vew_tix,
+sum(r1.clk_tix)                         as clk_tix,
 sum(cast(r1.vew_rev as decimal (10,2))) as vew_rev,
 sum(cast(r1.clk_rev as decimal (10,2))) as clk_rev,
-sum(cast(r1.rev as decimal (10,2))) as rev
+sum(cast(r1.rev as decimal (10,2)))     as rev
 from (
 
 select
@@ -202,7 +205,7 @@ and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mi
 -- and total_conversions != 0
 and (activity_id = 978826 or activity_id = 1086066)
 and (advertiser_id <> 0)
-and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
+and (site_id_dcm = 1578478 or site_id_dcm = 2202011 or site_id_dcm = 3266673)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
 
@@ -245,7 +248,7 @@ from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
 where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2017-01-01''
-and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
+and (site_id_dcm = 1578478 or site_id_dcm = 2202011 or site_id_dcm = 3266673)
 and (advertiser_id <> 0)
 -- and dbm_advertiser_id = 649134
 ) as ti
@@ -284,7 +287,7 @@ select *
 from diap01.mec_us_united_20056.dfa2_click
 where cast(timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date) > ''2017-01-01''
 and (advertiser_id <> 0)
-and (site_id_dcm = 1578478 or site_id_dcm = 2202011)
+and (site_id_dcm = 1578478 or site_id_dcm = 2202011 or site_id_dcm = 3266673)
 -- and dbm_advertiser_id = 649134
 ) as tc
 
@@ -341,8 +344,8 @@ on r1.site_id_dcm = directory.site_id_dcm
 
 where not regexp_like(placements.placement,''.do\s*not\s*use.'',''ib'')
 -- and not regexp_like(campaign.campaign,''.2016.'',''ib'')
-and not regexp_like(placements.placement,''DBM.'',''ib'')
-and (r1.site_id_dcm = 1578478 or r1.site_id_dcm = 2202011)
+-- and not regexp_like(placements.placement,''DBM.'',''ib'')
+and (r1.site_id_dcm = 1578478 or r1.site_id_dcm = 2202011 or r1.site_id_dcm = 3266673)
 group by
 cast(r1.date as date)
 -- , cast(month(cast(r1.date as date)) as int)
@@ -380,9 +383,10 @@ where prs.costmethod like '[Dd][Cc][Pp][Mm]'
            ,t1.placement_id
 
               ) as t2
---   where t2.site_rank = 1
+--    where t2.placement like '%CN_Retargeting%'
+--   where t2.site_rank_2 = 1
        ) as t3
-where t3.site_rank= 1
+where t3.site_rank_2 = 1
 
   group by
     t3.dcmmatchdate,
