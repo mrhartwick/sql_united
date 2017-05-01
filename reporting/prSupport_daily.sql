@@ -56,12 +56,12 @@ select
 -- dcm campaign id
     t3.campaign_id,
 --campaign type: Acquisition, Branding/Routes, Added Value                                                                                       as "campaign id",
-    case when campaign_id = '10742878' then 'Acquisition'
-    when campaign_id = '10918234' or campaign_id = '10942240' or campaign_id = '10768497' or campaign_id = '11069476' then 'Branding/Routes'
-    when campaign_id = '10740457' or campaign_id = '10812738' then 'Added Value'
-    else 'non-Acquisition' end                                                                         as "campaign_type",
+--     case when campaign_id = '10742878' then 'Acquisition'
+--     when campaign_id = '10918234' or campaign_id = '10942240' or campaign_id = '10768497' or campaign_id = '11069476' then 'Branding/Routes'
+--     when campaign_id = '10740457' or campaign_id = '10812738' then 'Added Value'
+--     else 'non-Acquisition' end                                                                         as "campaign_type",
 
-    t3.site_dcm as site_orig,
+--     t3.site_dcm as site_orig,
 -- preferred, friendly site name; also corresponds to what's used in the joinkey fields across dfa, dv, and moat.
     [dbo].udf_sitename(t3.site_dcm)                                                                    as "site",
 
@@ -82,7 +82,7 @@ select
     t3.rate                                                                                            as rate,
     t3.planned_amt                                                                                     as "planned amt",
     t3.planned_cost                                                                                    as "planned cost",
-    t3.planned_cost / max(t3.amt_count)                                                                as planned_cost,
+--     t3.planned_cost / max(t3.amt_count)                                                                as planned_cost,
     case when t3.costmethod like '[Ff]lat' then t3.flatcost / max(t3.flat_count) else sum(t3.cost) end as cost,
     sum(t3.tot_led)                                                                                    as leads,
     sum(t3.dlvrimps)                                                                                   as "delivered impressions",
