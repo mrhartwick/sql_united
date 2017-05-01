@@ -1,4 +1,4 @@
-CREATE procedure dbo.crt_dv_summ
+alter procedure dbo.crt_dv_summ
 as
 if OBJECT_ID('master.dbo.dv_summ',N'U') is not null
     drop table master.dbo.dv_summ;
@@ -68,7 +68,7 @@ insert into master.dbo.dv_summ
     where DV.placement_name not like '%[Dd][Oo]%[Nn][Oo][Tt]%[Uu][Ss][Ee]%'
         and DV.placement_name not like '%[Nn]o%[Tt]racking%'
 --         and dv.placement_code != '300492'
-        and cast(DV.dvDate as date) > '2016-01-01'
+        and cast(DV.dvDate as date) > '2017-01-01'
     group by
         DV.joinKey,
         DV.dvDate,
