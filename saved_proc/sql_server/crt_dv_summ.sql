@@ -61,14 +61,16 @@ insert into master.dbo.dv_summ
                                   total_impressions                                         as ''total_impressions'',
                                   groupm_passed_impressions                                 as ''groupm_passed_impressions'',
                                   groupm_billable_impressions                               as ''groupm_billable_impressions''
-                                  from diap01.mec_us_united_20056.dv_impression_agg')) as t1
+                                  from diap01.mec_us_united_20056.dv_impression_agg
+                                  where cast(event_date as date) >= ''2017-01-01''
+                                  ')) as t1
 
          ) as DV
 
     where DV.placement_name not like '%[Dd][Oo]%[Nn][Oo][Tt]%[Uu][Ss][Ee]%'
         and DV.placement_name not like '%[Nn]o%[Tt]racking%'
 --         and dv.placement_code != '300492'
-        and cast(DV.dvDate as date) > '2017-01-01'
+        and cast(DV.dvDate as date) >= '2017-01-01'
     group by
         DV.joinKey,
         DV.dvDate,
