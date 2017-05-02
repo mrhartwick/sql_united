@@ -6,7 +6,7 @@
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 -- -- --
-exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
 --
@@ -17,13 +17,15 @@ exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store 
 -- exec master.dbo.crt_dfa_flatCost_dt2 go
 -- exec master.dbo.crt_dbm_cost go
 -- exec master.dbo.crt_dfa_cost_dt2 go
+
+
 -- exec master.dbo.crt_prs_summ_vertica go
 
 
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-04-30';
+set @report_ed = '2017-05-01';
 set @report_st = '2017-04-27';
 
 --
@@ -42,11 +44,11 @@ select
 -- reference/optional: difference, in months, between placement end date and report date. field is used deterministically in other fields below.
 --  t3.diff                                                                                              as diff,
 -- reference/optional: match key from the dv table; only present when dv data is available.
-    t3.dvjoinkey                                                                                       as dvjoinkey,
+--     t3.dvjoinkey                                                                                       as dvjoinkey,
 -- reference/optional: match key from the moat table; only present when moat data is available.
-    t3.mtjoinkey                                                                                       as mtjoinkey,
+--     t3.mtjoinkey                                                                                       as mtjoinkey,
 -- reference/optional: package category from prisma (standalone; package; child). useful for exchanging info with planning/investment
-    t3.packagecat                                                                                      as packagecat,
+--     t3.packagecat                                                                                      as packagecat,
 -- reference/optional: first six characters of package-level placement name, used to join 1) prisma table, and 2) flat fee table
     t3.cost_id                                                                                         as cost_id,
 -- dcm campaign name
@@ -76,12 +78,12 @@ select
 -- dcm placement id
     t3.placement_id                                                                                    as placement_id,
 -- reference/optional: planned package end date, from prisma; attributed to all placements within package.
-    t3.placementend                                                                                    as "placement end",
-    t3.placementstart                                                                                  as "placement start",
-    t3.dv_map                                                                                          as "dv map",
-    t3.rate                                                                                            as rate,
-    t3.planned_amt                                                                                     as "planned amt",
-    t3.planned_cost                                                                                    as "planned cost",
+--     t3.placementend                                                                                    as "placement end",
+--     t3.placementstart                                                                                  as "placement start",
+--     t3.dv_map                                                                                          as "dv map",
+--     t3.rate                                                                                            as rate,
+--     t3.planned_amt                                                                                     as "planned amt",
+--     t3.planned_cost                                                                                    as "planned cost",
 --     t3.planned_cost / max(t3.amt_count)                                                                as planned_cost,
     case when t3.costmethod like '[Ff]lat' then t3.flatcost / max(t3.flat_count) else sum(t3.cost) end as cost,
     sum(t3.tot_led)                                                                                    as leads,
@@ -89,20 +91,20 @@ select
     sum(t3.billimps)                                                                                   as "billable impressions",
     sum(t3.cnslimps)                                                                                   as "dfa impressions",
     sum(t3.iv_impressions)                                                                             as "innovid impressions",
-    sum(t3.clicks)                                                                                     as clicks,
+    sum(t3.clicks)                                                                                     as clicks
 --   case when sum(t3.dlvrimps) = 0 then 0
 --   else (sum(cast(t3.clicks as decimal(20,10)))/sum(cast(t3.dlvrimps as decimal(20,10))))*100 end  as ctr,
-    sum(t3.tot_con)                                                                                    as transactions,
-    sum(t3.vew_con)                                                                                    as vew_trns,
-    sum(t3.clk_con)                                                                                    as clck_thru_trns,
-    sum(t3.tot_tix)                                                                                    as tix,
-    sum(t3.vew_tix)                                                                                    as vew_tix,
-    sum(t3.clk_tix)                                                                                    as clk_tix,
-    sum(t3.tot_rev)                                                                                    as revenue,
-    sum(t3.vew_rev)                                                                                    as vew_rev,
-    sum(t3.clk_rev)                                                                                    as clk_thru_rev,
-    sum(t3.billrevenue)                                                                                as "billable revenue",
-    sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue"
+--     sum(t3.tot_con)                                                                                    as transactions,
+--     sum(t3.vew_con)                                                                                    as vew_trns,
+--     sum(t3.clk_con)                                                                                    as clck_thru_trns,
+--     sum(t3.tot_tix)                                                                                    as tix,
+--     sum(t3.vew_tix)                                                                                    as vew_tix,
+--     sum(t3.clk_tix)                                                                                    as clk_tix,
+--     sum(t3.tot_rev)                                                                                    as revenue,
+--     sum(t3.vew_rev)                                                                                    as vew_rev,
+--     sum(t3.clk_rev)                                                                                    as clk_thru_rev,
+--     sum(t3.billrevenue)                                                                                as "billable revenue",
+--     sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue"
 from (
 
 -- for running the code here instead of at "f3," above
@@ -110,7 +112,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-04-30';
+-- set @report_ed = '2017-05-01';
 -- set @report_st = '2017-04-27';
 
 select
@@ -567,7 +569,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-04-27'' and ''2017-04-30''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-04-27'' and ''2017-05-01''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 and campaign_id = 11390108 -- display 2017
@@ -607,7 +609,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-04-27'' and ''2017-04-30''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-04-27'' and ''2017-05-01''
 and campaign_id = 11390108 -- display 2017
 
 and (advertiser_id <> 0)
@@ -641,7 +643,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-04-27'' and ''2017-04-30''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-04-27'' and ''2017-05-01''
 and campaign_id = 11390108 -- display 2017
 and (advertiser_id <> 0)
 ) as tc
