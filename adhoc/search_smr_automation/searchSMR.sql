@@ -42,8 +42,8 @@ select
   sum(t1.imps)                 as Impressions,
   sum(t1.clicks)               as Clicks,
   avg(t1.avg_pos)              as [Avg Position],
-  sum(cast(t1.actions as int)) as Actions,
-  sum(t1.visits)               as Visits,
+  -- sum(cast(t1.actions as int)) as Actions,
+  -- sum(t1.visits)               as Visits,
   sum(fld2.rev)                  as Revenue,
   sum(cast(fld2.con as int))     as Conversions,
   sum(fld2.tix)                  as Tickets
@@ -63,8 +63,8 @@ from (
         sum(std1.pdsearch_impressions)                                              as imps,
         sum(std1.pdsearch_clicks)                                                   as clicks,
         avg(std1.pdsearch_avg_position)                                             as avg_pos,
-        sum(std1.pdsearch_actions)                                                  as actions,
-        sum(std1.pdsearch_page_visits)                                              as visits
+        -- sum(std1.pdsearch_actions)                                                  as actions,
+        -- sum(std1.pdsearch_page_visits)                                              as visits
 
 
       from [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.ualus_search_standard as std1
