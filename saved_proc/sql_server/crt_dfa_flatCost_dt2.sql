@@ -437,5 +437,5 @@ group by
                                   f0.planned_amt
                           ) as f1
                   ) as f2
-where f2.Cost_ID is not null
+where (len(isnull(f2.Cost_ID,'')) != 0)
          ) as f3
