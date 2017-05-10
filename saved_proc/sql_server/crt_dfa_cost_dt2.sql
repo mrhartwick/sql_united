@@ -112,16 +112,100 @@ insert into master.dbo.dfa_cost_dt2
                  t7.stDate                                          as stDate,
                  t7.edDate                                          as edDate,
                  isNull(t7.diff,cast(0 as int))                     as diff,
-               isNull(t7.flatcost,cast(0 as decimal(20,10)))       as flatCost,
+                 isNull(t7.flatcost,cast(0 as decimal(20,10)))       as flatCost,
+
                  case
-                 when t7.costmethod     like '[Cc][Pp][Cc]%' and t7.diff > 0 and t7.cost < t7.planned_cost and t7.clksRunTot < t7.planned_amt then t7.cost
-                 when t7.diff > 0 and t7.cost < t7.planned_cost and t7.impsRunTot < t7.planned_amt then t7.cost
-                 when t7.diff > 0 and t7.costRemain = 0 and t7.lagCostRemain > 0 then t7.lagCostRemain
-                 when t7.diff > 0 and t7.lagCost = 0 and t7.lagCostRemain = 0 then cast(0 as decimal(20,10))
-                 when t7.cost = 0 then 0
-                 when t7.cost > t7.lagCostRemain then t7.lagCostRemain
+
+--               cond_2_CPC
+                 when t7.costmethod like '[Cc][Pp][Cc]%' and
+                      t7.diff >= 0 and
+                      t7.cost < t7.planned_cost and
+                      t7.clksRunTot <= t7.planned_amt
+                 then t7.cost
+
+--               cond_2_dCPM
+                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
+                      t7.diff >= 0 and
+                      t7.cost < t7.planned_cost and
+                      t7.costRunTot <= t7.planned_cost and
+                      t7.lagCostRemain > 0
+                 then t7.cost
+
+--               cond_2_1
+                 when t7.diff >= 0 and
+                      t7.cost < t7.planned_cost and
+                      t7.impsRunTot <= t7.planned_amt
+                 then t7.cost
+
+--               cond_2_2
+                 when t7.diff >= 0 and
+                      t7.costRemain = 0 and
+                      t7.lagCostRemain > 0
+                 then t7.lagCostRemain
+
+--               cond_2_3
+                 when t7.diff >= 0 and
+                      t7.lagCost = 0 and
+                      t7.lagCostRemain = 0
+                 then cast(0 as decimal(20,10))
+
+--               cond_2_4
+                 when t7.cost = 0
+                 then 0
+
+--               cond_2_5
+                 when t7.cost >= t7.lagCostRemain
+                 then t7.lagCostRemain
+
+--               cond_2_else
                  else t7.cost - t7.lagCostRemain
                  end                                                as cost,
+
+                 t7.cost                                            as cost_plain,
+                 t7.cond_1                                          as cond_1,
+
+/*               Second field to help debug when cost is calculated incorrectly.
+                 Condition order matches that of the cost case statement above.
+ */
+                 case
+                 when t7.costmethod like '[Cc][Pp][Cc]%' and
+                      t7.diff >= 0 and
+                      t7.cost < t7.planned_cost and
+                      t7.clksRunTot <= t7.planned_amt
+                 then 'cond_2_CPC'
+
+
+                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
+                      t7.diff >= 0 and
+                      t7.cost < t7.planned_cost and
+                      t7.costRunTot <= t7.planned_cost and
+                      t7.lagCostRemain > 0
+                 then 'cond_2_dCPM'
+
+
+                 when t7.diff >= 0 and
+                      t7.cost < t7.planned_cost and
+                      t7.impsRunTot <= t7.planned_amt
+                 then 'cond_2_1'
+
+                 when t7.diff >= 0 and
+                      t7.costRemain = 0 and
+                      t7.lagCostRemain > 0
+                 then 'cond_2_2'
+
+                 when t7.diff >= 0 and
+                      t7.lagCost = 0 and
+                      t7.lagCostRemain = 0
+                 then 'cond_2_3'
+
+                 when t7.cost = 0
+                 then 'cond_2_4'
+
+                 when t7.cost >= t7.lagCostRemain
+                 then 'cond_2_5'
+
+                 else 'cond_2_else'
+                 end                                                as cond_2,
                  isNull(t7.lagCost,cast(0 as decimal(20,10)))       as lagCost,
                  isNull(t7.costRunTot,cast(0 as decimal(20,10)))    as costRunTot,
                  isNull(t7.costRemain,cast(0 as decimal(20,10)))    as costRemain,
@@ -174,11 +258,40 @@ insert into master.dbo.dfa_cost_dt2
                         isNull(t6.diff,cast(0 as decimal(20,10)))       as diff,
                         t6.flatcost as flatcost,
                         case
-                        when t6.cost is null then cast(0 as decimal(20,10))
-                        when t6.diff > 0 and t6.costmethod like '[Cc][Pp][Cc]%' and t6.clks > t6.planned_amt then isNull(t6.cost,cast(0 as decimal(20,10))) - isNull(t6.lagCost,cast(0 as decimal(20,10)))
-                        when t6.diff > 0 and t6.Imps > t6.planned_amt then isNull(t6.cost,cast(0 as decimal(20,10))) - isNull(t6.lagCost,cast(0 as decimal(20,10)))
+                        when t6.cost is null
+                        then cast(0 as decimal(20,10))
+
+                        when t6.diff >= 0 and
+                             t6.costmethod like '[Cc][Pp][Cc]%' and
+                             t6.clks >= t6.planned_amt
+                        then isNull(t6.cost,cast(0 as decimal(20,10))) - isNull(t6.lagCost,cast(0 as decimal(20,10)))
+
+                        when t6.diff >= 0 and
+                             t6.Imps >= t6.planned_amt
+                        then isNull(t6.cost,cast(0 as decimal(20,10))) - isNull(t6.lagCost,cast(0 as decimal(20,10)))
+
                         else isNull(t6.cost,cast(0 as decimal(20,10)))
                         end                                             as cost,
+
+/*                      First field to help debug when cost is calculated incorrectly.
+                        Condition order matches that of the cost case statement above.
+ */
+                        case
+                        when t6.cost is null
+                        then 'cond_1_1'
+
+                        when t6.diff >= 0 and
+                             t6.costmethod like '[Cc][Pp][Cc]%' and
+                             t6.clks >= t6.planned_amt
+                        then 'cond_1_2'
+
+                        when t6.diff >= 0 and
+                             t6.Imps >= t6.planned_amt
+                        then 'cond_1_3'
+
+                        else 'cond_1_else'
+                        end                                             as cond_1,
+
                         isNull(t6.lagCost,cast(0 as decimal(20,10)))    as lagCost,
                         isNull(t6.costRunTot,cast(0 as decimal(20,10))) as costRunTot,
                         isNull(t6.costRemain,cast(0 as decimal(20,10))) as costRemain,
@@ -307,9 +420,9 @@ insert into master.dbo.dfa_cost_dt2
                               case when t4.costmethod like '[Ff]lat' then t4.flatcost/max(t4.cst_count) else 0 end      as flatcost,
                               case
                               when t4.dcmDate - t4.stDate < 0 then 0
-                              when (t4.edDate - t4.dcmDate) > 0 and t4.costmethod like '[Cc][Pp][Cc]%' and sum(t4.clicks) > t4.planned_amt then t4.planned_cost
-                              when (t4.edDate - t4.dcmDate) > 0 and sum(t4.billimps) > t4.planned_amt then t4.planned_cost
-                              when (t4.edDate - t4.dcmDate) > 0 then sum(t4.cost)
+                              when (t4.edDate - t4.dcmDate) >= 0 and t4.costmethod like '[Cc][Pp][Cc]%' and sum(t4.clicks) >= t4.planned_amt then t4.planned_cost
+                              when (t4.edDate - t4.dcmDate) >= 0 and sum(t4.billimps) >= t4.planned_amt then t4.planned_cost
+                              when (t4.edDate - t4.dcmDate) >= 0 then sum(t4.cost)
                               when (t4.edDate - t4.dcmDate) < 0 then 0
                               else 0
                               end                                              as cost,
@@ -858,6 +971,7 @@ cast(report.date as date)
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
 --     and prs.cost_id = 'P8FSSK'
+-- where t1.campaign_id = 11390108
 
                  group by
                      t1.dcmdate
