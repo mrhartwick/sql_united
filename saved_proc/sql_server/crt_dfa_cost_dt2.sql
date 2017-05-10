@@ -1102,7 +1102,8 @@ cast(report.date as date)
                                   t4.flatcost,
                                   t4.plce_id
                           ) as t5
-where t5.costmethod != 'Flat'
+-- where t5.costmethod != 'Flat'
                   ) as t6
          ) as t7
+        where (len(isnull(t7.cost_id,'')) != 0)
 ) as t8
