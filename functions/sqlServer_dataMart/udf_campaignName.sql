@@ -25,7 +25,7 @@ as
                                  when @campaignID = 9999841 or @campaignID = 10121649 then 'Olympics 2016'
                                  when @campaignID = 10768497 then 'Polaris 2017'
                                  when @campaignID = 9801178  then 'Smithsonian 2017'
-                                 when @campaignID = 10742878 then 'Targeted Marketing 2017'
+                                 when @campaignID = 10742878 then 'GM Acquisition 2017'
                                  when @campaignID = 10740457 then 'People En Espanol 2017'
                                  when @campaignID = 10812738 then 'Marketing Fund 2017'
                                  when @campaignID = 10918234 then 'Win NY 2017'
@@ -34,10 +34,8 @@ as
                                  when @campaignID = 11152017 then 'Hamburg Co-Op 2017'
                                  when @campaignID = 11177760 then 'Chicago Fare Sale 2017'
                                  when @campaignID = 11224605 then 'San Jose Fare Sale 2017'
+                                 when @campaignID = 11390108 then 'PR Support 2017'
                                  else @campaignName end;
         return @finalCampaignName
     end
 go
-
-
-
