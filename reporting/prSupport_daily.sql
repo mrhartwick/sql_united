@@ -1,15 +1,8 @@
 
 
---      Version incorporating capped cost and DBM cost
---
---  this query is a bit of a hack. non-optimal aspects are necessitated by the particularities of the current tech stack on united.
---   code is most easily read by starting at the "innermost" block, inside the openquery call.
---
---   data must be pulled and reconciled from 1) prisma and moat in datamart, and 2) dfa/dv/moat in vertica*.
---   because of its scale, log-level dfa data (dtf 1.0) must be kept in vertica to preserve performance. dv and moat are stored there as well, mostly for convenience.
---   intermediary summary tables are necessary for this query, so we need to be able to create our own tables and run stored procedures to refresh those tables. but we don't have write access to vertica, so we can't keep routines and tables there.
---   di could do this, but edits to these routines are frequent (esp. in joinkey fields), so keeping this process in-house is more convenient for all parties.
--- */
+/*
+ Daily report for PR Support campaign
+ */
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 -- -- --
@@ -26,12 +19,14 @@
 -- exec master.dbo.crt_dfa_cost_dt2 go
 
 
+-- exec master.dbo.crt_prs_summ_vertica go
+
 
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-04-18';
-set @report_st = '2017-02-14';
+set @report_ed = '2017-05-01';
+set @report_st = '2017-04-27';
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -49,11 +44,11 @@ select
 -- reference/optional: difference, in months, between placement end date and report date. field is used deterministically in other fields below.
 --  t3.diff                                                                                              as diff,
 -- reference/optional: match key from the dv table; only present when dv data is available.
-    t3.dvjoinkey                                                                                       as dvjoinkey,
+--     t3.dvjoinkey                                                                                       as dvjoinkey,
 -- reference/optional: match key from the moat table; only present when moat data is available.
-    t3.mtjoinkey                                                                                       as mtjoinkey,
+--     t3.mtjoinkey                                                                                       as mtjoinkey,
 -- reference/optional: package category from prisma (standalone; package; child). useful for exchanging info with planning/investment
-    t3.packagecat                                                                                      as packagecat,
+--     t3.packagecat                                                                                      as packagecat,
 -- reference/optional: first six characters of package-level placement name, used to join 1) prisma table, and 2) flat fee table
     t3.cost_id                                                                                         as cost_id,
 -- dcm campaign name
@@ -63,12 +58,12 @@ select
 -- dcm campaign id
     t3.campaign_id,
 --campaign type: Acquisition, Branding/Routes, Added Value                                                                                       as "campaign id",
-    case when campaign_id = '10742878' then 'Acquisition'
-    when campaign_id = '10918234' or campaign_id = '10942240' or campaign_id = '10768497' or campaign_id = '11069476' then 'Branding/Routes'
-    when campaign_id = '10740457' or campaign_id = '10812738' then 'Added Value'
-    else 'non-Acquisition' end                                                                         as "campaign_type",
+--     case when campaign_id = '10742878' then 'Acquisition'
+--     when campaign_id = '10918234' or campaign_id = '10942240' or campaign_id = '10768497' or campaign_id = '11069476' then 'Branding/Routes'
+--     when campaign_id = '10740457' or campaign_id = '10812738' then 'Added Value'
+--     else 'non-Acquisition' end                                                                         as "campaign_type",
 
-    t3.site_dcm as site_orig,
+--     t3.site_dcm as site_orig,
 -- preferred, friendly site name; also corresponds to what's used in the joinkey fields across dfa, dv, and moat.
     [dbo].udf_sitename(t3.site_dcm)                                                                    as "site",
 
@@ -83,33 +78,33 @@ select
 -- dcm placement id
     t3.placement_id                                                                                    as placement_id,
 -- reference/optional: planned package end date, from prisma; attributed to all placements within package.
-    t3.placementend                                                                                    as "placement end",
-    t3.placementstart                                                                                  as "placement start",
-    t3.dv_map                                                                                          as "dv map",
-    t3.rate                                                                                            as rate,
-    t3.planned_amt                                                                                     as "planned amt",
-    t3.planned_cost                                                                                    as "planned cost",
-    t3.planned_cost / max(t3.amt_count)                                                                as planned_cost,
+--     t3.placementend                                                                                    as "placement end",
+--     t3.placementstart                                                                                  as "placement start",
+--     t3.dv_map                                                                                          as "dv map",
+--     t3.rate                                                                                            as rate,
+--     t3.planned_amt                                                                                     as "planned amt",
+--     t3.planned_cost                                                                                    as "planned cost",
+--     t3.planned_cost / max(t3.amt_count)                                                                as planned_cost,
     case when t3.costmethod like '[Ff]lat' then t3.flatcost / max(t3.flat_count) else sum(t3.cost) end as cost,
     sum(t3.tot_led)                                                                                    as leads,
     sum(t3.dlvrimps)                                                                                   as "delivered impressions",
     sum(t3.billimps)                                                                                   as "billable impressions",
     sum(t3.cnslimps)                                                                                   as "dfa impressions",
     sum(t3.iv_impressions)                                                                             as "innovid impressions",
-    sum(t3.clicks)                                                                                     as clicks,
+    sum(t3.clicks)                                                                                     as clicks
 --   case when sum(t3.dlvrimps) = 0 then 0
 --   else (sum(cast(t3.clicks as decimal(20,10)))/sum(cast(t3.dlvrimps as decimal(20,10))))*100 end  as ctr,
-    sum(t3.tot_con)                                                                                    as transactions,
-    sum(t3.vew_con)                                                                                    as vew_trns,
-    sum(t3.clk_con)                                                                                    as clck_thru_trns,
-    sum(t3.tot_tix)                                                                                    as tix,
-    sum(t3.vew_tix)                                                                                    as vew_tix,
-    sum(t3.clk_tix)                                                                                    as clk_tix,
-    sum(t3.tot_rev)                                                                                    as revenue,
-    sum(t3.vew_rev)                                                                                    as vew_rev,
-    sum(t3.clk_rev)                                                                                    as clk_thru_rev,
-    sum(t3.billrevenue)                                                                                as "billable revenue",
-    sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue"
+--     sum(t3.tot_con)                                                                                    as transactions,
+--     sum(t3.vew_con)                                                                                    as vew_trns,
+--     sum(t3.clk_con)                                                                                    as clck_thru_trns,
+--     sum(t3.tot_tix)                                                                                    as tix,
+--     sum(t3.vew_tix)                                                                                    as vew_tix,
+--     sum(t3.clk_tix)                                                                                    as clk_tix,
+--     sum(t3.tot_rev)                                                                                    as revenue,
+--     sum(t3.vew_rev)                                                                                    as vew_rev,
+--     sum(t3.clk_rev)                                                                                    as clk_thru_rev,
+--     sum(t3.billrevenue)                                                                                as "billable revenue",
+--     sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue"
 from (
 
 -- for running the code here instead of at "f3," above
@@ -117,8 +112,8 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-04-18';
--- set @report_st = '2017-02-14';
+-- set @report_ed = '2017-05-01';
+-- set @report_st = '2017-04-27';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -271,11 +266,11 @@ select
                sum(case
 --         not subject to viewability, DBM
              when (t2.dv_map = 'N' and t2.costmethod = 'dCPM')
-               then cast((cst.vew_rev + cst.clk_rev) * .2 * .15 as decimal(10,2))
+               then cast((cst.vew_rev * .2 * .15) + cst.clk_rev as decimal(10,2))
 
 --         not subject to viewability
              when (t2.dv_map = 'N')
-               then cast((t2.vew_rev + t2.clk_rev) * .2 * .15 as decimal(10,2))
+               then cast((t2.vew_rev * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         Win NY TapAd placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
@@ -287,11 +282,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .41) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .41 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .48) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .48 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .56) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .56 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     end
 --         Win NY Verve placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
@@ -302,11 +297,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .59) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .59 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .77) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .77 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .79) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .79 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     end
 
 --         Win NY Forbes placements, which Medialets failed to tag
@@ -319,11 +314,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .38) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .38 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .59) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .59 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .64) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .64 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     end
 
 --         Win NY Ninth Decimal placements, which Medialets failed to tag
@@ -335,12 +330,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .78) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .78 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .89) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .89 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .68) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-
+                    then cast(((t2.vew_rev) * .68 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     end
 
 --         Win NY NewYorkMagazine placements, which Medialets failed to tag
@@ -352,11 +346,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .54) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .54 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .62) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .62 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .64) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast(((t2.vew_rev) * .64 * .2 * .15) + t2.clk_rev as decimal(10,2))
                     end
 
 --         subject to viewability with flag; mt source
@@ -364,21 +358,21 @@ select
                then cast(
              (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .2 * .15 as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; dv source
              when (t2.dv_map = 'Y')
                then cast(
              (((t2.vew_rev) *
                 (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .2 * .15 as decimal(10,2))
+                            nullif(cast(dv.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; moat source
              when (t2.dv_map = 'M')
                then cast(
              (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .2 * .15 as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as adjsrevenue,
 
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
@@ -575,10 +569,10 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-04-18''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-04-27'' and ''2017-05-01''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
--- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+and campaign_id = 11390108 -- display 2017
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
@@ -615,8 +609,8 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-04-18''
--- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-04-27'' and ''2017-05-01''
+and campaign_id = 11390108 -- display 2017
 
 and (advertiser_id <> 0)
 ) as ti
@@ -649,8 +643,8 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-04-18''
--- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-04-27'' and ''2017-05-01''
+and campaign_id = 11390108 -- display 2017
 and (advertiser_id <> 0)
 ) as tc
 

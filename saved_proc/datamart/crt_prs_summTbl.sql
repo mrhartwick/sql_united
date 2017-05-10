@@ -1,6 +1,6 @@
 alter procedure dbo.crt_prs_summtbl
 as
-if object_id('dm_1161_unitedairlinesusa.dbo.prs_summ',N'U') is not null
+if object_id('DM_1161_UnitedAirlinesUSA.dbo.prs_summ',N'U') is not null
 	drop table dbo.prs_summ;
 create table dbo.prs_summ
 (
@@ -51,7 +51,8 @@ INSERT INTO dbo.prs_summ
 		isnull(t3.rate, cast(0 as decimal(20,10))) as rate,
 		t3.packagename                                                                                       as packagename,
 		t3.cost_id                                                                                           as cost_id,
-		t3.costmethod                                                                                        as costmethod
+		case when t3.campaignname = 'UNI_United_GEN_April 27th United PR Support_2017_DIS' and t3.placementname like '%[Gg][Oo][Oo][Gg][Ll][Ee]%' then 'dCPM' else t3.costmethod end as costmethod
+
 	FROM (
 
 			 select

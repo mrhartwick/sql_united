@@ -94,8 +94,7 @@ insert into master.dbo.dfa_flatCost_dt2
                  isNull(f2.lagCost,cast(0 as decimal(20,10)))           as lagCost,
                  --               remaining flat fee from previous day
                  lag(isNull(f2.flatCostRemain,cast(0 as decimal(20,10))),1,0) over (partition by f2.Cost_ID
-                     order by
-                         f2.dcmYrMo)                                    as lagRemain,
+                     order by f2.dcmYrMo)                               as lagRemain,
                  isNull(f2.flatCostRunTot,cast(0 as decimal(20,10)))    as flatCostRunTot,
                  isNull(f2.flatCostRemain,cast(0 as decimal(20,10)))    as flatCostRemain,
                  isNull(f2.Imps,cast(0 as int))                         as Imps,
@@ -141,13 +140,6 @@ insert into master.dbo.dfa_flatCost_dt2
                           else (cast(f1.Rate as decimal) - sum(f1.flatCost) over (partition by f1.Cost_ID
                               order by f1.dcmDate asc range between unbounded preceding and current row))
                           end                                                                            as flatCostRemain,
-
-                          -- old version of this statement, written without explicit range arguments
-                          --              case
-                          --              when (cast(f1.Rate as decimal) - sum(f1.flatCost) over (partition by f1.Cost_ID order by f1.dcmDate asc)) <= 0
-                          --                then 0
-                          --                           else (cast(f1.Rate as decimal) - sum(f1.flatCost) over (partition by f1.Cost_ID order by f1.dcmDate asc))
-                          --              end as flatCostRemain,
 
                           -- first and LAST time we sum Impressions, here grouped by Cost_ID and dcmDate
                           -- using OVER clause to get sums aggregated by specific, limited dimensions
@@ -211,7 +203,7 @@ insert into master.dbo.dfa_flatCost_dt2
                                   f0.edDate                                        as edDate,
                                   -- difference (in days) between traffic date and end date of package
                                   cast(f0.edDate as int) - cast(f0.dcmDate as int) as ed_diff,
-                      f0.planned_amt                                   as planned_amt,
+                                  f0.planned_amt                                   as planned_amt,
                                   case when f0.dcmDate - f0.stDate < 0 then 0
                                   else sum(f0.impressions)     end                         as impressions
                               from
@@ -274,11 +266,11 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2016-07-15''
--- and upper(substring(other_data, (instr(other_data,''u3='')+3), 3)) != ''mil''
--- and substring(other_data, (instr(other_data,''u3='')+3), 5) != ''miles''
--- and total_revenue != 0
--- and total_conversions != 0
+where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2017-01-01''
+and upper(substring(other_data, (instr(other_data,''u3='')+3), 3)) != ''mil''
+and substring(other_data, (instr(other_data,''u3='')+3), 5) != ''miles''
+and total_revenue != 0
+and total_conversions != 0
 and activity_id = 978826
 and (advertiser_id <> 0)
 ) as ta
@@ -304,7 +296,7 @@ cast(timestamp_trunc(to_timestamp(ti.event_time / 1000000), ''SS'') as date) as 
 from  (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2016-07-15''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
 and (advertiser_id <> 0)
 ) as ti
 
@@ -329,7 +321,7 @@ select
 from  (
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2016-07-15''
+where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
 and (advertiser_id <> 0)
 ) as tc
 
@@ -375,8 +367,10 @@ from diap01.mec_us_united_20056.dfa2_sites
 ) as directory
 on report.site_id_dcm = directory.site_id_dcm
 
-where not regexp_like(placement,''.do\s*not\s*use.'',''ib'')
-and report.site_id_dcm !=''1485655''
+where not regexp_like(placements.placement,''.do\s*not\s*use.'',''ib'')
+-- and not regexp_like(campaign.campaign,''.2016.'',''ib'')
+and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
+and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
 
 group by
  cast(report.date as date)
@@ -398,14 +392,21 @@ group by
 
                                           ) as Prisma
                                               on dcmReport.Placement_ID = Prisma.AdserverPlacementId
+
                                       where Prisma.CostMethod = 'Flat'
+                                      and dcmReport.campaign not like '%Search%'
+                                      and dcmReport.campaign not like '%[_]UK[_]%'
+                                      and dcmReport.campaign not like '%2016%'
+                                      and dcmReport.campaign not like '%2015%'
+                                      and dcmReport.campaign_id != 10698273  -- UK Acquisition 2017
+                                      and dcmReport.campaign_id != 11221036  -- Hong Kong 2017
 
 -- =========================================================================================================================
                                       group by
                                           cast(dcmReport.dcmDate as date)
                                           ,dcmReport.PlacementNumber
                                           ,Prisma.CostMethod
-             ,[dbo].udf_dateToInt(dcmReport.dcmDate)
+                                          ,[dbo].udf_dateToInt(dcmReport.dcmDate)
                                           ,[dbo].udf_yrmoToInt(dcmReport.dcmDate)
                                           ,Prisma.stYrMo
                                           ,Prisma.edYrMo
@@ -436,4 +437,5 @@ group by
                                   f0.planned_amt
                           ) as f1
                   ) as f2
+where f2.Cost_ID is not null
          ) as f3
