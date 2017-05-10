@@ -85,6 +85,7 @@ AS
 				when @site_name like '[Xx]ad%' then 'xAd Inc'
 				when @site_name like '[Yy]ieldbot%' then 'Yieldbot'
 				when @site_name like '[Yy]u[Mm]e%' then 'YuMe'
+        		when @site_name like '[Gg][Bb][Tt][Aa]%' then 'GBTA'
 				else @site_name end
 				;
 
