@@ -87,6 +87,7 @@ AS
 				when @site_name like '[Yy]u[Mm]e%' then 'YuMe'
         when @site_name like '[Gg][Bb][Tt][Aa]%' then 'GBTA'
 				when @site_name like '[Aa][Ss][Tt][Aa]%' then 'ASTA'
+				when @site_name like '[Tt]ravel[Mm]arket[Rr]eport%' then 'TMR'
 				else @site_name end
 				;
 
