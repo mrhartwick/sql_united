@@ -30,8 +30,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-04-18';
-set @report_st = '2017-02-14';
+set @report_ed = '2017-05-08';
+set @report_st = '2017-02-01';
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -90,7 +90,10 @@ select
     t3.planned_amt                                                                                     as "planned amt",
     t3.planned_cost                                                                                    as "planned cost",
     t3.planned_cost / max(t3.amt_count)                                                                as planned_cost,
-    case when t3.costmethod like '[Ff]lat' then t3.flatcost / max(t3.flat_count) else sum(t3.cost) end as cost,
+--  old field, with integrated flatCost
+--  case when t3.costmethod like '[Ff]lat' then t3.flatcost / max(t3.flat_count) else sum(t3.cost) end as cost,
+--  new field, with flat cost from dfa_cost_dt2
+    sum(case when t3.costmethod like '[Ff]lat' then t3.flatcost else t3.cost end)                      as cost,
     sum(t3.tot_led)                                                                                    as leads,
     sum(t3.dlvrimps)                                                                                   as "delivered impressions",
     sum(t3.billimps)                                                                                   as "billable impressions",
@@ -117,8 +120,8 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-04-18';
--- set @report_st = '2017-02-14';
+-- set @report_ed = '2017-05-08';
+-- set @report_st = '2017-02-01';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -149,8 +152,10 @@ select
 --     t2.dv_map_2                                                                  as dv_map_2,
     t2.planned_amt                                                             as planned_amt,
     t2.planned_cost                                                            as planned_cost,
-    flt.flatcost                                                               as flatcost,
-    sum(cst.flatcost)                                                          as flatcost_chk,
+--  old field, with integrated flatCost
+--  flt.flatcost                                                               as flatcost,
+--  new field, with flat cost from dfa_cost_dt2
+    sum(cst.flatcost)                                                          as flatcost,
     sum(cst.cost)                                                              as cost,
     t2.rate                                                                    as rate,
 
@@ -575,7 +580,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-04-18''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-02-01'' and ''2017-05-08''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
@@ -615,7 +620,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-04-18''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-01'' and ''2017-05-08''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -649,7 +654,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-14'' and ''2017-04-18''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-02-01'' and ''2017-05-08''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
@@ -726,6 +731,7 @@ cast (r1.date as date )
         and t1.campaign not like '%2015%'
         and t1.campaign_id != 10698273  -- UK Acquisition 2017
         and t1.campaign_id != 11221036  -- Hong Kong 2017
+        and t1.campaign_id != 11385662  -- Monagas (Venezuela) -> SFO 2017
 
     group by
        t1.dcmdate
@@ -751,13 +757,13 @@ cast (r1.date as date )
 
   ) as t2
 
-  left join
-  (
-    select *
-    from master.dbo.dfa_flatCost_dt2
-  ) as flt
-    on t2.cost_id = flt.cost_id
-       and t2.dcmmatchdate = flt.dcmdate
+--   left join
+--   (
+--     select *
+--     from master.dbo.dfa_flatCost_dt2
+--   ) as flt
+--     on t2.cost_id = flt.cost_id
+--        and t2.dcmmatchdate = flt.dcmdate
 
 --    Cost data
       left join
@@ -803,8 +809,7 @@ cast (r1.date as date )
       + cast(t2.dcmdate as varchar(10)) = iv.joinkey
 
 
---  where t2.costmethod = 'flat'
---     where t2.campaign not like 'BidManager%Campaign%'
+--  where t2.costmethod = 'Flat'
 group by
 
   t2.campaign
@@ -834,9 +839,10 @@ group by
   ,iv.joinkey
   ,cst.plce_id
   ,t2.costmethod
-  ,flt.flatcost
+--   ,flt.flatcost
 
      ) as t3
+
 
 group by
   t3.dcmdate
@@ -861,7 +867,8 @@ group by
   ,t3.dv_map
   ,t3.planned_amt
   ,t3.planned_cost
-  ,t3.flatcost
+--   ,t3.flatcost
+--   ,t3.flatcost_chk
 
 
 order by

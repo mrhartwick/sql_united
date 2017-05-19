@@ -85,13 +85,14 @@ AS
 				when @site_name like '[Xx]ad%' then 'xAd Inc'
 				when @site_name like '[Yy]ieldbot%' then 'Yieldbot'
 				when @site_name like '[Yy]u[Mm]e%' then 'YuMe'
+<<<<<<< HEAD
         when @site_name like '[Gg][Bb][Tt][Aa]%' then 'GBTA'
 				when @site_name like '[Aa][Ss][Tt][Aa]%' then 'ASTA'
 				when @site_name like '[Tt]ravel[Mm]arket[Rr]eport%' then 'TMR'
+=======
+        		when @site_name like '[Gg][Bb][Tt][Aa]%' then 'GBTA'
+>>>>>>> origin/master
 				else @site_name end
 				,' ','');
-
-
-
 RETURN @finalSiteName
 end

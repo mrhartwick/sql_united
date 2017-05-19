@@ -51,7 +51,9 @@ INSERT INTO dbo.prs_summ
 		isnull(t3.rate, cast(0 as decimal(20,10))) as rate,
 		t3.packagename                                                                                       as packagename,
 		t3.cost_id                                                                                           as cost_id,
-		case when t3.campaignname = 'UNI_United_GEN_April 27th United PR Support_2017_DIS' and t3.placementname like '%[Gg][Oo][Oo][Gg][Ll][Ee]%' then 'dCPM' else t3.costmethod end as costmethod
+		case when t3.campaignname = 'UNI_United_GEN_April 27th United PR Support_2017_DIS' and t3.placementname like '%[Gg][Oo][Oo][Gg][Ll][Ee]%' then 'dCPM'
+			 when t3.adservercampaignid = 11224605 and t3.placementname like '%[Gg][Oo][Oo][Gg][Ll][Ee]%' then 'dCPM'
+		else t3.costmethod end as costmethod
 
 	FROM (
 

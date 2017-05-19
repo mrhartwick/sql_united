@@ -1,11 +1,9 @@
---Unique reach query: working progress...
-
 select
 
-  t3.campaign,
-  t3.site_dcm,
-  t3.campaign_id,
-  t3.site_id_dcm,
+  t3.campaign as campaign,
+  t3.site_dcm as site,
+  t3.campaign_id as campaign_id,
+  t3.site_id_dcm as site_id,
   sum(case when t3.jan_17_imps > 0
     then 1
       else 0 end)    as jan_all_users,
@@ -152,7 +150,7 @@ from (
 --                  and t001.campaign_id <> ''10812738'' -- Marketing funds 2017
                  and t001.advertiser_id <> ''0''
                  and cast(timestamp_trunc(to_timestamp(t001.event_time / 1000000),''SS'') as date) between ''2017-01-01'' and ''2017-04-30''
-                  regexp_like(c1.campaign,''.*2017.*'',''ib'')
+                  and regexp_like(c1.campaign,''.*2017.*'',''ib'')
                   and not regexp_like(c1.campaign,''.*Search.*'',''ib'')
                   -- and not regexp_like(c1.campaign,''.*BidManager.*'',''ib'')
 
@@ -172,7 +170,7 @@ from (
                            rate,
                            costMethod
                          from [10.2.186.148\SQLINS02,4721].DM_1161_UnitedAirlinesUSA.dbo.prs_summ) as r0
-                on t1.placement_id = r0.adserverplacementId
+                on t1.placement_id = r0.AdserverPlacementId
 
 
             group by
@@ -187,7 +185,7 @@ from (
               t1.year_tim,
               t1.mnth_tim,
               t1.placement_id
-
+--
            ) as t2
 
 
