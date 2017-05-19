@@ -123,6 +123,14 @@ insert into master.dbo.dfa_cost_dt2
                       t7.clksRunTot <= t7.planned_amt
                  then t7.cost
 
+
+--               TEMPORARY CONDITION FOR SAN JOSE
+--               cond_2_dCPM
+                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
+                      t7.campaign_id = 11224605
+                 then t7.cost
+
+
 --               cond_2_dCPM
                  when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
                       t7.diff >= 0 and
@@ -260,6 +268,13 @@ insert into master.dbo.dfa_cost_dt2
                         case
                         when t6.cost is null
                         then cast(0 as decimal(20,10))
+
+
+--                      TEMPORARY CONDITION FOR SAN JOSE
+                         when t6.costmethod like '[Dd][Cc][Pp][Mm]%' and
+                              t6.campaign_id = 11224605
+                         then t6.cost
+
 
                         when t6.diff >= 0 and
                              t6.costmethod like '[Cc][Pp][Cc]%' and
@@ -419,6 +434,13 @@ insert into master.dbo.dfa_cost_dt2
                               t4.planned_amt                                   as planned_amt,
                               case when t4.costmethod like '[Ff]lat' then t4.flatcost/max(t4.cst_count) else 0 end      as flatcost,
                               case
+
+
+--                            TEMPORARY CONDITION FOR SAN JOSE
+                              when t4.costmethod like '[Dd][Cc][Pp][Mm]%' and
+                                   t4.campaign_id = 11224605 then sum(t4.cost)
+
+
                               when t4.dcmDate - t4.stDate < 0 then 0
                               when (t4.edDate - t4.dcmDate) >= 0 and t4.costmethod like '[Cc][Pp][Cc]%' and sum(t4.clicks) >= t4.planned_amt then t4.planned_cost
                               when (t4.edDate - t4.dcmDate) >= 0 and sum(t4.billimps) >= t4.planned_amt then t4.planned_cost
@@ -971,7 +993,7 @@ cast(report.date as date)
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
 --     and prs.cost_id = 'P8FSSK'
--- where t1.campaign_id = 11390108
+-- where t1.campaign_id = 11224605
 
                  group by
                      t1.dcmdate
