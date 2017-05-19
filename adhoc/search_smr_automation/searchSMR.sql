@@ -14,7 +14,7 @@ declare @report_st date
 declare @report_ed date
 --
 set @report_ed = '2017-02-28';
-set @report_st = '2017-01-01';
+set @report_st = '2017-02-28';
 
 select
 -- t1.date,
@@ -42,13 +42,23 @@ select
   sum(t1.imps)                 as Impressions,
   sum(t1.clicks)               as Clicks,
   avg(t1.avg_pos)              as [Avg Position],
-  -- sum(cast(t1.actions as int)) as Actions,
-  -- sum(t1.visits)               as Visits,
+  sum(case when t1.imps = 0 then 0 else t1.avg_pos_1/t1.imps end) as avg_pos_2,
+  case when sum(t1.imps) = 0 then 0 else sum(t1.avg_pos * t1.imps)/sum(t1.imps) end as avg_pos_3,
   sum(fld2.rev)                  as Revenue,
   sum(cast(fld2.con as int))     as Conversions,
   sum(fld2.tix)                  as Tickets
 
 from (
+
+--
+--
+--  declare @report_st date
+-- declare @report_ed date
+--
+-- set @report_ed = '2017-02-28';
+-- set @report_st = '2017-02-28';
+
+
        select
 --         cast(std1.date as date)                                                as "Date",
         cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date) as [week],
@@ -63,19 +73,15 @@ from (
         sum(std1.pdsearch_impressions)                                              as imps,
         sum(std1.pdsearch_clicks)                                                   as clicks,
         avg(std1.pdsearch_avg_position)                                             as avg_pos,
-        -- sum(std1.pdsearch_actions)                                                  as actions,
-        -- sum(std1.pdsearch_page_visits)                                              as visits
+        sum(std1.pdsearch_impressions * std1.pdsearch_avg_position)             as avg_pos_1
+--         std1.pdsearch_avg_position                                             as avg_pos
 
 
       from [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.ualus_search_standard as std1
 
 
 where cast(std1.date as date) between @report_st and @report_ed
---   and (LEN(ISNULL(std1.pdsearch_keyword_id,'')) > 0)
---   and (LEN(ISNULL(std1.pdsearch_engineaccount_id,'')) > 0)
--- and (LEN(ISNULL(fld2.pdsearch_engineaccount_id,'')) > 0)
---   and (LEN(ISNULL(std1.pdsearch_campaign_id,'')) > 0)
-  and std1.pdsearch_advertiser_id <> '0'
+and std1.pdsearch_advertiser_id <> '0'
 
 group by
 cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
@@ -84,6 +90,7 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
         std1.pdsearch_campaign_id,
         std1.pdsearch_keyword_id,
         std1.pdsearch_adgroup_id,
+--    std1.pdsearch_avg_position,
         std1.pdsearch_ad_id,
         std1.pdsearch_matchtype
 
@@ -104,6 +111,15 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
 
        left join
         (
+
+
+--
+--                declare @report_st date
+-- declare @report_ed date
+-- --
+-- set @report_ed = '2017-02-28';
+-- set @report_st = '2017-02-28';
+
         select
 --            fld1.date     as "date",
 --  fld1.pdsearch_advertiser as pdsearch_advertiser,
@@ -118,21 +134,22 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
 --  fld1.pdsearch_keyword,
            fld1.pdsearch_keyword_id,
 --  fld1.currency as currency,
---  fld1.pnr_base64encoded,
            sum(fld1.total_revenue)     as rev,
            sum(fld1.transaction_count) as con,
            sum(number_of_tickets)      as tix
 
-         from (select
+         from (
+
+
+                select
 --           fld0.pdsearch_advertiser,
 --           fld0.pdsearch_advertiser_id,
-                 cast(fld0.activity_date as date)              as "date",
-         cast(dateadd(week,datediff(week,0,cast(fld0.Activity_Date as date)),-1) as date) as "week",
+                 cast(fld0.date as date)              as "date",
+                 cast(dateadd(week,datediff(week,0,cast(fld0.date as date)),-1) as date) as [week],
                  fld0.pdsearch_engineaccount_id,
                  fld0.pdsearch_ad_id,
                  fld0.pdsearch_adgroup_id,
 --           fld0.pdsearch_adgroup,
---           fld0.pnr_base64encoded,
 --                 fld0.placement_id,
                  fld0.siteid_dcm,
                  fld0.pdsearch_campaign_id,
@@ -144,23 +161,20 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
 --                  count(*)                                      as this_count,
                  sum(number_of_tickets)                        as number_of_tickets
 
+
                from [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.ualus_search_floodlight as fld0
 
                  left join openQuery(verticaunited,
                                      'select currency, date, exchange_rate from diap01.mec_us_mecexchangerates_20067.EXCHANGE_RATES
-        ') as rates
+                                    ') as rates
                    on fld0.currency = rates.currency
-                   and cast(fld0.activity_date as date) = cast(rates.date as date)
+                   and cast(fld0.date as date) = cast(rates.date as date)
 
-
-
-
-               where cast(fld0.activity_date as date) between @report_st and @report_ed
+               where cast(fld0.date as date) between @report_st and @report_ed
 --                  and (LEN(ISNULL(fld0.pdsearch_engineaccount_id,'')) > 0)
 --                  and (LEN(ISNULL(fld0.pdsearch_adgroup_id,'')) > 0)
 --                  and (LEN(ISNULL(fld0.pdsearch_campaign_id,'')) > 0)
 --                  and (LEN(ISNULL(fld0.pdsearch_keyword_id,'')) > 0)
---                 and fld0.PdSearch_Advertiser_ID = 21700000001003602
 --                  and fld0.PdSearch_ad_ID <> '0'
                  and fld0.number_of_tickets <> 0
                  and fld0.currency <> 'Miles'
@@ -168,10 +182,11 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
                  and (PdSearch_EngineAccount not like '%[Br][Rr]%[Nn][Dd]%' and PdSearch_EngineAccount not like '%[Ss][Mm][Ee]%')
                  and fld0.currency not like '%--%'
                  and fld0.activity_id = 978826
+
                group by
 --          cast(fld0.date as date),
-                 cast(fld0.activity_date as date),
---          cast(dateadd(week,datediff(week,0,cast(fld0.Activity_Date as date)),0) as date),
+                 cast(fld0.date as date),
+         cast(dateadd(week,datediff(week,0,cast(fld0.date as date)),0) as date),
                  fld0.pdsearch_engineaccount_id,
 --                 fld0.placement_id,
 --                 fld0.pdsearch_advertiser,
@@ -185,6 +200,8 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
                  fld0.pdsearch_adgroup_id,
                  fld0.pdsearch_keyword_id,
                  fld0.pdsearch_campaign_id
+
+
               ) as fld1
 
 
@@ -208,7 +225,7 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
            fld1.pdsearch_campaign_id
         ) as fld2
           on t1.pdsearch_campaign_id = fld2.pdsearch_campaign_id
-and t1.week = fld2.week
+      and t1.week = fld2.week
           and t1.pdsearch_engineaccount_id = fld2.pdsearch_engineaccount_id
           and t1.pdsearch_keyword_id = fld2.pdsearch_keyword_id
           and t1.pdsearch_ad_id = fld2.pdsearch_ad_id
