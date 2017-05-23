@@ -124,11 +124,11 @@ insert into master.dbo.dfa_cost_dt2
                  then t7.cost
 
 
---               TEMPORARY CONDITION FOR SAN JOSE
---               cond_2_dCPM
-                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
-                      t7.campaign_id = 11224605
-                 then t7.cost
+-- --               TEMPORARY CONDITION FOR SAN JOSE
+-- --               cond_2_dCPM
+--                  when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
+--                       t7.campaign_id = 11224605
+--                  then t7.cost
 
 
 --               cond_2_dCPM
@@ -270,10 +270,10 @@ insert into master.dbo.dfa_cost_dt2
                         then cast(0 as decimal(20,10))
 
 
---                      TEMPORARY CONDITION FOR SAN JOSE
-                         when t6.costmethod like '[Dd][Cc][Pp][Mm]%' and
-                              t6.campaign_id = 11224605
-                         then t6.cost
+-- --                      TEMPORARY CONDITION FOR SAN JOSE
+--                          when t6.costmethod like '[Dd][Cc][Pp][Mm]%' and
+--                               t6.campaign_id = 11224605
+--                          then t6.cost
 
 
                         when t6.diff >= 0 and
@@ -436,9 +436,9 @@ insert into master.dbo.dfa_cost_dt2
                               case
 
 
---                            TEMPORARY CONDITION FOR SAN JOSE
-                              when t4.costmethod like '[Dd][Cc][Pp][Mm]%' and
-                                   t4.campaign_id = 11224605 then sum(t4.cost)
+-- --                            TEMPORARY CONDITION FOR SAN JOSE
+--                               when t4.costmethod like '[Dd][Cc][Pp][Mm]%' and
+--                                    t4.campaign_id = 11224605 then sum(t4.cost)
 
 
                               when t4.dcmDate - t4.stDate < 0 then 0
@@ -988,7 +988,7 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
@@ -1053,7 +1053,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
