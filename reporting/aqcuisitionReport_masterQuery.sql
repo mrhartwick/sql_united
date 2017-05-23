@@ -1,4 +1,4 @@
-
+-- Acquisition Report:
 
 --      Version incorporating capped cost and DBM cost
 --
@@ -12,12 +12,12 @@
 -- */
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
--- -- --
+--
 -- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
---
 -- exec [10.2.186.148\SQLINS02,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
+--
 -- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
 -- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
 -- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
@@ -30,7 +30,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-04-30';
+set @report_ed = '2017-05-19';
 set @report_st = '2017-01-01';
 
 --
@@ -61,8 +61,8 @@ select
 -- friendly campaign name
     [dbo].udf_campaignname(t3.campaign_id,t3.campaign)                                                 as campaign,
 -- dcm campaign id
+    t3.campaign_id                as "campaign id",
 
-  t3.campaign_id  as campaign_id,
 -- retargeting vs prospecting partner types for acquisition campaigns                                                                                                                                                                                                                                                                                                                  ,
 
   case when ((campaign_id = '10742878' OR campaign_id = '11177760' OR campaign_id = '11224605') AND (site_id_dcm= '1578478')) then 'Retargeting'
@@ -72,9 +72,8 @@ select
 
 -- preferred, friendly site name; also corresponds to what's used in the joinkey fields across dfa, dv, and moat.
     [dbo].udf_sitename(t3.site_dcm)                                                                    as "site",
-
 -- dcm site id
-    t3.site_id_dcm  as "site_id",
+    t3.site_id_dcm                                                                                     as "site id",
 -- reference/optional: package cost/pricing model, from prisma; attributed to all placements within package.
     t3.costmethod                                                                                      as "cost method",
 -- reference/optional: first six characters of placement name. used for matching across datasets when no common placement id is available, e.g. dfa-dv.
@@ -82,11 +81,12 @@ select
 -- dcm placement name
     t3.placement                                                                                       as placement,
 -- dcm placement id
-    t3.placement_id,
+    t3.placement_id                                                                                    as placement_id,
 -- reference/optional: planned package end date, from prisma; attributed to all placements within package.
     t3.placementend                                                                                    as "placement end",
     t3.placementstart                                                                                  as "placement start",
-  ---bid group categorization
+
+    ---bid group categorization
   case when campaign_id='10742878' AND site_id_dcm= '1578478' AND placement LIKE '%Test-BidStrategy1%' then 'Test-Bid1'
      when campaign_id='10742878' AND site_id_dcm= '1578478' AND placement LIKE '%Test-BidStrategy2%' then 'Test-Bid2'
      when campaign_id='10742878' AND site_id_dcm= '1578478' AND placement LIKE '%Test-BidStrategy3%' then 'Test-Bid3'
@@ -97,11 +97,11 @@ select
      when campaign_id='10742878' AND site_id_dcm= '1578478' AND placement LIKE '%Control_First and Business%' then 'Control-First/Biz'
      else '' end                                                                                as "bid_group",
 
+
     t3.dv_map                                                                                          as "dv map",
     t3.rate                                                                                            as rate,
     t3.planned_amt                                                                                     as "planned amt",
     t3.planned_cost                                                                                    as "planned cost",
-    t3.planned_cost / max(t3.amt_count)                                                                as planned_cost,
     case when t3.costmethod like '[Ff]lat' then t3.flatcost / max(t3.flat_count) else sum(t3.cost) end as cost,
     sum(t3.tot_led)                                                                                    as leads,
     sum(t3.dlvrimps)                                                                                   as "delivered impressions",
@@ -129,7 +129,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-04-30';
+-- set @report_ed = '2017-05-19';
 -- set @report_st = '2017-01-01';
 
 select
@@ -154,11 +154,10 @@ select
     t2.plce_id                                                                 as plce_id,
 --     cst.plce_id as dbm_plce_id,
     t2.placement                                                               as placement,
-    t2.placement_id,
+    t2.placement_id                                                            as placement_id,
     t2.placementend                                                            as placementend,
     t2.placementstart                                                          as placementstart,
     t2.dv_map                                                                  as dv_map,
---     t2.dv_map_2                                                                  as dv_map_2,
     t2.planned_amt                                                             as planned_amt,
     t2.planned_cost                                                            as planned_cost,
     flt.flatcost                                                               as flatcost,
@@ -175,87 +174,6 @@ select
 --         not subject to viewability
              when (t2.dv_map = 'N')
                then cast((t2.vew_rev) + t2.clk_rev as decimal(10,2))
-
---         Win NY TapAd placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast(((t2.vew_rev) * .41) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast(((t2.vew_rev) * .48) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast(((t2.vew_rev) * .56) + t2.clk_rev as decimal(10,2))
-                    end
-
---         Win NY Verve placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast(((t2.vew_rev) * .59) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast(((t2.vew_rev) * .77) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast(((t2.vew_rev) * .79) + t2.clk_rev as decimal(10,2))
-                    end
---
---         Win NY Forbes placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast(((t2.vew_rev) * .38) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast(((t2.vew_rev) * .59) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast(((t2.vew_rev) * .64) + t2.clk_rev as decimal(10,2))
-                    end
-
---         Win NY Ninth Decimal placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast(((t2.vew_rev) * .78) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast(((t2.vew_rev) * .89) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast(((t2.vew_rev) * .68) + t2.clk_rev as decimal(10,2))
-                    end
---         Win NY NewYorkMagazine placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast(((t2.vew_rev) * .54) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast(((t2.vew_rev) * .62) + t2.clk_rev as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast(((t2.vew_rev) * .64) + t2.clk_rev as decimal(10,2))
-                    end
-
 
 --         subject to viewability with flag; mt source
              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
@@ -279,6 +197,7 @@ select
                             nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as billrevenue,
 
+
 --         Billable revenue with United discounts applied
                sum(case
 --         not subject to viewability, DBM
@@ -297,112 +216,31 @@ select
               when (t2.dv_map = 'N' and t2.costmethod = 'dCPM')
               then cast((cst.vew_rev + cst.clk_rev)  * .2 * .15 as decimal(10,2))
 
+
 --         not subject to viewability
              when (t2.dv_map = 'N')
-               then cast((t2.vew_rev + t2.clk_rev) * .2 * .15 as decimal(10,2))
-
---         Win NY TapAd placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .41) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .48) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .56) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    end
---         Win NY Verve placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .59) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .77) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .79) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    end
-
---         Win NY Forbes placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .38) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .59) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .64) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    end
-
---         Win NY Ninth Decimal placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .78) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .89) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .68) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-
-                    end
-
---         Win NY NewYorkMagazine placements, which Medialets failed to tag
---         using average viewability rate for Feb, Mar, Apr
-             when (
-                    (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))=0)) or
-                    (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))=0))
-                  )
-             then
-                    case
-                    when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .54) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .62) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .64) + t2.clk_rev) * .2 * .15 as decimal(10,2))
-                    end
+               then cast((t2.vew_rev * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability with flag; mt source
              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
                then cast(
              (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .2 * .15 as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; dv source
              when (t2.dv_map = 'Y')
                then cast(
              (((t2.vew_rev) *
                 (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .2 * .15 as decimal(10,2))
+                            nullif(cast(dv.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; moat source
              when (t2.dv_map = 'M')
                then cast(
              (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .2 * .15 as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as adjsrevenue,
 
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
@@ -494,10 +332,10 @@ select
              case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
              else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
 
---                case
---                -- Flat-fee, cost-per-click, CPCV, and dynamic CPM should never be subject to viewability
---                when prs.costmethod = 'Flat' or prs.costmethod = 'CPC' or prs.costmethod = 'CPCV' or prs.costmethod = 'dCPM'
---                    then 'N'
+               case
+               -- Flat-fee, cost-per-click, CPCV, and dynamic CPM should never be subject to viewability
+               when prs.costmethod = 'Flat' or prs.costmethod = 'CPC' or prs.costmethod = 'CPCV' or prs.costmethod = 'dCPM'
+                   then 'N'
 --
 --                -- Corrections to SME 2016
 --                when t1.campaign_id = '10090315' and
@@ -514,32 +352,27 @@ select
 --                -- Live Intent
 --                    (t1.site_id_dcm = '1853564'))
 --                    then 'N'
---
---                -- FlipBoard unable to implement Moat tags; must bill off of DFA impressions
---                when t1.site_id_dcm = '2937979' then 'N'
---                -- All targeted marketing subject to viewability; mark "Y"
---                when t1.campaign_id = '9639387' then 'Y'
---
---                -- If it's CPMV and the placement has the words "Mobile," "Video," or "Pre-Roll," then it should be in Moat
---                when prs.CostMethod = 'CPMV' and
---                    (t1.placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or
---                     t1.placement like '%[Vv][Ii][Dd][Ee][Oo]%' or
---                     t1.placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or
---                -- Verve
---                     t1.site_id_dcm = '1995643'
---                ) then 'M'
---
---                -- Look for viewability flags Investment began to include in placement names 6/16.
---                when t1.placement like '%[_]DV[_]%' then 'Y'
---                when t1.placement like '%[_]MOAT[_]%' then 'M'
---                when t1.placement like '%[_]NA[_]%' then 'N'
---
---                -- If it's CPMV and marked "N," change to "Y"
---                when prs.costmethod = 'CPMV' and prs.DV_Map = 'N' then 'Y'
---                else prs.DV_Map end as DV_Map,
 
---             Because dv_map logic exists in more than one query, abstract it into function for easier updating
-               [dbo].udf_dvMap(t1.campaign_id,t1.site_id_dcm,t1.placement,prs.CostMethod,prs.dv_map) as dv_map
+               -- FlipBoard unable to implement Moat tags; must bill off of DFA impressions
+               when t1.site_id_dcm = '2937979' then 'N'
+               -- All targeted marketing subject to viewability; mark "Y"
+               when t1.campaign_id = '9639387' then 'Y'
+
+               -- If it's CPMV and the placement has the words "Mobile," "Video," or "Pre-Roll," then it should be in Moat
+               when prs.CostMethod = 'CPMV' and
+                   (t1.placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or t1.placement like '%[Vv][Ii][Dd][Ee][Oo]%' or t1.placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%'
+               -- Verve
+                       or t1.site_id_dcm = '1995643'
+               ) then 'M'
+
+               -- Look for viewability flags Investment began to include in placement names 6/16.
+               when t1.placement like '%[_]DV[_]%' then 'Y'
+               when t1.placement like '%[_]MOAT[_]%' then 'M'
+               when t1.placement like '%[_]NA[_]%' then 'N'
+
+               -- If it's CPMV and marked "N," change to "Y"
+               when prs.costmethod = 'CPMV' and prs.DV_Map = 'N' then 'Y'
+               else prs.DV_Map end as DV_Map
 
 
 
@@ -599,10 +432,10 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-04-30''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-05-19''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
--- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+and campaign_id in (10742878, 11177760, 11224605) -- display 2017
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
@@ -639,8 +472,8 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-04-30''
--- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-05-19''
+and campaign_id in (10742878, 11177760, 11224605) -- display 2017
 
 and (advertiser_id <> 0)
 ) as ti
@@ -673,8 +506,8 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-04-30''
--- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-05-19''
+and campaign_id in (10742878, 11177760, 11224605) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
 
@@ -715,8 +548,7 @@ from diap01.mec_us_united_20056.dfa2_sites
 ) as directory
 on r1.site_id_dcm = directory.site_id_dcm
 
-where  regexp_like(p1.placement,''P.?'',''ib'')
-and not regexp_like(p1.placement,''.?do\s?not\s?use.?'',''ib'')
+where not regexp_like(placement,''.?do\s?not\s?use.?'',''ib'')
 -- and not regexp_like(campaign.campaign,''.*2016.*'',''ib'')
 and  regexp_like(campaign.campaign,''.*2017.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
@@ -748,9 +580,7 @@ cast (r1.date as date )
         and t1.campaign not like '%[_]UK[_]%'
         and t1.campaign not like '%2016%'
         and t1.campaign not like '%2015%'
-        and t1.campaign_id != 10698273  -- UK Acquisition 2017
-        and t1.campaign_id != 11221036  -- Hong Kong 2017
-
+        and t1.campaign_id != 10698273
     group by
        t1.dcmdate
       ,cast(month(cast(t1.dcmdate as date)) as int)
@@ -835,7 +665,6 @@ group by
   ,t2.campaign_id
   ,t2.cost_id
   ,t2.dv_map
---   ,t2.dv_map_2
   ,t2.site_dcm
   ,t2.site_id_dcm
   ,t2.packagecat
@@ -862,6 +691,7 @@ group by
 
      ) as t3
 
+
 group by
   t3.dcmdate
   ,t3.dcmmonth
@@ -881,13 +711,13 @@ group by
   ,t3.placement
   ,t3.placement_id
   ,t3.placementend
-  ,t3.dv_map
   ,t3.placementstart
+  ,t3.dv_map
   ,t3.planned_amt
   ,t3.planned_cost
   ,t3.flatcost
 
 
--- order by
---   t3.cost_id,
---   t3.dcmdate;
+order by
+  t3.cost_id,
+  t3.dcmdate
