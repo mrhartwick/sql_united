@@ -8,7 +8,7 @@ This logic does two things:
 2.) corrects unknown but foreseeable mistakes, e.g. dv_map = "N" but the placement name has "DV" in it.
 */
 
-create function [dbo].udf_dvMap(
+alter function [dbo].udf_dvMap(
     @campaign_id int, @site_id_dcm int, @placement nvarchar(4000), @cost_method nvarchar(100), @dv_map nvarchar(1)
 )
     returns varchar(1)
@@ -27,7 +27,13 @@ as
                     @site_id_dcm = '1592652')     -- Xaxis
                    then 'Y'
 
-               -- Corrections to SFO-SIN 2016
+          -------Correction to Trade 2017, Vistar Media; MOAT tag not working, so using DV
+
+         when @campaign_id = '11069476' and
+                   (@site_id_dcm = '2244596') ---Vistar Media
+                   then 'Y'
+
+          ----- Corrections to SFO-SIN 2016
                when @campaign_id = '9923634' and
                   ((@site_id_dcm = '1534879' and @cost_method = 'CPM') or   -- Business Insider
                    (@site_id_dcm = '1853564'))                                -- Live Intent
