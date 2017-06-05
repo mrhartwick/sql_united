@@ -651,7 +651,7 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .77) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .79) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            end
+                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end
                     when  t2.site_id_dcm = 1485655  -- Forbes
                     then
                             case
@@ -661,7 +661,7 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .59) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .64) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            end
+                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end
                     when  t2.site_id_dcm = 2854118  -- TapAd
                     then
                             case
@@ -671,7 +671,7 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .48) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .56) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            end
+                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end
                     when  t2.site_id_dcm = 1329066  -- Ninth Decimal
                     then
                             case
@@ -681,7 +681,7 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .89) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .68) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            end
+                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end
                     when  t2.site_id_dcm = 3246841  -- NY Mag
                     then
                             case
@@ -691,7 +691,7 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .62) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .64) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            end end
+                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end end
 
              --  Impression-based cost; subject to viewability; MT source
              when   (
