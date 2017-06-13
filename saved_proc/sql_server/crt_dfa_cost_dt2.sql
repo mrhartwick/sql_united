@@ -132,11 +132,12 @@ insert into master.dbo.dfa_cost_dt2
 
 
 --               cond_2_dCPM
-                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
-                      t7.diff >= 0 and
-                      t7.cost < t7.planned_cost and
-                      t7.costRunTot <= t7.planned_cost and
-                      t7.lagCostRemain > 0
+                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%'
+--                      and
+--                       t7.diff >= 0 and
+--                       t7.cost < t7.planned_cost and
+--                       t7.costRunTot <= t7.planned_cost and
+--                       t7.lagCostRemain > 0
                  then t7.cost
 
 --               cond_2_1
@@ -183,11 +184,12 @@ insert into master.dbo.dfa_cost_dt2
                  then 'cond_2_CPC'
 
 
-                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
-                      t7.diff >= 0 and
-                      t7.cost < t7.planned_cost and
-                      t7.costRunTot <= t7.planned_cost and
-                      t7.lagCostRemain > 0
+                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%'
+--                      and
+--                       t7.diff >= 0 and
+--                       t7.cost < t7.planned_cost and
+--                       t7.costRunTot <= t7.planned_cost and
+--                       t7.lagCostRemain > 0
                  then 'cond_2_dCPM'
 
 
@@ -988,11 +990,11 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
---     and prs.cost_id = 'P8FSSK'
+--     where prs.cost_id = 'PD74K8'
 -- where t1.campaign_id = 11224605
 
                  group by
@@ -1053,7 +1055,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
