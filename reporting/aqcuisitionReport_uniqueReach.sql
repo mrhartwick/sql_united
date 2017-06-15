@@ -117,13 +117,13 @@ from (
              when t001.campaign_id = 8958859 then 10742878
                  else t001.campaign_id end as campaign_id,
 --              t001.campaign_id,
-             case when t001.site_id_dcm = 2202011 or t001.site_id_dcm = 3266673 then 1578478 else t001.site_id_dcm end as site_id_dcm,
+             case when t001.site_id_dcm = '2202011' or t001.site_id_dcm = '3266673' then '1578478' else t001.site_id_dcm end as site_id_dcm,
 --           t001.site_id_dcm,
              t001.placement_id,
              r0.rate,
-             case when t001.site_id_dcm = 2202011 or t001.site_id_dcm = 3266673 or t001.site_id_dcm = 1578478 then 'dCPM' else r0.CostMethod end as CostMethod,
+             case when t001.site_id_dcm = '2202011' or t001.site_id_dcm = '3266673' or t001.site_id_dcm = '1578478' then 'dCPM' else r0.CostMethod end as CostMethod,
              count(*)                                                                    as total_imp,
-             cast((sum(dbm_total_media_cost_usd) / 1000000000) as decimal(20,10)) as dbm_cost
+             cast((sum(t001.dbm_total_media_cost_usd) / 1000000000) as decimal(20,10)) as dbm_cost
 
          from diap01.mec_us_united_20056.dfa2_impression as t001
 
@@ -137,7 +137,7 @@ from (
 
          where
              user_id <> '0'
-                 and t001.campaign_id in (11177760, 11224605, 10742878)
+                 and t001.campaign_id in (8964059, 8958859, 11177760, 11224605, 10742878)
                  and t001.advertiser_id <> '0'
                  and cast(timestamp_trunc(to_timestamp(t001.event_time / 1000000),'SS') as date) between '2017-01-01' and '2017-06-06'
 
@@ -173,6 +173,7 @@ group by
 where
      regexp_like(c1.campaign,'.*2017.*','ib')
 and not regexp_like(c1.campaign,'.*Search.*','ib')
+
 
 
 group by
