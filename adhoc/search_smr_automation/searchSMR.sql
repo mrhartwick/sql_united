@@ -13,8 +13,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-02-28';
-set @report_st = '2017-02-28';
+set @report_ed = '2017-05-06';
+set @report_st = '2017-01-01';
 
 select
 -- t1.date,
@@ -40,12 +40,15 @@ select
 --   t1.pdsearch_ad_id            as [Ad ID],
   t1.pdsearch_matchtype        as [Match Type],
   sum(t1.imps)                 as Impressions,
+  sum(t1.cost)               as cost,
   sum(t1.clicks)               as Clicks,
   avg(t1.avg_pos)              as [Avg Position],
   sum(case when t1.imps = 0 then 0 else t1.avg_pos_1/t1.imps end) as avg_pos_2,
   case when sum(t1.imps) = 0 then 0 else sum(t1.avg_pos * t1.imps)/sum(t1.imps) end as avg_pos_3,
-  sum(fld2.rev)                  as Revenue,
-  sum(cast(fld2.con as int))     as Conversions,
+  sum(fld2.rev * .15 * .02)                  as Revenue,
+  sum(cast(fld2.prch as int))     as prch,
+  sum(cast(fld2.lead as int))     as lead,
+--   sum(cast(fld2.tot_con as int))     as Transactions,
   sum(fld2.tix)                  as Tickets
 
 from (
@@ -71,6 +74,7 @@ from (
         std1.pdsearch_ad_id                                                    as pdsearch_ad_id,
         std1.pdsearch_matchtype                                                as pdsearch_matchtype,
         sum(std1.pdsearch_impressions)                                              as imps,
+      sum(std1.pdsearch_cost)                                              as cost,
         sum(std1.pdsearch_clicks)                                                   as clicks,
         avg(std1.pdsearch_avg_position)                                             as avg_pos,
         sum(std1.pdsearch_impressions * std1.pdsearch_avg_position)             as avg_pos_1
@@ -111,8 +115,6 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
 
        left join
         (
-
-
 --
 --                declare @report_st date
 -- declare @report_ed date
@@ -135,7 +137,9 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
            fld1.pdsearch_keyword_id,
 --  fld1.currency as currency,
            sum(fld1.total_revenue)     as rev,
-           sum(fld1.transaction_count) as con,
+           sum(fld1.prch) as prch,
+            sum(fld1.lead) as lead,
+--             sum(fld1.total_conversions) as tot_con,
            sum(number_of_tickets)      as tix
 
          from (
@@ -156,10 +160,32 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
                  fld0.pdsearch_keyword_id,
 --               fld0.pdsearch_keyword,
 --                  fld0.currency,
-                 sum(fld0.total_revenue / rates.exchange_rate) as total_revenue,
-                 sum(fld0.transaction_count)                   as transaction_count,
+                 sum(case
+                     when fld0.activity_id = 978826 and
+                          fld0.currency not like '%--%' and
+                          fld0.currency <> 'Miles' and
+                          fld0.number_of_tickets <> 0
+                     then fld0.total_revenue / rates.exchange_rate
+                     end) as total_revenue,
+                 sum(case
+                     when fld0.activity_id = 978826 and
+                          fld0.currency not like '%--%' and
+                          fld0.currency <> 'Miles' and
+                          fld0.total_revenue > 0
+                     then fld0.transaction_count
+                     end) as prch,
+                 sum(case
+                     when fld0.activity_id = 1086066
+                     then fld0.transaction_count
+                     end) as lead,
+--                  sum(fld0.total_conversions) as total_conversions,
 --                  count(*)                                      as this_count,
-                 sum(number_of_tickets)                        as number_of_tickets
+                 sum(case
+                     when fld0.activity_id = 978826 and
+                          fld0.currency not like '%--%' and
+                          fld0.currency <> 'Miles'
+                     then number_of_tickets
+                     end) as number_of_tickets
 
 
                from [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.ualus_search_floodlight as fld0
@@ -176,12 +202,14 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
 --                  and (LEN(ISNULL(fld0.pdsearch_campaign_id,'')) > 0)
 --                  and (LEN(ISNULL(fld0.pdsearch_keyword_id,'')) > 0)
 --                  and fld0.PdSearch_ad_ID <> '0'
-                 and fld0.number_of_tickets <> 0
-                 and fld0.currency <> 'Miles'
+--                  and fld0.number_of_tickets <> 0
+--                  and fld0.currency <> 'Miles'
 --                  and (LEN(ISNULL(fld0.currency,'')) > 0)
-                 and (PdSearch_EngineAccount not like '%[Br][Rr]%[Nn][Dd]%' and PdSearch_EngineAccount not like '%[Ss][Mm][Ee]%')
-                 and fld0.currency not like '%--%'
-                 and fld0.activity_id = 978826
+--                  and (PdSearch_EngineAccount not like '%[Br][Rr]%[Nn][Dd]%' and PdSearch_EngineAccount not like '%[Ss][Mm][Ee]%')
+                   and (PdSearch_EngineAccount not like '%[Ss][Mm][Ee]%')
+--                  and fld0.currency not like '%--%'
+                 and (fld0.activity_id = 978826 or fld0.activity_id = 1086066)
+--                  and fld0.activity_id = 1086066
 
                group by
 --          cast(fld0.date as date),
@@ -196,6 +224,7 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
 --                 fld0.pdsearch_keyword,
 --                 fld0.pdsearch_adgroup,
 --                 fld0.pnr_base64encoded,
+                 fld0.activity_id,
                  fld0.pdsearch_ad_id,
                  fld0.pdsearch_adgroup_id,
                  fld0.pdsearch_keyword_id,
@@ -233,7 +262,8 @@ cast(dateadd(week,datediff(week,0,cast(std1.date as date)),-1) as date),
      and t1.siteid_dcm = fld2.siteid_dcm
 
 --       where e1.Paid_SearchEngine like '%TMK%'
-where (e1.Paid_SearchEngine not like '%[Br][Rr]%[Nn][Dd]%' and e1.Paid_SearchEngine not like '%[Bb][Rr][Nn][Dd]%' and e1.Paid_SearchEngine not like '%[Ss][Mm][Ee]%')
+-- where (e1.Paid_SearchEngine not like '%[Br][Rr]%[Nn][Dd]%' and e1.Paid_SearchEngine not like '%[Bb][Rr][Nn][Dd]%' and e1.Paid_SearchEngine not like '%[Ss][Mm][Ee]%')
+where (e1.Paid_SearchEngine not like '%[Bb][Rr][Nn][Dd]%' and e1.Paid_SearchEngine not like '%[Ss][Mm][Ee]%')
 group by
 -- t1.date,
 --         cast(dateadd(week,datediff(week,0,cast(t1.date as date)),0) as date),

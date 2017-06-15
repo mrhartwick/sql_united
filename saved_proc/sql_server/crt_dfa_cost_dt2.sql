@@ -48,7 +48,7 @@ create table master.dbo.dfa_cost_dt2
 );
 
 insert into master.dbo.dfa_cost_dt2
-  select
+ select
     t8.cost_id       as cost_id,
     t8.plce_id       as plce_id,
     t8.dcmDate       as dcmDate,
@@ -132,11 +132,12 @@ insert into master.dbo.dfa_cost_dt2
 
 
 --               cond_2_dCPM
-                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
-                      t7.diff >= 0 and
-                      t7.cost < t7.planned_cost and
-                      t7.costRunTot <= t7.planned_cost and
-                      t7.lagCostRemain > 0
+                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%'
+--                      and
+--                       t7.diff >= 0 and
+--                       t7.cost < t7.planned_cost and
+--                       t7.costRunTot <= t7.planned_cost and
+--                       t7.lagCostRemain > 0
                  then t7.cost
 
 --               cond_2_1
@@ -183,11 +184,12 @@ insert into master.dbo.dfa_cost_dt2
                  then 'cond_2_CPC'
 
 
-                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
-                      t7.diff >= 0 and
-                      t7.cost < t7.planned_cost and
-                      t7.costRunTot <= t7.planned_cost and
-                      t7.lagCostRemain > 0
+                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%'
+--                      and
+--                       t7.diff >= 0 and
+--                       t7.cost < t7.planned_cost and
+--                       t7.costRunTot <= t7.planned_cost and
+--                       t7.lagCostRemain > 0
                  then 'cond_2_dCPM'
 
 
@@ -629,6 +631,17 @@ from (
                     )
              then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
+
+             --  Impression-based cost; subject to viewability; MT source
+             when   (
+                    (t2.dv_map = 'M') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    (len(isnull(mt.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+
+
              --  Fixes for Win NY, which Medialets failed to tag
              --  Using average viewability rate for Feb, Mar, Apr
              --  Impression-based cost; subject to viewability; MT source
@@ -638,7 +651,7 @@ from (
                     (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841)) and
                     (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
-                    (len(isnull(dv.joinkey,'')) = 0)
+                    (len(isnull(mt.joinkey,'')) = 0)
                     )
              then
                     case
@@ -651,7 +664,8 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .77) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .79) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end
+--                             else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end
                     when  t2.site_id_dcm = 1485655  -- Forbes
                     then
                             case
@@ -661,7 +675,8 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .59) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .64) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end
+--                             else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end
                     when  t2.site_id_dcm = 2854118  -- TapAd
                     then
                             case
@@ -671,7 +686,8 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .48) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .56) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end
+--                             else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end
                     when  t2.site_id_dcm = 1329066  -- Ninth Decimal
                     then
                             case
@@ -681,7 +697,8 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .89) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .68) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end
+--                             else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end
                     when  t2.site_id_dcm = 3246841  -- NY Mag
                     then
                             case
@@ -691,15 +708,10 @@ from (
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .62) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
                             when  t2.dcmmonth = 4
                             then  cast((sum(cast(t2.impressions as decimal(20,10)) * .64) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
-                            else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10)) end end
+--                             else cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+                            end end
 
-             --  Impression-based cost; subject to viewability; MT source
-             when   (
-                    (t2.dv_map = 'M') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE')
-                    )
-             then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+
 
 
 
@@ -722,7 +734,9 @@ from (
                     when t2.dv_map = 'M' and
                         (len(isnull(mt.joinkey,'')) = 0) and
                         (t2.campaign_id = 10918234) and
-                        (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841))
+                        (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841)) and
+                        (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                        (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE')
                     then t2.impressions
 
                     when t2.dv_map = 'M' then mt.total_impressions
@@ -741,7 +755,10 @@ from (
                     when t2.dv_map = 'M' and
                         (len(isnull(mt.joinkey,'')) = 0) and
                         (t2.campaign_id = 10918234) and
-                        (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841))
+                        (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841)) and
+                        (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                        (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE')
+
                     then t2.impressions
                     when t2.dv_map = 'M' then mt.groupm_billable_impressions
                     when t2.dv_map = 'N' and (len(isnull(iv.joinkey,'')) > 0) then iv.impressions
@@ -988,11 +1005,11 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
---     and prs.cost_id = 'P8FSSK'
+--     where prs.cost_id = 'PF25CJ'
 -- where t1.campaign_id = 11224605
 
                  group by
@@ -1053,7 +1070,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
