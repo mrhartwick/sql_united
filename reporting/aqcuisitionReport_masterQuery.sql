@@ -305,11 +305,11 @@ select
               then cast(((t2.vew_rev)  + t2.clk_rev) * .06 as decimal(10,2))
 
               when (t2.dv_map = 'N' and t2.costmethod = 'dCPM')
-              then cast((cst.vew_rev + cst.clk_rev)  * .2 * .15 as decimal(10,2))
+              then cast((cst.vew_rev + cst.clk_rev)  * .08 as decimal(10,2))
 
 --         not subject to viewability
              when (t2.dv_map = 'N')
-               then cast((t2.vew_rev + t2.clk_rev) * .2 * .15 as decimal(10,2))
+               then cast((t2.vew_rev + t2.clk_rev) * .08 as decimal(10,2))
 
 --         Win NY TapAd placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
@@ -321,11 +321,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .41) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .41) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .48) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .48) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .56) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .56) + t2.clk_rev) * .08 as decimal(10,2))
                     end
 --         Win NY Verve placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr
@@ -336,11 +336,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .59) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .59) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .77) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .77) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .79) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .79) + t2.clk_rev) * .08 as decimal(10,2))
                     end
 
 --         Win NY Forbes placements, which Medialets failed to tag
@@ -353,11 +353,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .38) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .38) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .59) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .59) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .64) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .64) + t2.clk_rev) * .08 as decimal(10,2))
                     end
 
 --         Win NY Ninth Decimal placements, which Medialets failed to tag
@@ -369,11 +369,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .78) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .78) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .89) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .89) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .68) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .68) + t2.clk_rev) * .08 as decimal(10,2))
 
                     end
 
@@ -386,11 +386,11 @@ select
              then
                     case
                     when t2.dcmmonth = 2
-                    then cast( ( (t2.vew_rev * .54) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .54) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 3
-                    then cast( ( (t2.vew_rev * .62) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .62) + t2.clk_rev) * .08 as decimal(10,2))
                     when t2.dcmmonth = 4
-                    then cast( ( (t2.vew_rev * .64) + t2.clk_rev) * .2 * .15 as decimal(10,2))
+                    then cast( ( (t2.vew_rev * .64) + t2.clk_rev) * .08 as decimal(10,2))
                     end
 
 --         subject to viewability with flag; mt source
@@ -398,21 +398,21 @@ select
                then cast(
              (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .2 * .15 as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08 as decimal(10,2))
 
 --         subject to viewability; dv source
              when (t2.dv_map = 'Y')
                then cast(
              (((t2.vew_rev) *
                 (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .2 * .15 as decimal(10,2))
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .08 as decimal(10,2))
 
 --         subject to viewability; moat source
              when (t2.dv_map = 'M')
                then cast(
              (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .2 * .15 as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08 as decimal(10,2))
              else 0 end)                                                            as adjsrevenue,
 
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
