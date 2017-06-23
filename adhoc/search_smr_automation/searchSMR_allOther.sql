@@ -1,49 +1,27 @@
--- Search SMR Automation 5 - ALL NETWORKS
+-- Search SMR Automation 5
+-- matching at day/keyword/ad_id level doesn't work; there are dupes in Standard file
+-- have to do it at week level
+
+/* GOT RID OF AD_ID in my created DIM table*/
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_sch_adGroupTbl go
+-- exec [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.crt_sch_keywordTbl go
+-- exec master.dbo.crt_sch_keywordTbl go
+-- exec master.dbo.crt_sch_keywordTbl_2 go
+-- exec master.dbo.crt_sch_keywordTbl_3 go
+
 
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-05-31';
-set @report_st = '2017-05-01';
+set @report_ed = '2017-02-28';
+set @report_st = '2017-02-01';
 
-select
--- t1.date,
---         cast(dateadd(week,datediff(week,0,cast(t1.date as date)),0) as date) as "week",
-    t2.month                                                                            as [month],
-    t2.week                                                                             as [Week],
-    t2.Paid_SearchEngine                                                                as [Search Engine],
---   t2.pdsearch_engineaccount_id as [Search Engine ID],
-    t2.Network as Network,
-   --  t2.placement_id,
-    t2.paid_search_campaign                                                             as Campaign,
---   t2.pdsearch_campaign_id      as [Campaign ID],
---   k1.paid_search_keyword                   as Keyword,
---   t2.pdsearch_keyword_id       as [Keyword ID],
-    t2.Paid_Search_Ad_Group                                                             as [Ad Group],
---     t2.pdsearch_adgroup_id       as [Ad Group ID],
-    t2.site_dcm                                                                         as Site,
---   t2.siteid_dcm                as [Site ID],
---   t2.pdsearch_ad_id            as [Ad ID],
-    t2.pdsearch_matchtype                                                               as [Match Type],
-    sum(t2.imps)                                                                        as Impressions,
-    sum(t2.cost)                                                                        as cost,
-    sum(t2.clicks)                                                                      as Clicks,
-    sum(t2.avg_pos)                                                                     as [Avg Position],
---     sum(case when t2.imps = 0 then 0 else t2.avg_pos_1 / t2.imps end)                   as avg_pos_2,
---     case when sum(t2.imps) = 0 then 0 else sum(t2.avg_pos * t2.imps) / sum(t2.imps) end as avg_pos_3,
-    isnull(sum(t2.rev), 0)                                                           as Revenue,
-    isnull(sum(cast(t2.prch as int)), 0)                                                         as purchases,
-    isnull(sum(cast(t2.lead as int)), 0)                                                         as leads,
---   sum(cast(t2.tot_con as int))     as Transactions,
-    isnull(sum(t2.tix), 0)                                                                       as tickets
-
-from (
 select
 -- t1.date,
 --         cast(dateadd(week,datediff(week,0,cast(t1.date as date)),0) as date) as "week",
     t1.month                                                                            as [month],
     t1.week                                                                             as [Week],
-    e1.Paid_SearchEngine                                                                as Paid_SearchEngine,
+    e1.Paid_SearchEngine                                                                as [Search Engine],
 --   t1.pdsearch_engineaccount_id as [Search Engine ID],
     case
     when
@@ -52,27 +30,27 @@ select
     when (c1.paid_search_campaign like '%[Ss]earch%' or ad1.Paid_Search_Ad_Group like '%[Ss]earch%') then 'Search'
     else 'Search' end                                                                   as Network,
 --  t1.placement_id,
-    c1.paid_search_campaign                                                             as paid_search_campaign,
+    c1.paid_search_campaign                                                             as Campaign,
 --   t1.pdsearch_campaign_id      as [Campaign ID],
 --   k1.paid_search_keyword                   as Keyword,
 --   t1.pdsearch_keyword_id       as [Keyword ID],
-    ad1.Paid_Search_Ad_Group                                                             as Paid_Search_Ad_Group,
-  -- t1.pdsearch_adgroup_id       as pdsearch_adgroup_id,
-    s1.site_dcm                                                                         as site_dcm,
+    ad1.Paid_Search_Ad_Group                                                             as [Ad Group],
+  t1.pdsearch_adgroup_id       as [Ad Group ID],
+    s1.site_dcm                                                                         as Site,
 --   t1.siteid_dcm                as [Site ID],
 --   t1.pdsearch_ad_id            as [Ad ID],
-    t1.pdsearch_matchtype                                                               as pdsearch_matchtype,
-    sum(t1.imps)                                                                        as imps,
+    t1.pdsearch_matchtype                                                               as [Match Type],
+    sum(t1.imps)                                                                        as Impressions,
     sum(t1.cost)                                                                        as cost,
     sum(t1.clicks)                                                                      as Clicks,
-    avg(t1.avg_pos)                                                                     as avg_pos,
+    avg(t1.avg_pos)                                                                     as [Avg Position],
 --     sum(case when t1.imps = 0 then 0 else t1.avg_pos_1 / t1.imps end)                   as avg_pos_2,
---     case when sum(t1.imps) = 0 then 0 else sum(t1.avg_pos * t1.imps) / sum(t1.imps) end as avg_pos_3,
-    isnull(sum(fld2.rev * .08), 0)                                                           as rev,
-    isnull(sum(cast(fld2.prch as int)), 0)                                                         as prch,
-    isnull(sum(cast(fld2.lead as int)), 0)                                                         as lead,
+    case when sum(t1.imps) = 0 then 0 else sum(t1.avg_pos * t1.imps) / sum(t1.imps) end as avg_pos_3,
+    isnull(sum(fld2.rev * .15 * .02), 0)                                                           as Revenue,
+    isnull(sum(cast(fld2.prch as int)), 0)                                                         as purchases,
+    isnull(sum(cast(fld2.lead as int)), 0)                                                         as leads,
 --   sum(cast(fld2.tot_con as int))     as Transactions,
-    isnull(sum(fld2.tix), 0)                                                                       as tix
+    isnull(sum(fld2.tix), 0)                                                                       as tickets
 
 from (
 
@@ -118,7 +96,7 @@ from (
              std1.pdsearch_campaign_id,
              std1.pdsearch_keyword_id,
              std1.pdsearch_adgroup_id,
---      std1.pdsearch_avg_position,
+--    std1.pdsearch_avg_position,
              std1.pdsearch_ad_id,
              std1.pdsearch_matchtype
 
@@ -136,8 +114,8 @@ from (
 --      left join openQuery(verticaunited,
 --                      'select  cast(paid_search_keyword_id as varchar(50)) as paid_search_keyword_id, cast(paid_search_keyword as varchar(4000)) as paid_search_keyword from diap01.mec_us_united_20056.dfa2_paid_search
 --                      group by cast(paid_search_keyword_id as varchar(50)), cast(paid_search_keyword as varchar(4000))'
---           ) as k1
---      on t1.pdsearch_keyword_id = k1.paid_search_keyword_id
+--       ) as k1
+--    on t1.pdsearch_keyword_id = k1.paid_search_keyword_id
 
 --     left join master.dbo.sch_keyword_3 as k1
 --     on cast(t1.pdsearch_keyword_id as bigint) = k1.paid_search_keyword_id
@@ -232,7 +210,7 @@ from (
 
                      left join openQuery(verticaunited,
                                          'select currency, date, exchange_rate from diap01.mec_us_mecexchangerates_20067.EXCHANGE_RATES
-                                        ') as rates
+                    ') as rates
                      on fld0.currency = rates.currency
                          and cast(fld0.date as date) = cast(rates.date as date)
 
@@ -325,154 +303,10 @@ group by
     e1.Paid_SearchEngine,
     t1.pdsearch_adgroup_id,
     ad1.Paid_Search_Ad_Group
-
-    union all
-
-select
---  cast(fld1.date as date)     as "date",
-    fld1.month                  as month,
-    fld1.week                   as Week,
-    null                        as Paid_SearchEngine,
-    'Metasearch'                as Network,
-    c1.campaign                 as paid_search_campaign,
---  null                        as Keyword,
---  null                        as [Keyword ID],
-    null                        as Paid_Search_Ad_Group,
---  null                        as [Ad Group ID],
---    p1.placement,
---    fld1.placement_id,
-    s1.site_dcm                 as site_dcm,
---  null                        as [Ad ID],
-    null                        as pdsearch_matchtype,
-    0                           as imps,
-    0                           as cost,
-    0                           as Clicks,
-    0                           as avg_pos,
-    sum(fld1.total_revenue * .08) as rev,
-    sum(fld1.prch)          as prch,
-    sum(fld1.lead)          as lead,
---  sum(fld1.total_conversions) as tot_con,
-    sum(fld1.number_of_tickets)  as tix
-
-from (
-
-         select
---           cast(fld0.activity_date as date)                                                as "date",
-             datename(month,cast(fld0.date as date))                                 as [month],
-             cast(dateadd(week,datediff(week,0,cast(fld0.Activity_Date as date)),0) as date) as [week],
-             fld0.pdsearch_engineaccount_id,
-             fld0.pdsearch_ad_id,
-             fld0.pdsearch_adgroup_id,
-             fld0.pdsearch_campaign_id,
-             fld0.pdsearch_keyword_id,
---           fld0.placement_id,
-             fld0.campaign_id,
-             fld0.siteid_dcm,
-
-                sum(case
-                     when fld0.activity_id = 978826 and
-                          fld0.currency not like '%--%' and
-                          fld0.currency <> 'Miles' and
-                          fld0.number_of_tickets <> 0
-                     then fld0.total_revenue / rates.exchange_rate
-                     end) as total_revenue,
-                 sum(case
-                     when fld0.activity_id = 978826 and
-                          fld0.currency not like '%--%' and
-                          fld0.currency <> 'Miles' and
-                          fld0.total_revenue > 0
-                     then fld0.transaction_count
-                     end) as prch,
-                 sum(case
-                     when fld0.activity_id = 1086066
-                     then fld0.transaction_count
-                     end) as lead,
---                  sum(fld0.total_conversions) as total_conversions,
---                  count(*)                                      as this_count,
-                 sum(case
-                     when fld0.activity_id = 978826 and
-                          fld0.currency not like '%--%' and
-                          fld0.currency <> 'Miles'
-                     then number_of_tickets
-                     end) as number_of_tickets
-
-
-         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.ualus_search_floodlight as fld0
-
-             left join openQuery(verticaunited,
-                                 'select currency, date, exchange_rate from diap01.mec_us_mecexchangerates_20067.EXCHANGE_RATES
-     ') as rates
-                 on fld0.currency = rates.currency
-                 and cast(fld0.activity_date as date) = cast(rates.date as date)
-
-         where cast(fld0.activity_date as date) between @report_st and @report_ed
---           and fld0.currency <> 'Miles'
---           and (LEN(ISNULL(fld0.currency,'')) > 0)
---           and fld0.currency <> '--'
-             and (fld0.activity_id = 978826 or fld0.activity_id = 1086066)
---           and fld0.campaign_id = '10740194' -- TMK Search 2017
-         group by
---           cast(fld0.activity_date as date),
-             datename(month,cast(fld0.date as date)),
-             cast(dateadd(week,datediff(week,0,cast(fld0.Activity_Date as date)),0) as date),
-             fld0.pdsearch_engineaccount_id,
-             fld0.pdsearch_ad_id,
-             fld0.pdsearch_adgroup_id,
-             fld0.pdsearch_campaign_id,
-             fld0.pdsearch_keyword_id,
---           fld0.placement_id,
-             fld0.siteid_dcm,
-             fld0.campaign_id,
-             fld0.currency
-     ) as fld1
-
---  left join openQuery(verticaunited,
---                      'select  campaign_id, cast(campaign as varchar(4000)) as campaign from diap01.mec_us_united_20056.dfa2_campaigns
---           ') as c1
---      on cast(fld1.Campaign_ID as int) = c1.campaign_id
-
-
-          left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Campaign as c1
-              on fld1.Campaign_ID = c1.campaign_id
-
---        left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Site as s1
---            on fld1.siteid_dcm = s1.site_id_dcm
-
-    left join openQuery(verticaunited,
-                        'select  site_id_dcm, cast(site_dcm as varchar(4000)) as site_dcm from diap01.mec_us_united_20056.dfa2_sites
-             ') as s1
-        on cast(fld1.siteid_dcm as int) = s1.site_id_dcm
+--     k1.paid_search_keyword
+--   t1.pdsearch_campaign_id,
+-- --   t1.pdsearch_keyword_id,
+-- --   t1.pdsearch_ad_id,
 
 
 
-where c1.campaign like '%[Tt]argeted_[Mm]arketing_[Ss]earch%'
-
-group by
-    fld1.week,
-    fld1.month,
---  fld1.placement_id,
---  fld1.pdsearch_engineaccount_id,
---  e1.Paid_SearchEngine,
---  fld1.siteid_dcm,
-    s1.site_dcm,
---  k1.paid_search_keyword,
---  fld1.pdsearch_keyword_id,
-    c1.campaign
-
-) as t2
-
-group by
--- t1.date,
---         cast(dateadd(week,datediff(week,0,cast(t1.date as date)),0) as date),
-    t2.month,
-    t2.week,
-    t2.pdsearch_matchtype,
-    t2.Network,
---   t2.pdsearch_engineaccount_id,
--- -- -- --  t2.placement_id,
---   t2.siteid_dcm,
-    t2.site_dcm,
-    t2.paid_search_campaign,
-    t2.Paid_SearchEngine,
---     t2.pdsearch_adgroup_id,
-    t2.Paid_Search_Ad_Group
