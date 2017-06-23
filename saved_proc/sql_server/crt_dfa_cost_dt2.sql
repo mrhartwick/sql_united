@@ -114,6 +114,8 @@ insert into master.dbo.dfa_cost_dt2
                  isNull(t7.diff,cast(0 as int))                     as diff,
                  isNull(t7.flatcost,cast(0 as decimal(20,10)))       as flatCost,
 
+-- ############# FINAL COST CALCULATION #################
+-- If planned Impressions are reached (impsRunTot = planned_amt) before cost is capped, cost will be returned as a negative number
                  case
 
 --               cond_2_CPC
