@@ -13,8 +13,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-04-30';
-set @report_st = '2017-04-01';
+set @report_ed = '2017-02-28';
+set @report_st = '2017-02-01';
 
 select
 -- t1.date,
@@ -25,17 +25,17 @@ select
 --   t1.pdsearch_engineaccount_id as [Search Engine ID],
     case
     when
-        (c1.paid_search_campaign like '%[Rr]emarketing%' or ad1.Paid_Search_AdGroup like '%[Rr]emarketing%') then 'Display'
-    when (c1.paid_search_campaign like '%[Rr][Ll][Ss][Aa]%' or ad1.Paid_Search_AdGroup like '%[Rr][Ll][Ss][Aa]%' or e1.Paid_SearchEngine like '%[Rr][Ll][Ss][Aa]%') then 'RLSA'
-    when (c1.paid_search_campaign like '%[Ss]earch%' or ad1.Paid_Search_AdGroup like '%[Ss]earch%') then 'Search'
+        (c1.paid_search_campaign like '%[Rr]emarketing%' or ad1.Paid_Search_Ad_Group like '%[Rr]emarketing%') then 'Display'
+    when (c1.paid_search_campaign like '%[Rr][Ll][Ss][Aa]%' or ad1.Paid_Search_Ad_Group like '%[Rr][Ll][Ss][Aa]%' or e1.Paid_SearchEngine like '%[Rr][Ll][Ss][Aa]%') then 'RLSA'
+    when (c1.paid_search_campaign like '%[Ss]earch%' or ad1.Paid_Search_Ad_Group like '%[Ss]earch%') then 'Search'
     else 'Search' end                                                                   as Network,
 --  t1.placement_id,
     c1.paid_search_campaign                                                             as Campaign,
 --   t1.pdsearch_campaign_id      as [Campaign ID],
 --   k1.paid_search_keyword                   as Keyword,
 --   t1.pdsearch_keyword_id       as [Keyword ID],
-    ad1.Paid_Search_AdGroup                                                             as [Ad Group],
---   t1.pdsearch_adgroup_id       as [Ad Group ID],
+    ad1.Paid_Search_Ad_Group                                                             as [Ad Group],
+  t1.pdsearch_adgroup_id       as [Ad Group ID],
     s1.site_dcm                                                                         as Site,
 --   t1.siteid_dcm                as [Site ID],
 --   t1.pdsearch_ad_id            as [Ad ID],
@@ -46,11 +46,11 @@ select
     avg(t1.avg_pos)                                                                     as [Avg Position],
 --     sum(case when t1.imps = 0 then 0 else t1.avg_pos_1 / t1.imps end)                   as avg_pos_2,
     case when sum(t1.imps) = 0 then 0 else sum(t1.avg_pos * t1.imps) / sum(t1.imps) end as avg_pos_3,
-    sum(fld2.rev * .15 * .02)                                                           as Revenue,
-    sum(cast(fld2.prch as int))                                                         as purchases,
-    sum(cast(fld2.lead as int))                                                         as leads,
+    isnull(sum(fld2.rev * .15 * .02), 0)                                                           as Revenue,
+    isnull(sum(cast(fld2.prch as int)), 0)                                                         as purchases,
+    isnull(sum(cast(fld2.lead as int)), 0)                                                         as leads,
 --   sum(cast(fld2.tot_con as int))     as Transactions,
-    sum(fld2.tix)                                                                       as tickets
+    isnull(sum(fld2.tix), 0)                                                                       as tickets
 
 from (
 
@@ -102,8 +102,8 @@ from (
 
      ) as t1
 
-    left join [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.ualus_dim_paid_searchcampaign as c1
-    on t1.pdsearch_campaign_id = c1.paid_search_campaign_id
+    left join [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.UALUS_DIM_PaidSearch_Campaign as c1
+    on t1.pdsearch_campaign_id = c1.Paid_Search_Campaign_ID
 
 --     left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Paid_SearchKeyword as k1
 --     on t1.pdsearch_keyword_id = k1.paid_search_keyword_id
@@ -120,8 +120,8 @@ from (
 --     left join master.dbo.sch_keyword_3 as k1
 --     on cast(t1.pdsearch_keyword_id as bigint) = k1.paid_search_keyword_id
 
-    left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_SearchAdGroup as ad1
-    on t1.pdsearch_adgroup_id = ad1.Paid_Search_AdGroup_ID
+    left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_PaidSearch_AdGroup as ad1
+    on t1.pdsearch_adgroup_id = ad1.Paid_Search_Ad_Group_ID
 
     left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Paid_SearchEngine as e1
     on t1.pdsearch_engineaccount_id = e1.Paid_SearchEngine_ID
@@ -301,12 +301,12 @@ group by
     s1.site_dcm,
     c1.paid_search_campaign,
     e1.Paid_SearchEngine,
-    ad1.Paid_Search_AdGroup
+    t1.pdsearch_adgroup_id,
+    ad1.Paid_Search_Ad_Group
 --     k1.paid_search_keyword
 --   t1.pdsearch_campaign_id,
 -- --   t1.pdsearch_keyword_id,
 -- --   t1.pdsearch_ad_id,
---   t1.pdsearch_adgroup_id
 
 
 
