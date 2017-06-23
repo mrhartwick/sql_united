@@ -604,11 +604,19 @@ from (
              then   cast((sum(cast(iv.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as
                            decimal(20,10))
 
+             --  Impression-based cost; not subject to viewability; DCM source - CPE
+             when   (
+                    (t2.dv_map = 'N') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPE')
+                    )
+             then   cast((sum(cast(t2.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
+
              --  Impression-based cost; not subject to viewability; DCM source
              when   (
                     (t2.dv_map = 'N') and
                     (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE')
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV')
                     )
              then   cast((sum(cast(t2.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
@@ -1009,8 +1017,8 @@ cast(report.date as date)
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
---     where prs.cost_id = 'PF25CJ'
--- where t1.campaign_id = 11224605
+--     where prs.cost_id = 'PFHH1N'
+-- and t1.campaign_id = 10942240
 
                  group by
                      t1.dcmdate
