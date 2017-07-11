@@ -1,0 +1,1 @@
+copy diap01.mec_us_united_20056.ual_weather_noaa from local 'C:\Users\matthew.hartwick\Dropbox\MEC_Work\Projects\United\20170615_weather\master_dbo_ual_weather_final_noaa.csv' WITH DELIMITER ',' DIRECT;
