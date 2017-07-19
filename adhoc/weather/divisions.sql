@@ -1,0 +1,11 @@
+case when state in ('ak','hi') then 'ak_hi'
+     when state in ('il','in','mi','oh','wi') then 'enc'
+     when state in ('al','ky','ms','tn') then 'esc'
+     when state in ('nj','ny','pa') then 'mid'
+     when state in ('az','co','id','mt','nv','nm','ut','wy') then 'mtn'
+     when state in ('ct','me','ma','nh','ri','vt') then 'new'
+     when state in ('ca','or','wa') then 'pac'
+     when state in ('de','fl','ga','md','nc','sc','va','wv') then 'sat'
+     when state in ('ia','ks','mn','mo','ne','nd','sd') then 'wnc'
+     when state in ('ar','la','ok','tx') then 'wsc'
+else 'xxx' end as division
