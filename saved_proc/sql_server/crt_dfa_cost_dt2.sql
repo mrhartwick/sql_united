@@ -118,7 +118,19 @@ insert into master.dbo.dfa_cost_dt2
 -- If planned Impressions are reached (impsRunTot = planned_amt) before cost is capped, cost will be returned as a negative number
                  case
 
+
+              when t7.costmethod like '[Dd][Cc][Pp][Mm]%'
+--                      and
+--                       t7.diff >= 0 and
+--                       t7.cost < t7.planned_cost and
+--                       t7.costRunTot <= t7.planned_cost and
+--                       t7.lagCostRemain > 0
+                 then t7.cost
+
 --               cond_2_CPC
+
+
+
                  when t7.costmethod like '[Cc][Pp][Cc]%' and
                       t7.diff >= 0 and
                       t7.cost < t7.planned_cost and
@@ -134,13 +146,7 @@ insert into master.dbo.dfa_cost_dt2
 
 
 --               cond_2_dCPM
-                 when t7.costmethod like '[Dd][Cc][Pp][Mm]%'
---                      and
---                       t7.diff >= 0 and
---                       t7.cost < t7.planned_cost and
---                       t7.costRunTot <= t7.planned_cost and
---                       t7.lagCostRemain > 0
-                 then t7.cost
+
 
 --               cond_2_1
                  when t7.diff >= 0 and
@@ -275,9 +281,8 @@ insert into master.dbo.dfa_cost_dt2
 
 
 -- --                      TEMPORARY CONDITION FOR SAN JOSE
---                          when t6.costmethod like '[Dd][Cc][Pp][Mm]%' and
---                               t6.campaign_id = 11224605
---                          then t6.cost
+                         when t6.costmethod like '[Dd][Cc][Pp][Mm]%'
+                         then t6.cost
 
 
                         when t6.diff >= 0 and
@@ -440,7 +445,7 @@ insert into master.dbo.dfa_cost_dt2
                               case
 
 --                               un-comment if dCPM is coming out 0
---                               when t4.costmethod like '[Dd][Cc][Pp][Mm]%' then sum(t4.cost)
+                              when t4.costmethod like '[Dd][Cc][Pp][Mm]%' then sum(t4.cost)
 
                               when t4.dcmDate - t4.stDate < 0 then 0
                               when (t4.costmethod like '[Cc][Pp][Cc]' and (t4.edDate - t4.dcmDate) >= 0 and sum(t4.clicks) >= t4.planned_amt) then t4.planned_cost
@@ -1027,8 +1032,8 @@ cast(report.date as date)
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
 --     where prs.cost_id = 'PFHH1N'
-where t1.site_id_dcm =1578478
-                     and prs.eddate >= 20170101
+-- where t1.site_id_dcm =1578478
+--                      and prs.eddate >= 20170101
 
                  group by
                      t1.dcmdate
