@@ -1,75 +1,75 @@
 --====================================================================
--- author:      seetha srinivasan
--- create date:      13 jul 2016 08:38:36 pm et
--- description: {description}
--- comments:
+-- Author:    Seetha Srinivasan
+-- Create date:      13 Jul 2016 08:38:36 PM ET
+-- Description: {Description}
+-- Comments:
 --====================================================================
---delete existing records from the fact table (idea is to have rolling 7 days data)
-delete from [ualus_search_standard]
-where  date in (select distinct cast([date] as date)
-                from   [dbo].[dfid041780_ualus_search_standard_extracted])
+--Delete existing records from the Fact Table (Idea is to have rolling 7 days data)
+DELETE FROM [UALUS_Search_Standard]
+WHERE  Date IN (SELECT DISTINCT Cast([Date] AS DATE)
+                FROM   [dbo].[DFID041780_UALUS_Search_Standard_Extracted])
 
---transform/cast data types and insert cleansed data into the fact table
-insert into [ualus_search_standard]
-select cast(date as date)                                    date,
-       cast([week] as date)                                  [week],
-       cast([paid search engine account id] as nvarchar(50)) pdsearchengine_accountid,
-       cast([paid search campaign id] as nvarchar(50))       pdsearch_campaignid,
-       cast([paid search keyword id] as nvarchar(50))        pdsearch_keywordid,
-       cast([paid search ad group id] as nvarchar(50))       pdsearch_adgroupid,
-       cast([paid search ad id] as nvarchar(50))             pdsearch_adid,
-       cast([paid search advertiser id] as nvarchar(50))     pdsearch_advertiserid,
-       cast([paid search match type] as nvarchar(50))        pdsearch_matchtype,
-       cast([site id (dcm)] as nvarchar(50))                 siteid_dcm,
-       cast([site id (site directory)] as nvarchar(50))      siteid_sitedir,
-       cast([campaign id] as nvarchar(50))                   campaignid,
-       cast([package/roadblock id] as nvarchar(50))          packageid,
-       cast([placement id] as nvarchar(50))                  placementid,
-       case
-         when isnumeric([placement total booked units]) = 1 then cast([placement total booked units] as bigint)
-         else 0
-       end                                                   totalbookedunits,
-       case
-         when isnumeric([paid search impressions]) = 1 then cast([paid search impressions] as bigint)
-         else 0
-       end                                                   impressions,
-       case
-         when isnumeric([paid search clicks]) = 1 then cast([paid search clicks] as bigint)
-         else 0
-       end                                                   clicks,
-       case
-         when isnumeric([paid search cost]) = 1 then cast([paid search cost] as decimal(38, 2))
-         else 0
-       end                                                   search_cost,
-       case
-         when isnumeric([paid search revenue]) = 1 then cast([paid search revenue] as decimal(38, 2))
-         else 0
-       end                                                   search_revenue,
-       case
-         when isnumeric([paid search click rate]) = 1 then cast([paid search click rate] as decimal(38, 2))
-         else 0
-       end                                                   click_rate,
-       case
-         when isnumeric([paid search average position]) = 1 then cast([paid search average position] as decimal(38, 2))
-         else 0
-       end                                                   avg_postn,
-       case
-         when isnumeric([paid search transactions]) = 1 then cast([paid search transactions] as decimal(38, 2))
-         else 0
-       end                                                   transactions,
-       case
-         when isnumeric([paid search actions]) = 1 then cast([paid search actions] as decimal(38, 2))
-         else 0
-       end                                                   actions,
-       case
-         when isnumeric([paid search visits]) = 1 then cast([paid search visits] as bigint)
-         else 0
-       end                                                   totalvisits,
-       acquireid
-from   [dbo].[dfid041780_ualus_search_standard_extracted]
-where  cast([date] as date) not in (select distinct [date]
-                                    from   ualus_search_standard)
+--Transform/Cast data types and insert cleansed data into the Fact Table
+INSERT INTO [UALUS_Search_Standard]
+SELECT Cast(Date AS DATE)                                    Date,
+       Cast([Week] AS DATE)                                  [Week],
+       Cast([Paid Search Engine Account ID] AS NVARCHAR(50)) PdSearchEngine_AccountID,
+       Cast([Paid Search Campaign ID] AS NVARCHAR(50))       PdSearch_CampaignID,
+       Cast([Paid Search Keyword ID] AS NVARCHAR(50))        PdSearch_KeywordID,
+       Cast([Paid Search Ad Group ID] AS NVARCHAR(50))       PdSearch_AdGroupID,
+       Cast([Paid Search Ad ID] AS NVARCHAR(50))             PdSearch_AdID,
+       Cast([Paid Search Advertiser ID] AS NVARCHAR(50))     PdSearch_AdvertiserID,
+       Cast([Paid Search Match Type] AS NVARCHAR(50))        PdSearch_MatchType,
+       Cast([Site ID (DCM)] AS NVARCHAR(50))                 SiteID_DCM,
+       Cast([Site ID (Site Directory)] AS NVARCHAR(50))      SiteID_SiteDir,
+       Cast([Campaign ID] AS NVARCHAR(50))                   CampaignID,
+       Cast([Package/Roadblock ID] AS NVARCHAR(50))          PackageID,
+       Cast([Placement ID] AS NVARCHAR(50))                  PlacementID,
+       CASE
+         WHEN Isnumeric([Placement Total Booked Units]) = 1 THEN Cast([Placement Total Booked Units] AS BIGINT)
+         ELSE 0
+       END                                                   TotalBookedUnits,
+       CASE
+         WHEN Isnumeric([Paid Search Impressions]) = 1 THEN Cast([Paid Search Impressions] AS BIGINT)
+         ELSE 0
+       END                                                   Impressions,
+       CASE
+         WHEN Isnumeric([Paid Search Clicks]) = 1 THEN Cast([Paid Search Clicks] AS BIGINT)
+         ELSE 0
+       END                                                   Clicks,
+       CASE
+         WHEN Isnumeric([Paid Search Cost]) = 1 THEN Cast([Paid Search Cost] AS DECIMAL(38, 2))
+         ELSE 0
+       END                                                   Search_Cost,
+       CASE
+         WHEN Isnumeric([Paid Search Revenue]) = 1 THEN Cast([Paid Search Revenue] AS DECIMAL(38, 2))
+         ELSE 0
+       END                                                   Search_Revenue,
+       CASE
+         WHEN Isnumeric([Paid Search Click Rate]) = 1 THEN Cast([Paid Search Click Rate] AS DECIMAL(38, 2))
+         ELSE 0
+       END                                                   Click_Rate,
+       CASE
+         WHEN Isnumeric([Paid Search Average Position]) = 1 THEN Cast([Paid Search Average Position] AS DECIMAL(38, 2))
+         ELSE 0
+       END                                                   Avg_Postn,
+       CASE
+         WHEN Isnumeric([Paid Search Transactions]) = 1 THEN Cast([Paid Search Transactions] AS DECIMAL(38, 2))
+         ELSE 0
+       END                                                   Transactions,
+       CASE
+         WHEN Isnumeric([Paid Search Actions]) = 1 THEN Cast([Paid Search Actions] AS DECIMAL(38, 2))
+         ELSE 0
+       END                                                   Actions,
+       CASE
+         WHEN Isnumeric([Paid Search Visits]) = 1 THEN Cast([Paid Search Visits] AS BIGINT)
+         ELSE 0
+       END                                                   TotalVisits,
+       AcquireID
+FROM   [dbo].[DFID041780_UALUS_Search_Standard_Extracted]
+WHERE  Cast([Date] AS DATE) NOT IN (SELECT DISTINCT [Date]
+                                    FROM   UALUS_Search_Standard)
 
-select max([date]) activitydate
-into   #dt
-from   ualus_search_standard
+SELECT Max([Date]) ActivityDate
+INTO   #DT
+FROM   UALUS_Search_Standard
