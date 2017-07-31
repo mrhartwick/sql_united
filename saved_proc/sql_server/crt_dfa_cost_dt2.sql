@@ -439,19 +439,26 @@ insert into master.dbo.dfa_cost_dt2
                               case when t4.costmethod like '[Ff]lat' then t4.flatcost/max(t4.cst_count) else 0 end      as flatcost,
                               case
 
-
--- --                            TEMPORARY CONDITION FOR SAN JOSE
---                               when t4.costmethod like '[Dd][Cc][Pp][Mm]%' and
---                                    t4.campaign_id = 11224605 then sum(t4.cost)
-
+--                               un-comment if dCPM is coming out 0
+--                               when t4.costmethod like '[Dd][Cc][Pp][Mm]%' then sum(t4.cost)
 
                               when t4.dcmDate - t4.stDate < 0 then 0
-                              when (t4.edDate - t4.dcmDate) >= 0 and t4.costmethod like '[Cc][Pp][Cc]%' and sum(t4.clicks) >= t4.planned_amt then t4.planned_cost
-                              when (t4.edDate - t4.dcmDate) >= 0 and sum(t4.billimps) >= t4.planned_amt then t4.planned_cost
+                              when (t4.costmethod like '[Cc][Pp][Cc]' and (t4.edDate - t4.dcmDate) >= 0 and sum(t4.clicks) >= t4.planned_amt) then t4.planned_cost
+                              when t4.costmethod not like '[Dd][Cc][Pp][Mm]%' and (t4.edDate - t4.dcmDate) >= 0 and sum(t4.billimps) >= t4.planned_amt then t4.planned_cost
                               when (t4.edDate - t4.dcmDate) >= 0 then sum(t4.cost)
                               when (t4.edDate - t4.dcmDate) < 0 then 0
                               else 0
                               end                                              as cost,
+
+                              case
+                              when t4.dcmDate - t4.stDate < 0 then 'cond_0_1'
+                              when (t4.edDate - t4.dcmDate) >= 0 and t4.costmethod like '[Cc][Pp][Cc]' and sum(t4.clicks) >= t4.planned_amt then 'cond_0_2'
+                              when (t4.edDate - t4.dcmDate) >= 0 and sum(t4.billimps) >= t4.planned_amt then 'cond_0_2'
+                              when (t4.edDate - t4.dcmDate) >= 0 then 'cond_0_3'
+                              when (t4.edDate - t4.dcmDate) < 0 then 'cond_0_4'
+                              else 'cond_0_else'
+                              end                                              as cond_0,
+                                  sum(t4.dbm_cost) as dbm_cost,
                               cast(t4.edDate as int) - cast(t4.dcmDate as int) as ed_diff,
                               case
                               when t4.dcmDate - t4.stDate < 0 then 0
@@ -1020,7 +1027,8 @@ cast(report.date as date)
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
 --     where prs.cost_id = 'PFHH1N'
--- and t1.campaign_id = 10942240
+where t1.site_id_dcm =1578478
+                     and prs.eddate >= 20170101
 
                  group by
                      t1.dcmdate
