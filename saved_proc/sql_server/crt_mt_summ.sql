@@ -36,13 +36,12 @@ as
                  select
                      t1.mtDate                           as mtDate,
                      case when
-                         (LEN(ISNULL(t1.media_property,'')) = 0) then s1.directory_site
+                         (LEN(ISNULL(t1.media_property,'')) = 0) then s1.site_dcm
                      else t1.media_property end          as media_property,
-                     c1.buy                              as campaign_name,
+                     c1.campaign                              as campaign_name,
                      t1.campaign_id                      as campaign_id,
                      t1.site_id                          as site_id,
---                      t1.placement_code                   as placement_code,
-                     isnull(t1.placement_code,p3.placement_id) as placement_code,
+                     t1.placement_code                   as placement_code,
                      case when
                          (LEN(ISNULL(t1.placement_name,'')) = 0) then p3.placement
                      else t1.placement_name end          as placement_name,
@@ -67,32 +66,34 @@ as
                                       (LEN(ISNULL(cast(mt.campaign_id as varchar),'')) > 9) or
                                       (LEN(ISNULL(cast(mt.campaign_id as varchar),'')) < 6)
                                   )
-                                      and (LEN(ISNULL(cast(p1.order_id as varchar),'')) = 0))
-                                  then p2.order_id
+                                      and (LEN(ISNULL(cast(p1.campaign_id as varchar),'')) = 0))
+                                  then p2.campaign_id
                               when (
                                   ((LEN(ISNULL(cast(mt.campaign_id as varchar),'')) = 0) or
                                       (LEN(ISNULL(cast(mt.campaign_id as varchar),'')) > 8))
-                                      and (LEN(ISNULL(cast(p1.order_id as varchar),'')) != 0))
-                                  then p1.order_id
+                                      and (LEN(ISNULL(cast(p1.campaign_id as varchar),'')) != 0))
+                                  then p1.campaign_id
                               else mt.campaign_id
                               end                                as campaign_id,
 
                               case when
                                   MT.site_label = 'Amobee' then '1853562'
-                              when (LEN(ISNULL(cast(mt.site_id as varchar),'')) = 7)
-                                  then mt.site_id
-                              when (LEN(ISNULL(cast(mt.site_id as varchar),'')) < 7) and
-                                  (LEN(ISNULL(cast(p1.site_id as varchar),'')) = 0)
-                                  then p2.site_id
-                              else p1.site_id
+                              when (LEN(ISNULL(cast(MT.site_id as varchar),'')) = 7)
+                                  then MT.site_id
+                              when (LEN(ISNULL(cast(MT.site_id as varchar),'')) < 7) and
+                                  (LEN(ISNULL(cast(p1.site_id_dcm as varchar),'')) = 0)
+                                  then p2.site_id_dcm
+                              else p1.site_id_dcm
                               end                                as site_id,
 
                               case when
                                   (LEN(ISNULL(cast(mt.placement_id as varchar),'')) < 9)
-                                  then p2.page_id
-                              else p1.page_id
+                                  then p2.placement_id
+                              else p1.placement_id
                               end                                as placement_code,
+
                               MT.placement_label                 as placement_name,
+
                               sum(MT.human_impressions)          as total_impressions,
                               sum(MT.half_duration_impressions)  as groupm_passed_impressions,
                               sum(MT.groupm_payable_impressions) as groupm_billable_impressions
@@ -100,24 +101,21 @@ as
                           from (select
                                     cast(mt1.mtDate as date)              as mtDate,
                                     mt1.campaign_label                  as campaign_label,
-                                    case when mt1.campaign_id = 33809 then 10121649
-                                    when mt1.campaign_id = 33809 then 10121649
-                                    when mt1.campaign_id = 34957 then 10276123
-                                    when mt1.campaign_id = 26315 then 8955169
+                                    case when mt1.campaign_id = '33809' then '10121649'
+                                    when mt1.campaign_id = '33809' then '10121649'
+                                    when mt1.campaign_id = '34957' then '10276123'
+                                    when mt1.campaign_id = '26315' then '8955169'
                                     else mt1.campaign_id end            as campaign_id,
 
                                     [dbo].udf_siteKey(mt1.site_label)   as site_label,
                                     --                site_label                      as site_label,
                                     mt1.site_id                         as site_id,
-                                    case when isnumeric(mt1.placement_id) = 0
---                                         = 'undefined'
-                                        then 0
-                                    when mt1.placement_id = 137412609 or mt1.placement_id = 300459 or mt1.placement_id = 325988 or mt1.placement_id = 137412510
-                                        then 137412609
+                                    case when mt1.placement_id = 'undefined' then 'undefined'
+                                    when mt1.placement_id = '137412609' or mt1.placement_id = '300459' or mt1.placement_id = '325988' or mt1.placement_id = '137412510'
+                                        then '137412609'
                                     else mt1.placement_id end           as placement_id,
                                     case when mt1.placement_label like 'PBKB7J%' or mt1.placement_label like 'PBKB7H%' or mt1.placement_label like 'PBKB7K%' or mt1.placement_label = 'United 360 - Polaris 2016 - Q4 - Amobee' then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID'
                                     else mt1.placement_label end        as placement_label,
---                                     mt1.plce_id,
                                     sum(mt1.human_impressions)          as human_impressions,
                                     sum(mt1.half_duration_impressions)  as half_duration_impressions,
                                     sum(mt1.groupm_payable_impressions) as groupm_payable_impressions
@@ -125,32 +123,15 @@ as
                                 from (
                                          select
                                              t0.mtDate,
-                                             case when isnumeric(t0.campaign_id) = 1 then cast(t0.campaign_id as int) else 0 end as campaign_id,
-                                             case when t0.campaign_id = '11177760' then 'UNI_United_2017_DIS_Chicago_Fare Sale Test'
-                                                  when t0.campaign_id = '11224605' then 'UNI_United_2017_DIS_San Jose_Fare Sale Test'
-                                                  else t0.campaign_label end as campaign_label,
---                                              t0.plce_id,
-                                             t0.site_id,
-                                             case when t0.site_id = '1190273' then 'Adara'
-                                                  when t0.site_id = '1853562' then 'Amobee'
-                                                  else t0.site_label end as site_label,
-                                             case when isnumeric(t0.placement_id) = 1 then cast(t0.placement_id as int) else 0 end as placement_id,
-
-                                             case when t0.placement_id = '149052533' then 'PG1T4X_UAC_TMK_023_Mobile_ADARA MEDIA_Adara_In Market Chicago Traveler_MOB_MOAT_300x250_Run of Network_Behavioral_P2+_300 x 250_Standard_NV_NA '
-                                                  when t0.placement_id = '149052303' then 'PG1T8K_UAC_TMK_023_Mobile_ADARA MEDIA_Adara_In Market Chicago Traveler_MOB_MOAT_320x50_Run of Network_Behavioral_P2+_320 x 50_Standard_NV_NA'
-                                                  when t0.placement_id = '149050783' then 'PG1T9T_UAC_TMK_023_Mobile_ADARA MEDIA_Adara_In Market Chicago Traveler_MOB_MOAT_300x50_Run of Network_Behavioral_P2+_300 x 50_Standard_NV_NA'
-                                                  when t0.placement_id = '149052304' then 'PG0YXH_UAC_TMK_023_Mobile_AMOBEE_Amobee_MOB_In View_Proximity_Chicago_MOAT_300x250_Run of Network_Behavioral_P25-54_300 x 250_Standard_NV_NA'
-                                                  when t0.placement_id = '149046388' then 'PG0YXN_UAC_TMK_023_Mobile_AMOBEE_Amobee_MOB_In View_Proximity_Chicago_MOAT_320x50_Run of Network_Behavioral_P25-54_320 x 50_Standard_NV_NA'
-                                                  when t0.placement_id = '149457140' then 'PG6TPP_UAC_TMK_024_Mobile_ADARA MEDIA_Adara_In Market San Jose Traveler_MOB_MOAT_300x250_Run of Network_Behavioral_P2+_300 x 250_Standard_NV_NA'
-                                                  when t0.placement_id = '149456642' then 'PG6TPQ_UAC_TMK_024_Mobile_ADARA MEDIA_Adara_In Market San Jose Traveler_MOB_MOAT_320x50_Run of Network_Behavioral_P2+_320 x 50_Standard_NV_NA'
-                                                  when t0.placement_id = '149457620' then 'PG6TPR_UAC_TMK_024_Mobile_ADARA MEDIA_Adara_In Market San Jose Traveler_MOB_MOAT_300x50_Run of Network_Behavioral_P2+_300 x 50_Standard_NV_NA'
-                                                  when t0.placement_id = '149457144' then 'PG6TPF_UAC_TMK_024_Mobile_AMOBEE_Amobee_MOB_In View_Proximity_San Jose_MOAT_300x250_Run of Network_Behavioral_P25-54_300 x 250_Standard_NV_NA'
-                                                  when t0.placement_id = '149457626' then 'PG6TPG_UAC_TMK_024_Mobile_AMOBEE_Amobee_MOB_In View_Proximity_San Jose_MOAT_320x50_Run of Network_Behavioral_P25-54_320 x 50_Standard_NV_NA'
-                                                  else t0.placement_label end as placement_label,
+                                             t0.campaign_id,
+ t0.campaign_label,
+                   t0.site_id,
+                                             t0.site_label,
+                                             t0.placement_id,
+                                             t0.placement_label,
                                              t0.human_impressions,
                                              t0.half_duration_impressions,
                                              t0.groupm_payable_impressions
-
 
                                          from (
                                                   select *
@@ -161,9 +142,8 @@ as
                                                                  cast(campaign_label as varchar(255))                         as ''campaign_label'',
                                                                  cast(site_id as varchar(255))                        as ''site_id'',
                                                                  cast(site_label as varchar(255))                        as ''site_label'',
-                                                                 cast(placement_id as varchar(255)) as ''placement_id'',
+                                                                 cast(placement_id as varchar(255))                        as ''placement_id'',
                                                                  cast(placement_label as varchar(255))                        as ''placement_label'',
---                                                       left(cast(placement_label as varchar(255)),6) as plce_id,
                                                                  human_impressions                                        as ''human_impressions'',
                                                                  half_duration_impressions                                as ''half_duration_impressions'',
                                                                  groupm_payable_impressions                               as ''groupm_payable_impressions''
@@ -182,7 +162,6 @@ as
                                     mt1.site_id,
                                     mt1.placement_id,
                                     mt1.placement_label,
---                                     mt1.plce_id,
                                     mt1.human_impressions,
                                     mt1.half_duration_impressions,
                                     mt1.groupm_payable_impressions
@@ -196,18 +175,17 @@ as
                                   select *
                                   from openQuery(VerticaUnited,
                                                  '
-                                                select cast(p1.site_placement as varchar(4000)) as ''site_placement'',  p1.page_id as ''page_id'', p1.order_id as ''order_id'', p1.site_id as ''site_id''
+                                      select cast (p1.placement as varchar (4000)) as ''placement'',p1.placement_id as ''placement_id'',p1.campaign_id as ''campaign_id'',p1.site_id_dcm as ''site_id_dcm''
+from ( select campaign_id as campaign_id,site_id_dcm as site_id_dcm,placement_id as placement_id,placement as placement,cast (placement_start_date as date ) as thisdate,
+row_number() over (partition by campaign_id,site_id_dcm,placement_id order by cast (placement_start_date as date ) desc ) as x1
+from diap01.mec_us_united_20056.dfa2_placements
 
-                                                from (select order_id as order_id, site_id as site_id, page_id as page_id, site_placement as site_placement, cast(start_date as date) as thisDate,
-                                                row_number() over (partition by order_id, site_id, page_id  order by cast(start_date as date) desc) as r1
-                                               FROM diap01.mec_us_united_20056.dfa_page
-                                                ) as p1
-                                                where r1 = 1
-                                                and  left(site_placement,6) like ''P%''
+) as p1
+where x1 = 1
+                                        and  left(p1.placement,6) like ''P%''
                                                  '
                                   )) as p1
-                                  on cast(mt.placement_id as int) = p1.page_id
---                               or mt.plce_id = left(p1.site_placement,6)
+                                  on cast(mt.placement_id as int) = p1.placement_id
 
 --                            Placements 2
                               left join
@@ -215,21 +193,20 @@ as
                                   select *
                                   from openQuery(VerticaUnited,
                                                  '
-                                                 select cast(p2.site_placement as varchar(4000)) as "site_placement",  p2.page_id as "page_id", p2.order_id as "order_id", p2.PlacementNumber as "PlacementNumber", p2.site_id as "site_id"
+select cast (p1.placement as varchar (4000)) as ''placement'',p1.placement_id as ''placement_id'',p1.campaign_id as ''campaign_id'',p1.site_id_dcm as ''site_id_dcm'',p1.placementnumber
+from ( select campaign_id as campaign_id,site_id_dcm as site_id_dcm,placement_id as placement_id,placement as placement,   left(cast(placement as varchar(4000)), 6) as PlacementNumber,cast (placement_start_date as date ) as thisdate,
+row_number() over (partition by campaign_id,site_id_dcm,placement_id order by cast (placement_start_date as date ) desc ) as x1
+from diap01.mec_us_united_20056.dfa2_placements
 
-                                                 from (select order_id as order_id, site_id as site_id, page_id as page_id, site_placement as site_placement,   left(cast(site_placement as varchar(4000)), 6) as PlacementNumber, cast(start_date as date) as thisDate,
-                                                 row_number() over (partition by order_id, site_id, page_id  order by cast(start_date as date) desc) as r1
-                                                 FROM diap01.mec_us_united_20056.dfa_page
-                                                 ) as p2
-                                                 where r1 = 1
-                                                 and  left(site_placement,6) like ''P%''
+) as p1
+where x1 = 1
+                                        and  left(p1.placement,6) like ''P%''
                                                  '
                                   )) as p2
                                   on left(mt.placement_label,6) = p2.PlacementNumber
 
 
-
---                           where MT.placement_id <> 'undefined'
+                          where MT.placement_id != 'undefined'
                           group by
                               -- MT.joinKey,
                               MT.mtDate,
@@ -238,14 +215,13 @@ as
                               MT.placement_id,
                               MT.site_id,
                               mt.campaign_id,
-                              p1.order_id,
-                              p2.order_id,
-                              p1.site_id,
-                              p2.site_id,
-                              p1.page_id,
-                              p2.page_id,
+                              p1.campaign_id,
+                              p2.campaign_id,
+                              p1.site_id_dcm,
+                              p2.site_id_dcm,
+                              p1.placement_id,
+                              p2.placement_id,
                               MT.placement_label
---                      mt.plce_id
                       ) as t1
 
 --                   Campaigns
@@ -254,17 +230,17 @@ as
                          select *
                          from openQuery(VerticaUnited,
                                         '
-                                        select c1.order_id, c1.buy
+                                        select c1.campaign_id, c1.campaign
                                         from (
 
                                         select
-                                        cast(buy as varchar(4000)) as "buy", order_id as "order_id"
-                                               from diap01.mec_us_united_20056.dfa_campaign
+                                        cast(campaign as varchar(4000)) as ''campaign'', campaign_id as ''campaign_id''
+                                               from diap01.mec_us_united_20056.dfa2_campaigns
                                         ) as c1
 
-                                        group by c1.order_id, c1.buy'
+                                        group by c1.campaign_id, c1.campaign'
                          )) as c1
-                         on cast(t1.campaign_id as int) = c1.order_id
+                         on cast(t1.campaign_id as int) = c1.campaign_id
 
 --                   Sites
                      left join
@@ -272,17 +248,17 @@ as
                          select *
                          from openQuery(VerticaUnited,
                                         '
-                                        select s1.site_id, s1.directory_site
+                                        select s1.site_id_dcm, s1.site_dcm
                                         from (
 
                                         select
-                                        cast(directory_site as varchar(4000)) as "directory_site", site_id as "site_id"
-                 from diap01.mec_us_united_20056.dfa_site
+                                        cast(site_dcm as varchar(4000)) as ''site_dcm'', site_id_dcm as ''site_id_dcm''
+                 from diap01.mec_us_united_20056.dfa2_sites
                    ) as s1
 
-                                        group by s1.directory_site, s1.site_id'
+                                        group by s1.site_dcm, s1.site_id_dcm'
                          )) as s1
-                         on cast(t1.site_id as int) = s1.site_id
+                         on cast(t1.site_id as int) = s1.site_id_dcm
 
 --                   Placements 3
                      left join
@@ -290,29 +266,26 @@ as
                          select *
                          from openQuery(VerticaUnited,
                                         '
-                                        select cast (p1.placement as varchar (4000)) as ''placement'',p1.placement_id as ''placement_id'',p1.campaign_id as ''campaign_id'',p1.site_id_dcm as ''site_id_dcm''
-
+                                      select cast (p1.placement as varchar (4000)) as ''placement'',p1.placement_id as ''placement_id'',p1.campaign_id as ''campaign_id'',p1.site_id_dcm as ''site_id_dcm''
 from ( select campaign_id as campaign_id,site_id_dcm as site_id_dcm,placement_id as placement_id,placement as placement,cast (placement_start_date as date ) as thisdate,
 row_number() over (partition by campaign_id,site_id_dcm,placement_id order by cast (placement_start_date as date ) desc ) as x1
 from diap01.mec_us_united_20056.dfa2_placements
 
 ) as p1
 where x1 = 1
-                                        and  left(placement,6) like ''P%''
+                                        and  left(p1.placement,6) like ''P%''
                                         '
                          )) as p3
                          on cast(t1.placement_code as int) = p3.placement_id
-                     or left(t1.placement_name, 6) = left(p3.placement,6)
 
                  group by
                      t1.mtDate,
                      t1.media_property,
-                     s1.directory_site,
+                     s1.site_dcm,
                      t1.campaign_id,
                      t1.site_id,
                      t1.placement_code,
-                     p3.placement_id,
-                     c1.buy,
+                     c1.campaign,
                      p3.placement,
                      t1.placement_name
 
