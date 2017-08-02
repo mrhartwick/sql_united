@@ -30,7 +30,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-05-30';
+set @report_ed = '2017-06-13';
 set @report_st = '2017-01-01';
 
 --
@@ -126,7 +126,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-05-30';
+-- set @report_ed = '2017-06-13';
 -- set @report_st = '2017-01-01';
 
 select
@@ -211,33 +211,33 @@ select
               then cast(((t2.vew_rev)  + t2.clk_rev) * .06 as decimal(10,2))
 
               when (t2.dv_map = 'N' and t2.costmethod = 'dCPM')
-              then cast((cst.vew_rev + cst.clk_rev)  * .2 * .15 as decimal(10,2))
+              then cast((cst.vew_rev + cst.clk_rev)  * .08 as decimal(10,2))
 
 
 --         not subject to viewability
              when (t2.dv_map = 'N')
-               then cast((t2.vew_rev * .2 * .15) + t2.clk_rev as decimal(10,2))
+               then cast((t2.vew_rev * .08) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability with flag; mt source
              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
                then cast(
              (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) * .08) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; dv source
              when (t2.dv_map = 'Y')
                then cast(
              (((t2.vew_rev) *
                 (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
+                            nullif(cast(dv.total_impressions as decimal),0))) * .08) + t2.clk_rev as decimal(10,2))
 
 --         subject to viewability; moat source
              when (t2.dv_map = 'M')
                then cast(
              (((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) * .2 * .15) + t2.clk_rev as decimal(10,2))
+                            nullif(cast(mt.total_impressions as decimal),0))) * .08) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as adjsrevenue,
 
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
@@ -429,7 +429,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-05-30''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-06-13''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 and campaign_id in (11069476) -- display 2017
@@ -469,7 +469,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-05-30''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-06-13''
 and campaign_id in (11069476) -- display 2017
 
 and (advertiser_id <> 0)
@@ -503,7 +503,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-05-30''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-06-13''
 and campaign_id in (11069476) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
