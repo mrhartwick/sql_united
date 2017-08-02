@@ -15,14 +15,19 @@ select cast(date as date)                                    date,
        cast([Campaign Name] as nvarchar(1000))       campaign_name,
        cast([Media Property] as nvarchar(1000))       media_property,
        cast([Placement Name] as nvarchar(1000))        placement_name,
-       cast(try_cast([Ad Server Placement Code] as int) as nvarchar(100))       placement_code,
---        cast([Ad Server Placement Code] as nvarchar(100))        placement_code,
+       cast([Ad Server Placement Code] as nvarchar(100))        placement_code,
        case
          when (len(isnull([GroupM Active Impressions],''))=0) then 0
          when isnumeric([GroupM Active Impressions]) = 1 then cast([GroupM Active Impressions] as bigint)
          else 0
        end                                                   gm_active_impressions,
+
        case
+          when (len(isnull([GroupM Passed Impressions],''))=0) then 0
+         when isnumeric([GroupM Passed Impressions]) = 1 then cast([GroupM Passed Impressions] as bigint)
+         else 0
+         end                                                   gm_passed_impressions,
+         case
        when (len(isnull([GroupM Billable Impressions],''))=0) then 0
          when isnumeric([GroupM Billable Impressions]) = 1 then cast([GroupM Billable Impressions] as bigint)
          else 0

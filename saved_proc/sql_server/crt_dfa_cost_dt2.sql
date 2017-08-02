@@ -792,7 +792,7 @@ from (
              sum(iv.click_thrus)                                                        as iv_clicks,
              sum(iv.all_completion)                                                     as iv_completes,
              sum(cast(dv.total_impressions as int))                                     as dv_imps,
---              sum(dv.groupm_passed_impressions)                                          as dv_viewed,
+             sum(dv.groupm_passed_impressions)                                          as dv_viewed,
              sum(cast(dv.groupm_billable_impressions as decimal(20,10)))                as dv_groupmpayable,
              sum(cast(mt.total_impressions as int))                                     as mt_imps,
              sum(mt.groupm_passed_impressions)                                          as mt_viewed,
