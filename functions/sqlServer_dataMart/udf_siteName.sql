@@ -93,7 +93,7 @@ AS
 				when @site_name like '[Yy]u[Mm]e%' then 'YuMe'
 			    when @site_name like '[Ff]lipboard%' then 'Flipboard'
         		when @site_name like '[Gg][Bb][Tt][Aa]%' then 'GBTA'
-        		when @site_name like '[Gg][Bb][Tt][Aa]%' then 'GBTA'
+        		when @site_name like '[Ss][Uu][Cc][Cc][Ee][Ss][Ss][Ff][Uu][Ll][Mm][Ee][Ee][Tt][Ii][Nn][Gg][Ss]%' then 'NorthStar'
 				else @site_name end
 				;
 
