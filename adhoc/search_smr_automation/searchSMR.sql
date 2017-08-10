@@ -3,8 +3,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-05-31';
-set @report_st = '2017-05-01';
+set @report_ed = '2017-06-30';
+set @report_st = '2017-06-01';
 
 select
 -- t1.date,
@@ -19,7 +19,7 @@ select
 --   t2.pdsearch_campaign_id      as [Campaign ID],
 --   k1.paid_search_keyword                   as Keyword,
 --   t2.pdsearch_keyword_id       as [Keyword ID],
-    t2.Paid_Search_Ad_Group                                                             as [Ad Group],
+    t2.Paid_Search_AdGroup                                                             as [Ad Group],
 --     t2.pdsearch_adgroup_id       as [Ad Group ID],
     t2.site_dcm                                                                         as Site,
 --   t2.siteid_dcm                as [Site ID],
@@ -47,16 +47,16 @@ select
 --   t1.pdsearch_engineaccount_id as [Search Engine ID],
     case
     when
-        (c1.paid_search_campaign like '%[Rr]emarketing%' or ad1.Paid_Search_Ad_Group like '%[Rr]emarketing%') then 'Display'
-    when (c1.paid_search_campaign like '%[Rr][Ll][Ss][Aa]%' or ad1.Paid_Search_Ad_Group like '%[Rr][Ll][Ss][Aa]%' or e1.Paid_SearchEngine like '%[Rr][Ll][Ss][Aa]%') then 'RLSA'
-    when (c1.paid_search_campaign like '%[Ss]earch%' or ad1.Paid_Search_Ad_Group like '%[Ss]earch%') then 'Search'
+        (c1.paid_search_campaign like '%[Rr]emarketing%' or ad1.Paid_Search_AdGroup like '%[Rr]emarketing%') then 'Display'
+    when (c1.paid_search_campaign like '%[Rr][Ll][Ss][Aa]%' or ad1.Paid_Search_AdGroup like '%[Rr][Ll][Ss][Aa]%' or e1.Paid_SearchEngine like '%[Rr][Ll][Ss][Aa]%') then 'RLSA'
+    when (c1.paid_search_campaign like '%[Ss]earch%' or ad1.Paid_Search_AdGroup like '%[Ss]earch%') then 'Search'
     else 'Search' end                                                                   as Network,
 --  t1.placement_id,
     c1.paid_search_campaign                                                             as paid_search_campaign,
 --   t1.pdsearch_campaign_id      as [Campaign ID],
 --   k1.paid_search_keyword                   as Keyword,
 --   t1.pdsearch_keyword_id       as [Keyword ID],
-    ad1.Paid_Search_Ad_Group                                                             as Paid_Search_Ad_Group,
+    ad1.Paid_Search_AdGroup                                                             as Paid_Search_AdGroup,
   -- t1.pdsearch_adgroup_id       as pdsearch_adgroup_id,
     s1.site_dcm                                                                         as site_dcm,
 --   t1.siteid_dcm                as [Site ID],
@@ -142,8 +142,8 @@ from (
 --     left join master.dbo.sch_keyword_3 as k1
 --     on cast(t1.pdsearch_keyword_id as bigint) = k1.paid_search_keyword_id
 
-    left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_PaidSearch_AdGroup as ad1
-    on t1.pdsearch_adgroup_id = ad1.Paid_Search_Ad_Group_ID
+    left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Paid_SearchAdGroup as ad1
+    on t1.pdsearch_adgroup_id = ad1.Paid_Search_AdGroup_ID
 
     left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Paid_SearchEngine as e1
     on t1.pdsearch_engineaccount_id = e1.Paid_SearchEngine_ID
@@ -277,7 +277,7 @@ from (
 
         group by
 --            fld1.date,
---          cast(dateadd(week,datediff(week,0,cast(fld1.Activity_Date as date)),0) as date),
+--          cast(dateadd(week,datediff(week,0,cast(fld1.date as date)),0) as date),
             fld1.pdsearch_engineaccount_id,
 --           fld1.placement_id,
             fld1.week,
@@ -324,7 +324,7 @@ group by
     c1.paid_search_campaign,
     e1.Paid_SearchEngine,
     t1.pdsearch_adgroup_id,
-    ad1.Paid_Search_Ad_Group
+    ad1.Paid_Search_AdGroup
 
     union all
 
@@ -337,7 +337,7 @@ select
     c1.campaign                 as paid_search_campaign,
 --  null                        as Keyword,
 --  null                        as [Keyword ID],
-    null                        as Paid_Search_Ad_Group,
+    null                        as Paid_Search_AdGroup,
 --  null                        as [Ad Group ID],
 --    p1.placement,
 --    fld1.placement_id,
@@ -357,9 +357,9 @@ select
 from (
 
          select
---           cast(fld0.activity_date as date)                                                as "date",
+--           cast(fld0.date as date)                                                as "date",
              datename(month,cast(fld0.date as date))                                 as [month],
-             cast(dateadd(week,datediff(week,0,cast(fld0.Activity_Date as date)),0) as date) as [week],
+             cast(dateadd(week,datediff(week,0,cast(fld0.date as date)),0) as date) as [week],
              fld0.pdsearch_engineaccount_id,
              fld0.pdsearch_ad_id,
              fld0.pdsearch_adgroup_id,
@@ -403,18 +403,18 @@ from (
                                  'select currency, date, exchange_rate from diap01.mec_us_mecexchangerates_20067.EXCHANGE_RATES
      ') as rates
                  on fld0.currency = rates.currency
-                 and cast(fld0.activity_date as date) = cast(rates.date as date)
+                 and cast(fld0.date as date) = cast(rates.date as date)
 
-         where cast(fld0.activity_date as date) between @report_st and @report_ed
+         where cast(fld0.date as date) between @report_st and @report_ed
 --           and fld0.currency <> 'Miles'
 --           and (LEN(ISNULL(fld0.currency,'')) > 0)
 --           and fld0.currency <> '--'
              and (fld0.activity_id = 978826 or fld0.activity_id = 1086066)
 --           and fld0.campaign_id = '10740194' -- TMK Search 2017
          group by
---           cast(fld0.activity_date as date),
+--           cast(fld0.date as date),
              datename(month,cast(fld0.date as date)),
-             cast(dateadd(week,datediff(week,0,cast(fld0.Activity_Date as date)),0) as date),
+             cast(dateadd(week,datediff(week,0,cast(fld0.date as date)),0) as date),
              fld0.pdsearch_engineaccount_id,
              fld0.pdsearch_ad_id,
              fld0.pdsearch_adgroup_id,
@@ -475,4 +475,4 @@ group by
     t2.paid_search_campaign,
     t2.Paid_SearchEngine,
 --     t2.pdsearch_adgroup_id,
-    t2.Paid_Search_Ad_Group
+    t2.Paid_Search_AdGroup
