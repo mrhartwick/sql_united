@@ -15,5 +15,4 @@ AS
 			op.CustomColumnValue
 		FROM [dbo].[DFID037723_PrismaAdvancedPlacementDetails_Extracted] AS op
 		WHERE op.CustomColumnName = 'PUB PAID AD SERVING FEES'
-		      AND CustomColumnValue IS NOT NULL
-  AND CustomColumnValue <> 'Social';
+		      AND CustomColumnValue IS NOT NULL;
