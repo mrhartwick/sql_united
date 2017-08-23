@@ -370,7 +370,7 @@ cast(r1.date as date)
 --         on t1.placement_id = prs.adserverplacementid
         on t1.plce_id = prs.placementnumber
 
-where prs.costmethod like '[Dd][Cc][Pp][Mm]'
+
          group by
            t1.dcmdate
            ,cast(month(cast(t1.dcmdate as date)) as int)
@@ -386,6 +386,7 @@ where prs.costmethod like '[Dd][Cc][Pp][Mm]'
            ,t1.placement_id
 
               ) as t2
+where t2.costmethod like '[Dd][Cc][Pp][Mm]'
 --    where t2.placement like '%CN_Retargeting%'
 --   where t2.site_rank_2 = 1
        ) as t3
