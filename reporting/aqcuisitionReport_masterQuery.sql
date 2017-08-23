@@ -30,7 +30,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-06-06';
+set @report_ed = '2017-08-18';
 set @report_st = '2017-01-01';
 
 --
@@ -67,7 +67,7 @@ select
   --- retargeting vs prospecting partner types for acquisition campaigns                                                                                                                                                                                                                                                                                                                  ,
 
   case when ((campaign_id = '10742878' OR campaign_id = '11177760' OR campaign_id = '11224605') AND (site_id_dcm= '1578478')) then 'Retargeting'
-  when ((campaign_id = '10742878' OR campaign_id = '11177760' OR campaign_id = '11224605') AND (site_id_dcm='1853562' OR site_id_dcm='1190273')) then 'Prospecting'
+  when ((campaign_id = '10742878' OR campaign_id = '11177760' OR campaign_id = '11224605') AND (site_id_dcm='1853562' OR site_id_dcm='1190273' OR site_id_dcm='1239319'  OR site_id_dcm='3267410')) then 'Prospecting'
   else '' end                                                                                       as "partner_type",
 
 
@@ -98,6 +98,17 @@ select
      when campaign_id='10742878' AND site_id_dcm= '1578478' AND placement LIKE '%Test_First and Business%' then 'Test-First/Biz'
      when campaign_id='10742878' AND site_id_dcm= '1578478' AND placement LIKE '%Control_First and Business%' then 'Control-First/Biz'
      else '' end                                                                                as "bid_group",
+
+   case when campaign_id='10742878' AND (placement  like '%GEN_INT_PROS_FT%' OR placement LIKE '%GEN_DOM_PROS_FT%')  then 'Prospecting Tests'
+     else '' end                                                                                as "Placement_Type",
+
+case when campaign_id='10742878' AND t3.placement  like '%_TAB_%' then 'Tablet'
+     when campaign_id='10742878' AND t3.placement  like '%_DESK_%' then 'Desktop'
+     when campaign_id='10742878' AND t3.placement  like '%_MOB_%'  then 'Mobile'
+
+
+        else ''  end                                                                               as "Device Type",
+
 
     t3.dv_map                                                                                          as "dv map",
     t3.rate                                                                                            as rate,
@@ -137,7 +148,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-06-06';
+-- set @report_ed = '2017-08-18';
 -- set @report_st = '2017-01-01';
 
 select
@@ -609,10 +620,10 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-06-06''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-08-18''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
-and campaign_id in (10742878, 11177760, 11224605) -- display 2017
+and campaign_id = 10742878 -- display 2017
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
@@ -649,8 +660,8 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-06-06''
-and campaign_id in (10742878, 11177760, 11224605) -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-08-18''
+and campaign_id = 10742878 -- display 2017
 
 and (advertiser_id <> 0)
 ) as ti
@@ -683,8 +694,8 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-06-06''
-and campaign_id in (10742878, 11177760, 11224605) -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-08-18''
+and campaign_id = 10742878 -- display 2017
 and (advertiser_id <> 0)
 ) as tc
 
