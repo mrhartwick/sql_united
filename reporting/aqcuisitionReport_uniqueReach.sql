@@ -32,7 +32,13 @@ select
                 sum(may_17_cst)                                                             as may_17_cst,
                 sum(case when t3.jun_17_imps > 0 then 1 else 0 end)                         as jun_all_users,
 --                 sum(t3.jun_17_imps)                                                         as jun_17_imps,
-                sum(jun_17_cst)                                                             as jun_17_cst
+                sum(jun_17_cst)                                                             as jun_17_cst,
+                sum(case when t3.july_17_imps > 0 then 1 else 0 end)                         as july_all_users,
+--                 sum(t3.july_17_imps)                                                         as july_17_imps,
+                sum(july_17_cst)                                                             as july_17_cst,
+                sum(case when t3.aug_17_imps > 0 then 1 else 0 end)                         as aug_all_users,
+--                 sum(t3.aug_17_imps)                                                         as aug_17_imps,
+                sum(aug_17_cst)                                                             as aug_17_cst
 
 
 from (
@@ -49,6 +55,9 @@ select
                 sum(case when t2.year_tim = 2017  and t2.mnth_tim = 4 then 1 else 0 end) as apr_17_imps,
                 sum(case when t2.year_tim = 2017  and t2.mnth_tim = 5 then 1 else 0 end) as may_17_imps,
                 sum(case when t2.year_tim = 2017  and t2.mnth_tim = 6 then 1 else 0 end) as jun_17_imps,
+                sum(case when t2.year_tim = 2017  and t2.mnth_tim = 7 then 1 else 0 end) as july_17_imps,
+                sum(case when t2.year_tim = 2017  and t2.mnth_tim = 8 then 1 else 0 end) as aug_17_imps,
+
                 sum(case
                     when t2.year_tim = 2017 and
                          t2.mnth_tim = 1 and
@@ -102,7 +111,26 @@ select
                     when t2.year_tim = 2017 and
                          t2.mnth_tim = 6
                     then (t2.rate* cast(t2.total_imp as decimal))/cast(1000 as decimal)
-                    else 0 end) as jun_17_cst
+                    else 0 end) as jun_17_cst,
+                sum(case
+                    when t2.year_tim = 2017 and
+                         t2.mnth_tim = 7 and
+                         t2.CostMethod = 'dCPM'
+                    then t2.dbm_cost
+                    when t2.year_tim = 2017 and
+                         t2.mnth_tim = 7
+                    then (t2.rate* cast(t2.total_imp as decimal))/cast(1000 as decimal)
+                    else 0 end) as july_17_cst,
+                sum(case
+                    when t2.year_tim = 2017 and
+                         t2.mnth_tim = 8 and
+                         t2.CostMethod = 'dCPM'
+                    then t2.dbm_cost
+                    when t2.year_tim = 2017 and
+                         t2.mnth_tim = 8
+                    then (t2.rate* cast(t2.total_imp as decimal))/cast(1000 as decimal)
+                    else 0 end) as aug_17_cst
+
 from (
                   select
              t001.user_id,
@@ -137,9 +165,9 @@ from (
 
          where
              user_id <> '0'
-                 and t001.campaign_id in (8964059, 8958859, 11177760, 11224605, 10742878)
+                 and t001.campaign_id in ( 8958859, 10742878)
                  and t001.advertiser_id <> '0'
-                 and cast(timestamp_trunc(to_timestamp(t001.event_time / 1000000),'SS') as date) between '2017-01-01' and '2017-06-06'
+                 and cast(timestamp_trunc(to_timestamp(t001.event_time / 1000000),'SS') as date) between '2017-01-01' and '2017-08-18'
 
          group by
              t001.user_id,
