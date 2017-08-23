@@ -839,7 +839,7 @@ from (
                     case
                     when (t1.campaign_id = 10742878 OR t1.campaign_id = 8958859) AND
                     (t1.site_id_dcm = 1578478 OR t1.site_id_dcm = 2202011)
-                    then '[Dd][Cc][Pp][Mm]'   else  prs.costmethod end                                              as costmethod,
+                    then 'dCPM' else  prs.costmethod end                                              as costmethod,
                     prs.cost_id                                                                           as cost_id,
                     prs.planned_amt                                                                       as planned_amt,
                     prs.planned_cost                                                                      as planned_cost,
@@ -1171,4 +1171,4 @@ group by
          ) as t7
         where (len(isnull(t7.cost_id,'')) != 0)
 ) as t8
-gos
+go
