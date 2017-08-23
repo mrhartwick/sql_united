@@ -39,6 +39,17 @@ as
                    (@site_id_dcm = '1853564'))                                -- Live Intent
                    then 'N'
 
+          ----- Corrections to GM Acquisition, Prospecting Partners
+               when @campaign_id = '10742878' and
+                  ((@site_id_dcm = '1578478' and @placement like '%[Mm]obile_GOOGLE INC_GEN_INT_PROS_FT%') or   -- Google
+                   (@site_id_dcm = '3267410' and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%') or  --Quantcast
+                  (@site_id_dcm = '1239319' and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%') or  --Sojern
+                    (@site_id_dcm = '1190273' and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%') or   --Adara
+                    (@site_id_dcm = '1853562' and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%')  --Amobee
+                  )
+                   then 'Y'
+
+
                -- FlipBoard unable to implement Moat tags; must bill off of DFA impressions
                when @site_id_dcm = '2937979' then 'N'
                -- All targeted marketing subject to viewability; mark "Y"
