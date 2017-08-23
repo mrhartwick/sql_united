@@ -546,7 +546,7 @@ select
 -- ============================================================================================================================================
 
 from (
---
+
 --
 -- declare @report_st date,
 -- @report_ed date;
@@ -836,7 +836,10 @@ from (
                     then 20161022
                     else prs.eddate end                                                                   as eddate,
                     prs.packagecat                                                                        as packagecat,
-                    prs.costmethod                                                                        as costmethod,
+                    case
+                    when (t1.campaign_id = 10742878 OR t1.campaign_id = 8958859) AND
+                    (t1.site_id_dcm = 1578478 OR t1.site_id_dcm = 2202011)
+                    then '[Dd][Cc][Pp][Mm]'   else  prs.costmethod end                                              as costmethod,
                     prs.cost_id                                                                           as cost_id,
                     prs.planned_amt                                                                       as planned_amt,
                     prs.planned_cost                                                                      as planned_cost,
@@ -1027,7 +1030,7 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
@@ -1093,7 +1096,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
@@ -1103,8 +1106,7 @@ cast(report.date as date)
          where t2.campaign not like 'BidManager%Campaign%'
              and t2.site_dcm not like '%DfaSite%'
 
-         group by
-
+group by
              t2.campaign
              ,t2.campaign_id
              ,t2.cost_id
@@ -1131,7 +1133,7 @@ cast(report.date as date)
              ,iv.joinkey
              ,t2.costmethod
              ,flat.flatcost
-
+--
      ) as t3
                                                left join (
                            select *
@@ -1169,4 +1171,4 @@ cast(report.date as date)
          ) as t7
         where (len(isnull(t7.cost_id,'')) != 0)
 ) as t8
-go
+gos
