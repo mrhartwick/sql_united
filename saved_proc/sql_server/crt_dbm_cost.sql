@@ -125,7 +125,10 @@ insert into master.dbo.dbm_cost
              case when t1.plce_id in ('PBKB7J','PBKB7H','PBKB7K') then 'PBKB7J'
              else t1.plce_id end                                    as plce_id,
              prs.DV_Map                                             as DV_Map,
-             prs.costmethod                                         as costmethod,
+           case
+                    when (t1.campaign_id = 10742878 OR t1.campaign_id = 8958859) AND
+                    (t1.site_id_dcm = 1578478 OR t1.site_id_dcm = 2202011)
+                    then '[Dd][Cc][Pp][Mm]'   else  prs.costmethod end                                              as costmethod,
              prs.Rate                                               as rate,
              case when t1.placement like 'PBKB7J%' or t1.placement like 'PBKB7H%' or t1.placement like 'PBKB7K%' or t1.placement = 'United 360 - Polaris 2016 - Q4 - Amobee' then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID'
              else t1.placement end                                  as placement,
@@ -362,7 +365,7 @@ cast(r1.date as date)
                        left join
       (
         select *
-        from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+        from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
       ) as prs
 --         on t1.placement_id = prs.adserverplacementid
         on t1.plce_id = prs.placementnumber
@@ -387,6 +390,8 @@ where prs.costmethod like '[Dd][Cc][Pp][Mm]'
 --   where t2.site_rank_2 = 1
        ) as t3
 where t3.site_rank_2 = 1
+
+
 
   group by
     t3.dcmmatchdate,
