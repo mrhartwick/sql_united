@@ -69,7 +69,8 @@ SELECT Cast(date AS DATE)                      AS ftDate,
          WHEN Isnumeric(ad_visible_over_3_seconds) = 1 THEN Cast(ad_visible_over_3_seconds AS INT)
          ELSE 0
        END                                     AS ad_visible_over_3_seconds,
-       Cast(total_expand_time AS TIME(0))      AS total_expand_time,
+       Cast(replace(total_expand_time,'.',':') AS time(0))      AS total_expand_time,
+--    total_expand_time,
        CASE
          WHEN Isnumeric(expand_views) = 1 THEN Cast(expand_views AS INT)
          ELSE 0
@@ -82,7 +83,12 @@ SELECT Cast(date AS DATE)                      AS ftDate,
          WHEN Isnumeric(interactions_unique_by_impression) = 1 THEN Cast(interactions_unique_by_impression AS INT)
          ELSE 0
        END                                     AS interactions_unique_by_impression,
-       Cast(total_interaction_time AS TIME(0)) AS total_interaction_time,
+    case
+    when isnumeric(left(total_interaction_time,3)) = 1 then '00:00:00'
+    when cast(left(total_interaction_time,2) as int) > 23  then '00:00:00'
+
+    else cast(total_interaction_time as time(0)) end
+as total_interaction_time,
        CASE
          WHEN Isnumeric(interaction_rate) = 1 THEN Cast(interaction_rate AS DECIMAL(20, 10))
          ELSE 0
