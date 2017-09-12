@@ -279,7 +279,7 @@ select
                             nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .015 as decimal(10,2))
 
               when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((t2.vew_rev) *
+              then cast((((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
                             nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .015 as decimal(10,2))
 
@@ -290,7 +290,8 @@ select
                             nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .0225 as decimal(10,2))
 
               when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((t2.vew_rev) *
+              then cast(((
+(t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
                             nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .0225 as decimal(10,2))
 
@@ -301,7 +302,7 @@ select
                             nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .06 as decimal(10,2))
 
               when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((t2.vew_rev) *
+              then cast((((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
                             nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .06 as decimal(10,2))
 
@@ -312,7 +313,7 @@ select
                             nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .06 as decimal(10,2))
 
               when (t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((t2.vew_rev) *
+              then cast((((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
                             nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .06 as decimal(10,2))
 
@@ -323,7 +324,7 @@ select
                             nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08 as decimal(10,2))
 
               when (t2.costmethod = 'dCPM' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((t2.vew_rev) *
+              then cast((((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
                             nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .08 as decimal(10,2))
 
@@ -334,7 +335,7 @@ select
                             nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08 as decimal(10,2))
 
               when (t2.dv_map = 'N' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((t2.vew_rev) *
+              then cast((((t2.vew_rev) *
                           (cast(mt.groupm_passed_impressions as decimal) /
                             nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08 as decimal(10,2))
 
