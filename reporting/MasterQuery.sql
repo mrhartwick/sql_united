@@ -269,27 +269,74 @@ select
                             nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as billrevenue,
 
+-- ==============================================================================================================================================
 --         Billable revenue with United discounts applied
                sum(case
 --         not subject to viewability, DBM
-              when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%')
-              then cast(((t2.vew_rev) + t2.clk_rev)  * .015 as decimal(10,2))
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
+              then cast((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .015 as decimal(10,2))
 
-              when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%')
-              then cast(((t2.vew_rev)  + t2.clk_rev) * .0225 as decimal(10,2))
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .015 as decimal(10,2))
 
-              when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%')
-              then cast(((t2.vew_rev)  + t2.clk_rev) * .06 as decimal(10,2))
 
-             when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%')
-              then cast(((t2.vew_rev)  + t2.clk_rev) * .06 as decimal(10,2))
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
+              then cast((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .0225 as decimal(10,2))
 
-              when (t2.dv_map = 'N' and t2.costmethod = 'dCPM')
-              then cast((cst.vew_rev + cst.clk_rev)  * .08 as decimal(10,2))
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .0225 as decimal(10,2))
+
+
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
+              then cast((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .06 as decimal(10,2))
+
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .06 as decimal(10,2))
+
+
+              when (t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%' and (len(isnull(dv.joinkey,''))>0))
+              then cast((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .06 as decimal(10,2))
+
+              when (t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .06 as decimal(10,2))
+
+
+              when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
+              then cast((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08 as decimal(10,2))
+
+              when (t2.costmethod = 'dCPM' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .08 as decimal(10,2))
 
 --         not subject to viewability
-             when (t2.dv_map = 'N')
-               then cast((t2.vew_rev + t2.clk_rev) * .08 as decimal(10,2))
+              when (t2.dv_map = 'N' and (len(isnull(dv.joinkey,''))>0))
+              then cast((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08 as decimal(10,2))
+
+              when (t2.dv_map = 'N' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08 as decimal(10,2))
 
 --         Win NY TapAd placements, which Medialets failed to tag
 --         using average viewability rate for Feb, Mar, Apr

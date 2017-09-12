@@ -14,7 +14,7 @@ create table diap01.mec_us_united_20056.ual_dfa2_paid_search_meta (
 );
 
 -- combo file of all match_table_paid_search files since 20170526
-copy diap01.mec_us_united_20056.ual_dfa2_paid_search_meta from local 'C:\Users\matthew.hartwick\Documents\paid_search_match_20170526-20170727.csv' with DELIMITER ',' DIRECT commit;
+copy diap01.mec_us_united_20056.ual_dfa2_paid_search_meta from local 'C:\Users\matthew.hartwick\Documents\paid_search_match_20170728-20170912' with DELIMITER ',' DIRECT commit;
 
 -- De-duped version
 create table diap01.mec_us_united_20056.ual_dfa2_paid_search_meta_u (

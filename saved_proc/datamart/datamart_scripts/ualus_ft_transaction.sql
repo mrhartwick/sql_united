@@ -4,46 +4,49 @@
 -- Description: {Description}
 -- Comments:
 --====================================================================
-DELETE FROM ualus_ft_summary
-WHERE  ftDate IN (SELECT DISTINCT [date]
-                  FROM   [DFID060193_FT_Summ_Extracted_Post])
+DELETE FROM ualus_ft_transaction
+WHERE  ftDate IN (SELECT DISTINCT [Sales_Date]
+                  FROM   [DFID061369_FT_Trans_Extracted])
 
 --transform/cast data types and insert cleansed data into the fact table
-INSERT INTO ualus_ft_summary
-select cast(date as date)                      as ftdate,
-       cast(campaign_name as nvarchar(1000))   as campaign_name,
-       case when isnumeric(idcampaign) = 1 then cast(idcampaign as int) else 0 end                                     as campaign_id,
-       cast(site_name as nvarchar(1000))       as site_name,
-       case when isnumeric(idsite) = 1 then cast(idsite as int) else 0 end                                     as site_id,
-       cast(ad_size as nvarchar(1000))         as ad_size,
+INSERT INTO ualus_ft_transaction
+select cast(Sales_Date as date)                      as ftdate,
+      cast(Sales_Timestamp as datetime)                      as ft_timestamp,
+       cast(Campaign as nvarchar(1000))   as campaign_name,
+       case when isnumeric(Campaign_ID) = 1 then cast(Campaign_ID as int) else 0 end                                     as campaign_id,
+       cast(Site as nvarchar(1000))       as site_name,
+       case when isnumeric(Site_ID) = 1 then cast(Site_ID as int) else 0 end                                     as site_id,
        cast(placement as nvarchar(1000))       as placement,
-       case when isnumeric(idplacement) = 1 then cast(idplacement as int) else 0 end                                     as placement_id,
+       case when isnumeric(Placement_ID) = 1 then cast(Placement_ID as int) else 0 end                                     as placement_id,
        cast(creative as nvarchar(1000))        as creative,
-       case when isnumeric(idcreative) = 1 then cast(idcreative as int) else 0 end                                     as creative_id,
+       case when isnumeric(Creative_ID) = 1 then cast(Creative_ID as int) else 0 end                                     as creative_id,
+       case when isnumeric(Quantity) = 1 then cast(Quantity as int) else 0 end as quantity,
+       case when isnumeric(Sales_Value) = 1 then cast(Sales_Value as decimal(20, 10)) else 0 end as revenue
+       cast(currency as nvarchar(3))         as currency,
+       cast(Attribution_Method as nvarchar(1000))         as attribution_method,
+       cast(Sales_Type as nvarchar(1000))         as sales_type,
+       cast(Conversion_Type as nvarchar(1000))         as conversion_type,
        cast(version as nvarchar(1000))         as creative_ver,
-       case when isnumeric(idcreative_config) = 1 then cast(idcreative_config as int) else 0 end                                     as creative_ver_id,
-       case when isnumeric(impressions_delivered) = 1 then cast(impressions_delivered as int) else 0 end                                     as delivered_impressions,
-       case when isnumeric(clicks) = 1 then cast(clicks as int) else 0 end                                     as clicks,
-       case when isnumeric(desktop_impressions) = 1 then cast(desktop_impressions as int) else 0 end                                     as desktop_impressions,
-       case when isnumeric(mobile_web_impressions) = 1 then cast(mobile_web_impressions as int) else 0 end                                     as mobile_web_impressions,
-       case when isnumeric(mobile_app_impressions) = 1 then cast(mobile_app_impressions as int) else 0 end                                     as mobile_app_impressions,
-       case when isnumeric(affiliate_click) = 1 then cast(affiliate_click as int) else 0 end                                     as affiliate_click,
-       case when isnumeric(search_integration_click) = 1 then cast(search_integration_click as int) else 0 end                                     as search_integration_click,
-       case when isnumeric(ad_visible_over_3_seconds) = 1 then cast(ad_visible_over_3_seconds as int) else 0 end                                     as ad_visible_over_3_seconds,
-       cast(replace(total_expand_time,'.',':') as time(0))      as total_expand_time,
---    total_expand_time,
-       case when isnumeric(expand_views) = 1 then cast(expand_views as int) else 0 end                                     as expand_views,
-       case when isnumeric(fullscreen) = 1 then cast(fullscreen as int) else 0 end                                     as fullscreen,
-       case when isnumeric(interactions_unique_by_impression) = 1 then cast(interactions_unique_by_impression as int) else 0 end                                     as interactions_unique_by_impression,
-    case
-    when isnumeric(left(total_interaction_time,3)) = 1 then '00:00:00'
-    when cast(left(total_interaction_time,2) as int) > 23  then '00:00:00'
-    else cast(total_interaction_time as time(0)) end as total_interaction_time,
-       case when isnumeric(interaction_rate) = 1 then cast(interaction_rate as decimal(20, 10)) else 0 end                                     as interaction_rate
-from   [dbo].[dfid060193_ft_summ_extracted_post]
-where  cast([date] as date) not in (select distinct ftdate
-                                    from   ualus_ft_summary)
+       case when isnumeric(Version_ID) = 1 then cast(Version_ID as int) else 0 end as creative_ver_id,
+       cast(Spotlight as nvarchar(1000))         as spotlight_name,
+       case when isnumeric(Spotlight_ID) = 1 then cast(Spotlight_ID as int) else 0 end as Spotlight_ID,
+       cast(Flashtalking_GUID as nvarchar(1000))         as flashtalking_guid,
+       case when isnumeric(Time_To_Sale) = 1 then cast(Time_To_Sale as int) else 0 end as time_to_sale,
+       cast(keyword as nvarchar(1000))         as keyword,
+       cast(city as nvarchar(1000))         as city,
+       cast(country as nvarchar(1000))         as country,
+       cast(route_1 as nvarchar(3))         as route_1,
+       cast(route_2 as nvarchar(3))         as route_2,
+       case when dep_date_1 = '--' then null else cast(dep_date_1 as date) end as dep_date_1,
+       case when dep_date_2 = '--' then null else cast(dep_date_2 as date) end as dep_date_2,
+       cast(cbn_class as nvarchar(1000))         as cbn_class,
+       cast(U6 as nvarchar(1000))         as country_code,
+       cast(U7 as nvarchar(1000))         as U7,
+
+from   [dbo].[DFID061369_FT_Trans_Extracted]
+where  cast(Sales_Date as date) not in (select distinct ftdate
+                                    from   ualus_ft_transaction)
 
 SELECT Max(ftDate) ftDate
 INTO   #DT
-FROM   ualus_ft_summary
+FROM   ualus_ft_transaction
