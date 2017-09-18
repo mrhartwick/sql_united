@@ -19,7 +19,9 @@ from (
            ,report.traveldate_1            as traveldate_1
            ,case when (length(ISNULL(report.rt_2_dest,''))=0) then report.rt_1_dest
               when report.rt_1_orig = report.rt_2_dest and report.rt_2_orig = report.rt_1_dest then report.rt_1_dest
-              else report.rt_1_dest || '/' || report.rt_2_dest
+              when report.rt_2_dest in ('SYD','MEL','PEK','PVG','SHA','CTU','XIY','HKG','EZE','SCL','LCY','LGW','LHR','DUB','GVA','EDI','FRA','HHN','CDG','HNL','KOA','ITO') then report.rt_2_dest
+              when report.rt_1_dest in ('SYD','MEL','PEK','PVG','SHA','CTU','XIY','HKG','EZE','SCL','LCY','LGW','LHR','DUB','GVA','EDI','FRA','HHN','CDG','HNL','KOA','ITO') then report.rt_1_dest
+              else report.rt_2_dest
               end                          as destination
 --            ,case when (length(ISNULL(report.route_2,''))=0) then report.route_1
 --             when report.rt_1_orig = report.rt_2_dest and report.rt_2_orig = report.rt_1_dest then report.route_1
