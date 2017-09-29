@@ -3,8 +3,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-06-30';
-set @report_st = '2017-06-01';
+set @report_ed = '2017-08-31';
+set @report_st = '2017-08-01';
 
 select
 -- t1.date,
