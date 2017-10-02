@@ -18,6 +18,9 @@ as
         declare @final_dv_map varchar(4000)
         set @final_dv_map = case
                -- These cost methods should never be subject to viewability
+
+             -------Correction to SF 2017
+                 when @campaign_id = '20177168' and @site_id_dcm = 1995643 then 'Y'
                when @cost_method = 'Flat' or @cost_method = 'CPC' or @cost_method = 'CPCV' or @cost_method = 'dCPM'
                    then 'N'
 
