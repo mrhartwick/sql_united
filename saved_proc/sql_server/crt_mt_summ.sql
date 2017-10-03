@@ -10,8 +10,7 @@ create table master.dbo.mt_summ
   mtDate                      date         not null,
   media_property              varchar(255) not null,
   campaign_name               varchar(255),
-  placement_code              varchar(255),
-  placement_name              varchar(255),
+    placement_name              varchar(255),
   total_impressions           int          not null,
   groupm_passed_impressions   int          not null,
   groupm_billable_impressions int          not null
@@ -25,8 +24,7 @@ insert into master.dbo.mt_summ
     t2.mtDate,
     [dbo].udf_siteName(t2.media_property)                      as media_property,
     t2.campaign_name                                           as campaign_name,
-    t2.placement_code                                          as placement_code,
-    t2.placement_name                                          as placement_name,
+     t2.placement_name                                          as placement_name,
     isnull(sum(t2.total_impressions),0)                        as total_impressions,
     isnull(sum(t2.groupm_passed_impressions),0)                as groupm_passed_impressions,
     isnull(sum(t2.groupm_billable_impressions),0)              as groupm_billable_impressions
@@ -302,5 +300,4 @@ where x1 = 1
     t2.mtDate,
     t2.media_property,
     t2.campaign_name,
-    t2.placement_code,
     t2.placement_name
