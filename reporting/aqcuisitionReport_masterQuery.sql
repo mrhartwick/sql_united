@@ -15,12 +15,12 @@
 -- -- --
 -- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
--- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
+-- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
 --
--- exec [10.2.186.148\SQLINS02,4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
--- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
--- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
--- exec [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
+-- exec [10.2.186.148\SQLINS02, 4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
+-- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
+-- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
+-- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
 -- exec master.dbo.crt_dfa_flatCost_dt2 go
 -- exec master.dbo.crt_dbm_cost go
 -- exec master.dbo.crt_dfa_cost_dt2 go
@@ -30,7 +30,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-08-18';
+set @report_ed = '2017-09-25';
 set @report_st = '2017-01-01';
 
 --
@@ -136,7 +136,9 @@ case when campaign_id='10742878' AND t3.placement  like '%_TAB_%' then 'Tablet'
     sum(t3.vew_rev)                                                                                    as vew_rev,
     sum(t3.clk_rev)                                                                                    as clk_thru_rev,
 --     sum(t3.billrevenue)                                                                                as "billable revenue",
-    sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue"
+    sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue",
+  sum(t3.dv_viewed)                                                                                    as dv_viewed,
+  sum(t3.dv_impressions)                                                                               as dv_total_imps
 
 
 
@@ -148,7 +150,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-08-18';
+-- set @report_ed = '2017-09-25';
 -- set @report_st = '2017-01-01';
 
 select
@@ -301,26 +303,73 @@ select
              else 0 end)                                                            as billrevenue,
 
              --         Billable revenue with United discounts applied
-                            sum(case
-             --         not subject to viewability, DBM
-                           when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%')
-                           then cast((((t2.vew_rev) + t2.clk_rev)  * .015) *.9 as decimal(10,2))
+            sum(case
+--         not subject to viewability, DBM
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .015) * .9 as decimal(10,2))
 
-                           when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%')
-                           then cast((((t2.vew_rev)  + t2.clk_rev) * .0225) *.9 as decimal(10,2))
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .015) *.9 as decimal(10,2))
 
-                           when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%')
-                           then cast((((t2.vew_rev)  + t2.clk_rev) * .06) *.9 as decimal(10,2))
 
-                          when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%')
-                           then cast((((t2.vew_rev)  + t2.clk_rev) * .06) *.9 as decimal(10,2))
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .0225) * .9 as decimal(10,2))
 
-                           when (t2.dv_map = 'N' and t2.costmethod = 'dCPM')
-                           then cast(((cst.vew_rev + cst.clk_rev)  * .08) *.9 as decimal(10,2))
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
+              then cast((((
+(t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .0225) * .9 as decimal(10,2))
 
-             --         not subject to viewability
-                          when (t2.dv_map = 'N')
-                            then cast(((t2.vew_rev + t2.clk_rev) * .08) *.9 as decimal(10,2))
+
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .06) * .9 as decimal(10,2))
+
+              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .06) * .9 as decimal(10,2))
+
+
+              when (t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%' and (len(isnull(dv.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .06) * .9 as decimal(10,2))
+
+              when (t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .06) * .9 as decimal(10,2))
+
+
+              when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08) *.9 as decimal(10,2))
+
+              when (t2.costmethod = 'dCPM' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .08) *.9 as decimal(10,2))
+
+--         not subject to viewability
+              when (t2.dv_map = 'N' and (len(isnull(dv.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08) *.9 as decimal(10,2))
+
+              when (t2.dv_map = 'N' and (len(isnull(mt.joinkey,''))>0))
+              then cast(((((t2.vew_rev) *
+                          (cast(mt.groupm_passed_impressions as decimal) /
+                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
 
              --         Win NY TapAd placements, which Medialets failed to tag
              --         using average viewability rate for Feb, Mar, Apr
@@ -424,7 +473,20 @@ select
                           (((t2.vew_rev) *
                                        (cast(mt.groupm_passed_impressions as decimal) /
                                          nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
-                          else 0 end)                                                            as adjsrevenue,
+
+                          when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%')
+              then cast((((t2.vew_rev) + t2.clk_rev)  * .015) *.9 as decimal(10,2))
+
+              when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%')
+              then cast((((t2.vew_rev)  + t2.clk_rev) * .0225) *.9 as decimal(10,2))
+
+              when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%')
+              then cast((((t2.vew_rev)  + t2.clk_rev) * .06) *.9 as decimal(10,2))
+
+             when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%')
+              then cast((((t2.vew_rev)  + t2.clk_rev) * .06) *.9 as decimal(10,2))
+
+              else (((t2.vew_rev + t2.clk_rev ) * .08) *.9)  end) as            adjsrevenue,
 
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.billimps end) as billimps,
@@ -620,7 +682,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-08-18''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-09-25''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 and campaign_id = 10742878 -- display 2017
@@ -660,7 +722,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-08-18''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-09-25''
 and campaign_id = 10742878 -- display 2017
 
 and (advertiser_id <> 0)
@@ -694,7 +756,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-08-18''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-09-25''
 and campaign_id = 10742878 -- display 2017
 and (advertiser_id <> 0)
 ) as tc
@@ -759,7 +821,7 @@ cast (r1.date as date )
       left join
       (
         select *
-        from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+        from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
       ) as prs
         on t1.placement_id = prs.adserverplacementid
 
@@ -841,7 +903,7 @@ cast (r1.date as date )
 
   left join (
               select *
-              from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+              from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
               where ivdate between @report_st and @report_ed
             ) as iv
       on
