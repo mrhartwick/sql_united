@@ -60,9 +60,9 @@ insert into master.dbo.dv_summ
                            (len(isnull(placement_code,''))=0) then cast(0 as int)
                            else cast(placement_code as int) end as placement_code,
 --                        p2.placement_id,
-                        gm_active_impressions as total_impressions,
-                        gm_active_impressions as groupm_passed_impressions,
-                       gm_billable_impressions                 as groupm_billable_impressions
+                        gm_active_impressions                 as total_impressions,
+                        gm_passed_impressions                 as groupm_passed_impressions,
+                       gm_billable_impressions                as groupm_billable_impressions
 --
 
 
