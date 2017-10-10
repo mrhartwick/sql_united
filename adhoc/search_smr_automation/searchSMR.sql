@@ -3,8 +3,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-08-31';
-set @report_st = '2017-08-01';
+set @report_ed = '2017-09-30';
+set @report_st = '2017-09-01';
 
 select
 -- t1.date,
@@ -68,7 +68,7 @@ select
     avg(t1.avg_pos)                                                                     as avg_pos,
 --     sum(case when t1.imps = 0 then 0 else t1.avg_pos_1 / t1.imps end)                   as avg_pos_2,
 --     case when sum(t1.imps) = 0 then 0 else sum(t1.avg_pos * t1.imps) / sum(t1.imps) end as avg_pos_3,
-    isnull(sum(fld2.rev * .08), 0)                                                           as rev,
+    isnull(sum((fld2.rev * .08) *.9), 0)                                                           as rev,
     isnull(sum(cast(fld2.prch as int)), 0)                                                         as prch,
     isnull(sum(cast(fld2.lead as int)), 0)                                                         as lead,
 --   sum(cast(fld2.tot_con as int))     as Transactions,
@@ -307,7 +307,7 @@ from (
 --     where e1.Paid_SearchEngine not like '%[Ss][Mm][Ee]%'
 --       where e1.Paid_SearchEngine like '%TMK%'
 where
-    e1.Paid_SearchEngine not like '%[Bb][Rr][Nn][Dd]%' and
+--     e1.Paid_SearchEngine not like '%[Bb][Rr][Nn][Dd]%' and
     e1.Paid_SearchEngine not like '%[Ss][Mm][Ee]%' and
   e1.Paid_SearchEngine not like '%[Pp][Ll][Cc][Yy]%'
 
@@ -348,7 +348,7 @@ select
     0                           as cost,
     0                           as Clicks,
     0                           as avg_pos,
-    sum(fld1.total_revenue * .08) as rev,
+    sum((fld1.total_revenue * .08)* .9) as rev,
     sum(fld1.prch)          as prch,
     sum(fld1.lead)          as lead,
 --  sum(fld1.total_conversions) as tot_con,
