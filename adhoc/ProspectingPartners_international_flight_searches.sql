@@ -19,17 +19,10 @@ from (
            ,report.traveldate_1            as traveldate_1
            ,case when (length(ISNULL(report.rt_2_dest,''))=0) then report.rt_1_dest
               when report.rt_1_orig = report.rt_2_dest and report.rt_2_orig = report.rt_1_dest then report.rt_1_dest
-              when report.rt_2_dest in ('SYD','MEL','PEK','PVG','SHA','CTU','XIY','HKG','EZE','SCL','LCY','LGW','LHR','DUB','GVA','EDI','FRA','HHN','CDG','HNL','KOA','ITO') then report.rt_2_dest
-              when report.rt_1_dest in ('SYD','MEL','PEK','PVG','SHA','CTU','XIY','HKG','EZE','SCL','LCY','LGW','LHR','DUB','GVA','EDI','FRA','HHN','CDG','HNL','KOA','ITO') then report.rt_1_dest
+              when report.rt_2_dest in ('SYD','MEL','PEK','PVG','SHA','CTU','XIY','HKG','EZE','SCL','LCY','LGW','LHR','DUB','GVA','EDI','FRA','HHN','CDG','HNL','KOA','ITO', 'LIH','AMS', 'SIN', 'AKL', 'MUC', 'ZRH', 'ICN', 'HAM', 'ITM', 'KIX', 'BRU', 'EWR', 'DEN', 'SFO') then report.rt_2_dest
+              when report.rt_1_dest in ('SYD','MEL','PEK','PVG','SHA','CTU','XIY','HKG','EZE','SCL','LCY','LGW','LHR','DUB','GVA','EDI','FRA','HHN','CDG','HNL','KOA','ITO', 'LIH','AMS', 'SIN', 'AKL', 'MUC', 'ZRH', 'ICN', 'HAM', 'ITM', 'KIX', 'BRU', 'EWR', 'DEN', 'SFO') then report.rt_1_dest
               else report.rt_2_dest
               end                          as destination
---            ,case when (length(ISNULL(report.route_2,''))=0) then report.route_1
---             when report.rt_1_orig = report.rt_2_dest and report.rt_2_orig = report.rt_1_dest then report.route_1
---             else report.route_1 || ' / ' || report.route_2
---             end                            as route
---            ,case when report.rt_1_orig = report.rt_2_dest and report.rt_2_orig = report.rt_1_dest then 'round-trip' else 'one-way' end as flighttype
---            ,report.route_1                 as route_1
---            ,report.route_2                 as route_2,
            ,report.rt_1_dest               as route_1_destination
            ,report.rt_2_dest               as route_2_destination
            ,report.rt_1_orig               as route_1_origin
@@ -67,48 +60,7 @@ from (
                           when regexp_like(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(conversions.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) end as rt_2_orig
                           ,case when regexp_like(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then regexp_substr(conversions.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3)
                           when regexp_like(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(conversions.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) end as rt_2_dest
---
---                           ,case when regexp_like(cONVERSIONS.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
---                               regexp_like(cONVERSIONS.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
---                               then regexp_substr(cONVERSIONS.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3) ||' to '|| regexp_substr(cONVERSIONS.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3)
---
---                           when regexp_like(cONVERSIONS.other_data,'(u5=)([A-Z][A-Z][A-Z])\;','ib') and
---                               regexp_like(cONVERSIONS.other_data,'(u7=)([A-Z][A-Z][A-Z])\;','ib')
---                               then regexp_substr(cONVERSIONS.other_data,'(u5=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) ||' to '|| regexp_substr(cONVERSIONS.other_data,'(u7=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2)
---
---                           when regexp_like(cONVERSIONS.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
---                               regexp_like(cONVERSIONS.other_data,'(u7=)([A-Z][A-Z][A-Z])\;','ib')
---                               then regexp_substr(cONVERSIONS.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3) ||' to '|| regexp_substr(cONVERSIONS.other_data,'(u7=)([A-Z][A-Z][A-Z])\;',1,1,'ib',3)
---
---                           when regexp_like(cONVERSIONS.other_data,'(u5=)([A-Z][A-Z][A-Z])\;','ib') and
---                               regexp_like(cONVERSIONS.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
---                               then regexp_substr(cONVERSIONS.other_data,'(u5=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) ||' to '|| regexp_substr(cONVERSIONS.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3)
---
---                           end                                                                                                                                         as route_1,
---
---                           ,case when regexp_like(cONVERSIONS.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
---                               regexp_like(cONVERSIONS.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
---                               then regexp_substr(cONVERSIONS.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3) ||' to '|| regexp_substr(cONVERSIONS.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3)
---
---                           when regexp_like(cONVERSIONS.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') and
---                               regexp_like(cONVERSIONS.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib')
---                               then regexp_substr(cONVERSIONS.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) ||' to '|| regexp_substr(cONVERSIONS.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2)
---
---                           when regexp_like(cONVERSIONS.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])','ib') and
---                               regexp_like(cONVERSIONS.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib')
---                               then regexp_substr(cONVERSIONS.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3) ||' to '|| regexp_substr(cONVERSIONS.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib',3)
---
---                           when regexp_like(cONVERSIONS.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') and
---                               regexp_like(cONVERSIONS.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib')
---                               then regexp_substr(cONVERSIONS.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) ||' to '|| regexp_substr(cONVERSIONS.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3)
---                           end                                                                                                                                         as route_2
 
-
---                    , case when (regexp_substr(conversions.other_data,'(u5=).+?\;',1,1,'ib', 3) = regexp_substr(conversions.other_data,'(u8=).+?\;',1,1,'ib', 3) and
---                    regexp_substr(conversions.other_data,'(u7=).+?\;',1,1,'ib', 3) = regexp_substr(conversions.other_data,'(u6=).+?\;',1,1,'ib', 3))
--- --                                or regexp_like(conversions.other_data,'(u6=)\-\-\;','')
---                    then 'round-trip'
---                      else 'one-way' end                           as flighttype
 
                       ,sum(case when conversions.activity_id = 1086066 and conversions.conversion_id = 1 then 1 else 0 end) as clk_led
 
@@ -155,8 +107,6 @@ and conversions.site_id_dcm  = Placements.site_id_dcm
 
 
                 group by
---                     cast(conversions.date as date)
---                    ,cast(month(cast(conversions.date as date)) as int)
                     cast (timestamp_trunc(to_timestamp(conversions.interaction_time / 1000000),'SS') as date )
                    ,conversions.campaign_id
                    ,conversions.site_id_dcm
@@ -169,8 +119,6 @@ and conversions.site_id_dcm  = Placements.site_id_dcm
              ) as report
 
         where report.traveldate_1 is not null
---         and   ((report.rt_1_dest in ('SYD','MEL','PEK','PVG','SHA','CTU','XIY','HKG','EZE','SCL','LCY','LGW','LHR','DUB','GVA','EDI','FRA','HHN','CDG','HNL','KOA','ITO'))
---           or (report.rt_2_dest in ('SYD','MEL','PEK','PVG','SHA','CTU','XIY','HKG','EZE','SCL','LCY','LGW','LHR','DUB','GVA','EDI','FRA','HHN','CDG','HNL','KOA','ITO')))
 
        and report.placement LIKE '%GEN_INT_PROS_FT%' OR report.placement LIKE '%GEN_DOM_PROS_FT%'
 
@@ -214,7 +162,21 @@ OR final.destination LIKE'%HHN%'
 OR final.destination LIKE'%CDG%'
 OR final.destination LIKE'%HNL%'
 OR final.destination LIKE'%KOA%'
-OR final.destination LIKE'%ITO%')
+OR final.destination LIKE'%ITO%'
+OR final.destination LIKE'%LIH%'
+OR final.destination LIKE'%AMS%'
+OR final.destination LIKE'%SIN%'
+OR final.destination LIKE'%AKL%'
+OR final.destination LIKE'%MUC%'
+OR final.destination LIKE'%ZRH%'
+OR final.destination LIKE'%ICN%'
+OR final.destination LIKE'%HAM%'
+OR final.destination LIKE'%ITM%'
+OR final.destination LIKE'%KIX%'
+OR final.destination LIKE'%BRU%'
+OR final.destination LIKE'%EWR%'
+OR final.destination LIKE'%DEN%'
+OR final.destination LIKE'%SFO%')
 group by
 
 
@@ -223,6 +185,3 @@ final.site
 ,final.route_1_destination
 ,final.route_2_destination
 ,final.date
----------------------------------
-
-
