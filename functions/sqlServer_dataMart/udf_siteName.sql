@@ -93,9 +93,16 @@ AS
 				when @site_name like '[Xx]ad%' then 'xAd Inc'
 				when @site_name like '[Yy]ieldbot%' then 'Yieldbot'
 				when @site_name like '[Yy]u[Mm]e%' then 'YuMe'
-			    when @site_name like '[Ff]lipboard%' then 'Flipboard'
-        		when @site_name like '[Gg][Bb][Tt][Aa]%' then 'GBTA'
-        		when @site_name like '[Ss][Uu][Cc][Cc][Ee][Ss][Ss][Ff][Uu][Ll][Mm][Ee][Ee][Tt][Ii][Nn][Gg][Ss]%' then 'NorthStar'
+			  when @site_name like '[Ff]lipboard%' then 'Flipboard'
+        when @site_name like '[Gg][Bb][Tt][Aa]%' then 'GBTA'
+        when @site_name like '[Ss][Uu][Cc][Cc][Ee][Ss][Ss][Ff][Uu][Ll][Mm][Ee][Ee][Tt][Ii][Nn][Gg][Ss]%' then 'NorthStar'
+        when @site_name like '[Pp]ad[Ss]quad%' then 'PadSquad'
+				when @site_name like '[Oo]gury%' then 'Ogury'
+				when @site_name like '[Rr]euters%' then 'Reuters'
+				when @site_name like '[Vv]isible%[Mm]easures%' then 'Visible Measures'
+				when @site_name like '[Cc]aptify%' then 'Captify'
+        when @site_name like '[Tt]ravel[Ww]eekly%' then 'Travel Weekly'
+			  when @site_name like '[Pp]lace%[Ii][Qq]%' then 'Place IQ'
 				else @site_name end
 				;
 
