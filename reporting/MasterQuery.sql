@@ -799,20 +799,21 @@ cast (r1.date as date )
         and t1.campaign not like '%[_]UK[_]%'
         and t1.campaign not like '%2016%'
         and t1.campaign not like '%2015%'
-        and t1.campaign_id != 10698273  -- UK Acquisition 2017
-        and t1.campaign_id != 11221036  -- Hong Kong 2017
-        and t1.campaign_id != 11385662  -- Monagas (Venezuela) -> SFO 2017
-        and t1.campaign_id != 11476144  -- FT TestCampaign 2017
-        and t1.campaign_id != 20111873  -- Tel Aviv EU 2017
-        and t1.campaign_id != 20185173  -- Taipei Polaris 2017
-        and t1.campaign_id != 20194378  -- United Airlines_Acquisition_Jan / Dec Campaign_2017_North_South
-        and t1.campaign_id != 20155963  -- United Airlines_EU Campaign_Netherlands_2017
-        and t1.campaign_id != 20251942  -- United Airlines_EU Campaign_Italy_2017
-        and t1.campaign_id != 20167074  -- United Airlines_EU Campaign_FR_2017
-        and t1.campaign_id != 20161167  -- United Airlines_EU Campaign_DE_2017
-        and t1.campaign_id != 20156614  -- United Airlines_EU Campaign_Switzerland_2017
-        and t1.campaign_id != 20346348  -- UA0117_SG__SIN-LAX Route Launch_201709_United Airlines
-        and t1.campaign_id != 20360363  -- ARG_United Airlines_Seasonal_02102017
+        and t1.campaign_id not in (10698273, 11221036, 11385662, 11476144, 20111873, 20185173, 20194378, 20155963, 20251942, 20167074, 20161167, 20156614, 20346348, 20360363)
+        -- and t1.campaign_id != 10698273  -- UK Acquisition 2017
+        -- and t1.campaign_id != 11221036  -- Hong Kong 2017
+        -- and t1.campaign_id != 11385662  -- Monagas (Venezuela) -> SFO 2017
+        -- and t1.campaign_id != 11476144  -- FT TestCampaign 2017
+        -- and t1.campaign_id != 20111873  -- Tel Aviv EU 2017
+        -- and t1.campaign_id != 20185173  -- Taipei Polaris 2017
+        -- and t1.campaign_id != 20194378  -- United Airlines_Acquisition_Jan / Dec Campaign_2017_North_South
+        -- and t1.campaign_id != 20155963  -- United Airlines_EU Campaign_Netherlands_2017
+        -- and t1.campaign_id != 20251942  -- United Airlines_EU Campaign_Italy_2017
+        -- and t1.campaign_id != 20167074  -- United Airlines_EU Campaign_FR_2017
+        -- and t1.campaign_id != 20161167  -- United Airlines_EU Campaign_DE_2017
+        -- and t1.campaign_id != 20156614  -- United Airlines_EU Campaign_Switzerland_2017
+        -- and t1.campaign_id != 20346348  -- UA0117_SG__SIN-LAX Route Launch_201709_United Airlines
+        -- and t1.campaign_id != 20360363  -- ARG_United Airlines_Seasonal_02102017
 
 
     group by
@@ -955,4 +956,4 @@ group by
 
 order by
   t3.cost_id,
-  t3.dcmdate;
+  t3.dcmdate
