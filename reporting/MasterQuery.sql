@@ -13,17 +13,17 @@
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 -- -- --
-exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
-exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
-exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
-
-exec [10.2.186.148\SQLINS02, 4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
-exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
-exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
-exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
-exec master.dbo.crt_dfa_flatCost_dt2 go
-exec master.dbo.crt_dbm_cost go
-exec master.dbo.crt_dfa_cost_dt2 go
+-- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
+--
+-- exec [10.2.186.148\SQLINS02, 4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
+-- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
+-- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
+-- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
+-- exec master.dbo.crt_dfa_flatCost_dt2 go
+-- exec master.dbo.crt_dbm_cost go
+-- exec master.dbo.crt_dfa_cost_dt2 go
 
 
 
@@ -802,6 +802,18 @@ cast (r1.date as date )
         and t1.campaign_id != 10698273  -- UK Acquisition 2017
         and t1.campaign_id != 11221036  -- Hong Kong 2017
         and t1.campaign_id != 11385662  -- Monagas (Venezuela) -> SFO 2017
+        and t1.campaign_id != 11476144  -- FT TestCampaign 2017
+        and t1.campaign_id != 20111873  -- Tel Aviv EU 2017
+        and t1.campaign_id != 20185173  -- Taipei Polaris 2017
+        and t1.campaign_id != 20194378  -- United Airlines_Acquisition_Jan / Dec Campaign_2017_North_South
+        and t1.campaign_id != 20155963  -- United Airlines_EU Campaign_Netherlands_2017
+        and t1.campaign_id != 20251942  -- United Airlines_EU Campaign_Italy_2017
+        and t1.campaign_id != 20167074  -- United Airlines_EU Campaign_FR_2017
+        and t1.campaign_id != 20161167  -- United Airlines_EU Campaign_DE_2017
+        and t1.campaign_id != 20156614  -- United Airlines_EU Campaign_Switzerland_2017
+        and t1.campaign_id != 20346348  -- UA0117_SG__SIN-LAX Route Launch_201709_United Airlines
+        and t1.campaign_id != 20360363  -- ARG_United Airlines_Seasonal_02102017
+
 
     group by
        t1.dcmdate
