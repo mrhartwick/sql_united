@@ -103,6 +103,7 @@ insert into diap01.mec_us_united_20056.ual_freq_alt_tbl1
                 conversiontime > impressiontime
 );
 commit;
+
 select count(*) from diap01.mec_us_united_20056.ual_freq_alt_tbl1
 select count(*) from diap01.mec_us_united_20056.ual_freq_tbl1
 
@@ -128,6 +129,7 @@ from
 group by
  user_id,
 cvr_nbr);
+
 commit;
 
 -- ====================================================================================================================
