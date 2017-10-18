@@ -871,7 +871,7 @@ from (
                     case
                     when (t1.dcmdate >= '2017-10-01' and t1.dcmdate >= '2017-12-31') and
                          t1.site_id_dcm = 1190273
-                    then cast(7 as decimal(20,10))
+                    then cast(6 as decimal(20,10))
                     else cast(prs.rate as decimal(20,10))                                                 as rate,
                     sum(t1.impressions)                                                                   as impressions,
                     sum(t1.clicks)                                                                        as clicks,
