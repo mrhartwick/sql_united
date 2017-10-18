@@ -872,7 +872,7 @@ from (
                     when (t1.dcmdate >= '2017-10-01' and t1.dcmdate >= '2017-12-31') and
                          t1.site_id_dcm = 1190273
                     then cast(6 as decimal(20,10))
-                    else cast(prs.rate as decimal(20,10))                                                 as rate,
+                    else cast(prs.rate as decimal(20,10)) end                                                as rate,
                     sum(t1.impressions)                                                                   as impressions,
                     sum(t1.clicks)                                                                        as clicks,
                   --        sum(t1.con)                                                        as con,
@@ -1049,7 +1049,7 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
@@ -1115,7 +1115,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148\SQLINS02,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
@@ -1188,6 +1188,6 @@ group by
 -- where t5.costmethod != 'Flat'
                   ) as t6
          ) as t7
-        where (len(isnull(t7.cost_id,'')) != 0)
+        -- where (len(isnull(t7.cost_id,'')) != 0)
 ) as t8
 go
