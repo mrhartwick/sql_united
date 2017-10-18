@@ -591,6 +591,9 @@ from (
                     )
              then   cast(0 as decimal(20,10))
 
+
+             -- COST FOR PLACEMENTS NOT SUBJECT TO VIEWABILITY ====================================================================
+
              --  Click-based cost; source Innovid
              when   (
                     (t2.dv_map = 'Y' or t2.dv_map = 'N') and
@@ -634,7 +637,11 @@ from (
                     )
              then   cast((sum(cast(t2.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
-             --  Impression-based cost; subject to viewability with DV flag; DV data present
+
+             -- COST FOR PLACEMENTS SUBJECT TO VIEWABILITY ====================================================================
+
+
+             --  Impression-based cost; DV flag; DV data present
              when   (
                     (t2.dv_map = 'Y') and
                     (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
@@ -643,7 +650,7 @@ from (
                     )
              then   cast((sum(cast(dv.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
-             --  Impression-based cost; subject to viewability with DV flag; DV data not present; MT data present
+             --  Impression-based cost; DV flag; DV data not present; MT data present
              when   (
                     (t2.dv_map = 'Y') and
                     (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
@@ -654,7 +661,7 @@ from (
              then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
 
-             --  Impression-based cost; subject to viewability; MT source
+             --  Impression-based cost; MT flag; MT data present
              when   (
                     (t2.dv_map = 'M') and
                     (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
@@ -662,6 +669,16 @@ from (
                     (len(isnull(mt.joinkey,'')) > 0)
                     )
              then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+
+             --  Impression-based cost; MT flag; MT data not present; DV data present
+             when   (
+                    (t2.dv_map = 'M') and
+                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    (len(isnull(mt.joinkey,'')) = 0) and
+                    (len(isnull(dv.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(dv.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
 
              --  Fixes for Win NY, which Medialets failed to tag
@@ -737,7 +754,7 @@ from (
 
 
 
-             else   cast(0 as decimal(20,10)) end                                       as cost,
+            else cast(0 as decimal(20,10)) end                                       as cost,
 
 
              t2.rate                                                                    as rate,
