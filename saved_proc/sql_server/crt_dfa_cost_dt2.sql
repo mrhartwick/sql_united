@@ -751,9 +751,6 @@ from (
                             end end
 
 
-
-
-
             else cast(0 as decimal(20,10)) end                                       as cost,
 
 
@@ -870,7 +867,12 @@ from (
                     sum((cast(t1.impressions as decimal(20,10)) / nullif(
                       cast(prs.planned_amt as decimal(20,10)),0)) * cast(prs.rate as
                                                                            decimal(20,10)))               as incrflatcost,
-                    cast(prs.rate as decimal(20,10))                                                      as rate,
+--                  Correction for Adara rate, post Sep 30, 2017
+                    case
+                    when (t1.dcmdate >= '2017-10-01' and t1.dcmdate >= '2017-12-31') and
+                         t1.site_id_dcm = 1190273
+                    then cast(7 as decimal(20,10))
+                    else cast(prs.rate as decimal(20,10))                                                 as rate,
                     sum(t1.impressions)                                                                   as impressions,
                     sum(t1.clicks)                                                                        as clicks,
                   --        sum(t1.con)                                                        as con,
