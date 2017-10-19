@@ -6,13 +6,13 @@ if OBJECT_ID('master.dbo.dfa_cost_dt2',N'U') is not null
 
 create table master.dbo.dfa_cost_dt2
 (
-  cost_id       nvarchar(6)    not null,
+  cost_id       nvarchar(6)    ,
   plce_id       nvarchar(6)    not null,
   dcmDate       int            not null,
-  prsCostMethod nvarchar(100)  not null,
-  prsRate       decimal(20,10) not null,
-  prsStDate     int            not null,
-  prsEdDate     int            not null,
+  prsCostMethod nvarchar(100)  ,
+  prsRate       decimal(20,10) ,
+  prsStDate     int            ,
+  prsEdDate     int            ,
   diff          bigint         not null,
   flatcost      decimal(20,10) not null,
   cost          decimal(20,10) not null,
@@ -31,8 +31,8 @@ create table master.dbo.dfa_cost_dt2
   Clks          int            not null,
   ClksRunTot    int            not null,
   ClksRemain    int            not null,
-  planned_amt   int            not null,
-  planned_cost  decimal(20,10) not null,
+  planned_amt   int            ,
+  planned_cost  decimal(20,10) ,
   vew_con       int            not null,
   clk_con       int            not null,
   vew_tix       int            not null,
@@ -869,7 +869,7 @@ from (
                                                                            decimal(20,10)))               as incrflatcost,
 --                  Correction for Adara rate, post Sep 30, 2017
                     case
-                    when (t1.dcmdate >= '2017-10-01' and t1.dcmdate >= '2017-12-31') and
+                    when (t1.dcmdate between '2017-10-01' and '2017-12-31') and
                          t1.site_id_dcm = 1190273
                     then cast(6 as decimal(20,10))
                     else cast(prs.rate as decimal(20,10)) end                                                as rate,
@@ -1049,7 +1049,7 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
@@ -1115,7 +1115,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
