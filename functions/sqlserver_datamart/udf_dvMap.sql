@@ -24,6 +24,10 @@ as
                when @cost_method = 'Flat' or @cost_method = 'CPC' or @cost_method = 'CPCV' or @cost_method = 'dCPM'
                    then 'N'
 
+        -------Correction to Denver 2017---------------------
+           when @campaign_id = '20323941'
+                 then 'Y'
+
                -- Corrections to SME 2016
                when @campaign_id = '10090315' and
                    (@site_id_dcm = '1513807' or   -- Inc
