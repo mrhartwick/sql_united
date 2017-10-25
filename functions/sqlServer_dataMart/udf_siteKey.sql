@@ -99,11 +99,10 @@ AS
       	when @site_name like '[Pp]ad[Ss]quad%' then 'PadSquad'
 				when @site_name like '[Oo]gury%' then 'Ogury'
 				when @site_name like '[Rr]euters%' then 'Reuters'
-				when @site_name like '[Vv]isible%[Mm]easures%' then 'Visible Measures'
+				when @site_name like '[Vv]isible%[Mm]easures%' or @site_name like '[Aa]cuity[Aa]ds%[Ii]nc%' then 'VisibleMeasures'
 				when @site_name like '[Cc]aptify%' then 'Captify'
-        when @site_name like '[Tt]ravel[Ww]eekly%' then 'Travel Weekly'
-			  when @site_name like '[Pp]lace%[Ii][Qq]%' then 'Place IQ'
-
+        when @site_name like '[Tt]ravel[Ww]eekly%' then 'TravelWeekly'
+			  when @site_name like '[Pp]lace%[Ii][Qq]%' then 'PlaceIQ'
 
 				else @site_name end
 				,' ','');
