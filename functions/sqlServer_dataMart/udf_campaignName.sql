@@ -35,16 +35,16 @@ as
                                  when @campaignID = 11177760 then 'Chicago Fare Sale 2017'
                                  when @campaignID = 11224605 then 'San Jose Fare Sale 2017'
                                  when @campaignID = 11390108 then 'PR Support 2017'
-																	when @campaignID = 20113327 then 'Aruba Co-Op 2017'
-																	when @campaignID = 11382787 then 'Ireland Co-op 2017'
-																	when @campaignID = 11417648 then 'WIN NY Rewards'
-                                  when @campaignID = 20177168 then 'Defend SF 2017'
-                                  when @campaignID = 20323941 then 'Denver Local Support 2017'
-                                  when @campaignID = 20354464 then 'Buenos Aires 2017'
+								 when @campaignID = 20113327 then 'Aruba Co-Op 2017'
+								 when @campaignID = 11382787 then 'Ireland Co-op 2017'
+								 when @campaignID = 11417648 then 'WIN NY Rewards'
+                                 when @campaignID = 20177168 then 'Defend SF 2017'
+                                 when @campaignID = 20323941 then 'Denver Local Support 2017'
+                                 when @campaignID = 20354464 then 'Buenos Aires 2017'
                                  when @campaignID = 20343755 then 'United NFL 2017'
                                  when @campaignID = 20325908 or @campaignID = 20334628 then 'New Zealand Route Support 2017'
                                  when @campaignID = 20334410 or @campaignID = 20337019 or @campaignID = 20336827 then 'Singapore Route Launch 2017'
-																	when @campaignID = 20353010 then 'Chicago 2017'
+								 when @campaignID = 20353010 then 'Chicago 2017'
 
 
 

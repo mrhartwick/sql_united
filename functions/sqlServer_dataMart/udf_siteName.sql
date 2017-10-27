@@ -8,8 +8,8 @@ AS
 		declare @finalSiteName varchar(4000)
 		set @finalSiteName = case
 				when ( @site_name like '%[Cc]hicago%[Tt]ribune%' or @site_name like '[Tt]ribune_[Ii]nteractive%' ) then 'ChicagoTribune'
-				when ( @site_name like '[Gg][Dd][Nn]%' or @site_name like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' or @site_name = 'Google' or @site_name like '%Google%' or @site_name like '%DBM%' or @site_name like '%[Dd][Oo][Uu][Bb][Ll][Ee][Cc][Ll][Ii][Cc][Kk]%') then 'Google'
-				when @site_name like '%[Aa]dara%' then 'Adara'
+				when ( @site_name like '[Gg][Dd][Nn]%' or @site_name like '[Gg]oogle_[Dd]isplay_[Nn]etwork%' or @site_name = '1578478' or @site_name = 'Google' or @site_name like '%Google%' or @site_name like '%DBM%' or @site_name like '%[Dd][Oo][Uu][Bb][Ll][Ee][Cc][Ll][Ii][Cc][Kk]%') then 'Google'
+				when @site_name like '%[Aa]dara%' or @site_name = '1190273' then 'Adara'
 				when @site_name like '%[Aa]tlantic%' then 'The Atlantic'
 				when @site_name like '%[Bb]usiness%[Ii]nsider%' then 'Business Insider'
 				when @site_name like '%[Cc][Nn][Nn]%' then 'CNN'
