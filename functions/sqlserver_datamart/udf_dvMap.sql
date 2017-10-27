@@ -20,7 +20,7 @@ as
                -- These cost methods should never be subject to viewability
 
              -------Correction to SF 2017
-                 when @campaign_id = '20177168' and
+                 when @campaign_id = 20177168 and
                       (@site_id_dcm = 1995643 or --Verve
                       @site_id_dcm = 2198614) --PlaceIQ
                     then 'Y'
@@ -28,49 +28,49 @@ as
                    then 'N'
 
         -------Correction to Denver 2017---------------------
-           when @campaign_id = '20323941'
+           when @campaign_id = 20323941
                  then 'Y'
 
                -- Corrections to SME 2016
-               when @campaign_id = '10090315' and
-                   (@site_id_dcm = '1513807' or   -- Inc
-                    @site_id_dcm = '1592652')     -- Xaxis
+               when @campaign_id = 10090315 and
+                   (@site_id_dcm = 1513807 or   -- Inc
+                    @site_id_dcm = 1592652)     -- Xaxis
                    then 'Y'
 
           -------Correction to Trade 2017, Vistar Media; MOAT tag not working, so using DV
 
-         when @campaign_id = '11069476' and
-                   (@site_id_dcm = '2244596') ---Vistar Media
+         when @campaign_id = 11069476 and
+                   (@site_id_dcm = 2244596) ---Vistar Media
                    then 'Y'
 
           ----- Corrections to SFO-SIN 2016
-               when @campaign_id = '9923634' and
-                  ((@site_id_dcm = '1534879' and @cost_method = 'CPM') or   -- Business Insider
-                   (@site_id_dcm = '1853564'))                                -- Live Intent
+               when @campaign_id = 9923634 and
+                  ((@site_id_dcm = 1534879 and @cost_method = 'CPM') or   -- Business Insider
+                   (@site_id_dcm = 1853564))                                -- Live Intent
                    then 'N'
 
           ----- Corrections to GM Acquisition, Prospecting Partners
-               when @campaign_id = '10742878' and
-                  ((@site_id_dcm = '1578478' and @placement like '%[Mm]obile_GOOGLE INC_GEN_INT_PROS_FT%') or   -- Google
-                   (@site_id_dcm = '3267410' and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%') or  --Quantcast
-                  (@site_id_dcm = '1239319' and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%') or  --Sojern
-                    (@site_id_dcm = '1190273' and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%') or   --Adara
-                    (@site_id_dcm = '1853562' and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%')  --Amobee
+               when @campaign_id = 10742878 and
+                  ((@site_id_dcm = 1578478 and @placement like '%[Mm]obile_GOOGLE INC_GEN_INT_PROS_FT%') or   -- Google
+                   (@site_id_dcm = 3267410 and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%') or  --Quantcast
+                   (@site_id_dcm = 1239319 and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%') or  --Sojern
+                   (@site_id_dcm = 1190273 and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%') or   --Adara
+                   (@site_id_dcm = 1853562 and @placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%')  --Amobee
                   )
                    then 'Y'
 
 
                -- FlipBoard unable to implement Moat tags; must bill off of DFA impressions
-               when @site_id_dcm = '2937979' then 'N'
+               when @site_id_dcm = 2937979 then 'N'
                -- All targeted marketing subject to viewability; mark "Y"
-               when @campaign_id = '9639387' then 'Y'
+               when @campaign_id = 9639387 then 'Y'
 
                -- If it's CPMV and the placement has these words, then it should be in Moat
                when @cost_method = 'CPMV' and
                    (@placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or
                     @placement like '%[Vv][Ii][Dd][Ee][Oo]%' or
                     @placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or
-                    @site_id_dcm = '1995643'  -- Verve
+                    @site_id_dcm = 1995643  -- Verve
                ) then 'M'
 
                -- Look for viewability flags Investment began to include in placement names 6/16.
