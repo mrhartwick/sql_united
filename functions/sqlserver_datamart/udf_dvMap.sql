@@ -20,12 +20,8 @@ as
                -- These cost methods should never be subject to viewability
 
              -------Correction to SF 2017
-                 when @campaign_id = '20177168' and
-                      (@site_id_dcm = 1995643 or --Verve
-                      @site_id_dcm = 2198614) --PlaceIQ
+                 when @campaign_id = '20177168' and @site_id_dcm in (1995643, 2198614, 1513805, 4121213, 1329066, 1606319, 2937979)
                     then 'Y'
-               when @cost_method = 'Flat' or @cost_method = 'CPC' or @cost_method = 'CPCV' or @cost_method = 'dCPM'
-                   then 'N'
 
         -------Correction to Denver 2017---------------------
            when @campaign_id = '20323941'
