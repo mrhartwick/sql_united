@@ -513,15 +513,19 @@ select
   [dbo].udf_dateToInt(t3.placementstart) as stDate,
   t3.planned_amt                         as planned_amt,
   t3.planned_cost                        as planned_cost,
-  case when t3.costmethod = 'dCPM' then db.dbm_cost
+  case when t3.site_id_dcm = 1239319 then t3.cost
+  when t3.costmethod = 'dCPM' then db.dbm_cost
   else t3.cost end                       as cost,
   db.dbm_cost                            as dbm_cost,
   t3.rate                                as rate,
-  case when t3.costmethod = 'dCPM' then db.imps
+  case when t3.site_id_dcm = 1239319 then t3.dlvrimps
+  when t3.costmethod = 'dCPM' then db.imps
   else t3.dlvrimps end                   as dlvrimps,
-  case when t3.costmethod = 'dCPM' then db.imps
+  case when t3.site_id_dcm = 1239319 then t3.billimps
+  when t3.costmethod = 'dCPM' then db.imps
   else t3.billimps end                   as billimps,
-  case when t3.costmethod = 'dCPM' then db.imps
+  case when t3.site_id_dcm = 1239319 then t3.dfa_imps
+  when t3.costmethod = 'dCPM' then db.imps
   else t3.dfa_imps end                   as dfa_imps,
   t3.iv_imps                             as iv_imps,
   t3.dv_imps                             as dv_imps,
