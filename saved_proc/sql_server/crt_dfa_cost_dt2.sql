@@ -769,6 +769,11 @@ from (
 
                     when t2.dv_map = 'M' and
                         (len(isnull(mt.joinkey,'')) = 0) and
+                        (len(isnull(dv.joinkey,'')) > 0)
+                    then dv.total_impressions
+
+                    when t2.dv_map = 'M' and
+                        (len(isnull(mt.joinkey,'')) = 0) and
                         (t2.campaign_id = 10918234) and
                         (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841)) and
                         (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
@@ -787,6 +792,10 @@ from (
                         (len(isnull(dv.joinkey,'')) = 0) and
                         (len(isnull(mt.joinkey,'')) > 0)
                     then mt.groupm_billable_impressions
+                    when t2.dv_map = 'M' and
+                        (len(isnull(mt.joinkey,'')) = 0) and
+                        (len(isnull(dv.joinkey,'')) > 0)
+                    then dv.groupm_billable_impressions
                     when t2.dv_map = 'Y' then dv.groupm_billable_impressions
                     when t2.dv_map = 'M' and
                         (len(isnull(mt.joinkey,'')) = 0) and

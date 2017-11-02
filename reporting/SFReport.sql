@@ -259,6 +259,12 @@ select
                           (cast(mt.groupm_passed_impressions as decimal) /
                             nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
 
+             when (t2.dv_map = 'M' and (len(isnull(dv.joinkey,''))>0))
+               then cast(
+             (((t2.vew_rev) *
+                          (cast(dv.groupm_passed_impressions as decimal) /
+                            nullif(cast(dv.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
+
 --         subject to viewability; dv source
              when (t2.dv_map = 'Y')
                then cast(
@@ -432,6 +438,11 @@ select
                                        (cast(mt.groupm_passed_impressions as decimal) /
                                          nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
 
+                          when (t2.dv_map = 'M' and (len(isnull(dv.joinkey,''))>0))
+                            then cast((
+                          (((t2.vew_rev) *
+                                       (cast(dv.groupm_passed_impressions as decimal) /
+                                         nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
              --         subject to viewability; dv source
                           when (t2.dv_map = 'Y')
                             then cast((
