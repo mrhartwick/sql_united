@@ -1,3 +1,50 @@
+-- Insert latest Search metadata into Vertica table
+copy diap01.mec_us_united_20056.ual_dfa2_paid_search_meta from local 'C:\Users\matthew.hartwick\Documents\paid_search_match_20171001-20171031.csv' with DELIMITER ',' DIRECT commit;
+
+-- drop existing uniques table
+drop table diap01.mec_us_united_20056.ual_dfa2_paid_search_meta_u;
+
+-- create new uniques table
+create table diap01.mec_us_united_20056.ual_dfa2_paid_search_meta_u (
+    ad_id                         int,
+    advertiser_id                 int,
+    campaign_id                   int,
+    paid_search_ad_id             int,
+    paid_search_legacy_keyword_id int,
+    paid_search_keyword_id        int,
+    paid_search_campaign          varchar(6000),
+    paid_search_ad_group          varchar(6000),
+    paid_search_bid_strategy      varchar(6000),
+    paid_search_landing_page_url  varchar(6000),
+    paid_search_keyword           varchar(6000),
+    paid_search_match_type        varchar(6000)
+);
+
+
+insert into diap01.mec_us_united_20056.ual_dfa2_paid_search_meta_u
+(ad_id,advertiser_id,campaign_id,paid_search_ad_id,paid_search_legacy_keyword_id,paid_search_keyword_id,
+paid_search_campaign,paid_search_ad_group,paid_search_bid_strategy,paid_search_landing_page_url,paid_search_keyword,paid_search_match_type)
+    (
+        select
+            distinct
+            ad_id,
+            advertiser_id,
+            campaign_id,
+            paid_search_ad_id,
+            paid_search_legacy_keyword_id,
+            paid_search_keyword_id,
+            paid_search_campaign,
+            paid_search_ad_group,
+            paid_search_bid_strategy,
+            paid_search_landing_page_url,
+            paid_search_keyword,
+            paid_search_match_type
+        from diap01.mec_us_united_20056.ual_dfa2_paid_search_meta
+    );
+commit;
+
+
+-- pull unique leads at desired level
 select
 --     ta.user_id,
 --  ta.date,
@@ -6,7 +53,7 @@ select
 --  ta.campaign,
     ta.site_dcm,
     ta.site_id_dcm    as siteid_dcm,
-    ta.paid_search_keyword,
+--     ta.paid_search_keyword,
 --     ta.keyword_id as keyword_id,
 --     ta.ad_id,
     ta.paid_search_campaign,
@@ -47,7 +94,6 @@ from
             on a.segment_value_1 = s1.paid_search_legacy_keyword_id
                 and a.ad_id = s1.ad_id
 
-
             left join diap01.mec_us_united_20056.dfa2_sites as d1
             on a.site_id_dcm = d1.site_id_dcm
 
@@ -57,7 +103,7 @@ from
 -- left join diap01.mec_us_united_20056.dfa2_campaigns as c1
 -- on a.campaign_id = c1.campaign_id
 
-        where cast(timestamp_trunc(to_timestamp(a.interaction_time / 1000000),'SS') as date) between '2017-09-01' and '2017-09-30'
+        where cast(timestamp_trunc(to_timestamp(a.interaction_time / 1000000),'SS') as date) between '2017-10-01' and '2017-10-31'
             and (a.activity_id = 1086066)
             and (a.advertiser_id <> 0)
             and (length(isnull (a.event_sub_type,'')) > 0)
@@ -91,14 +137,9 @@ group by
     ta.site_dcm,
     ta.paid_search_ad_group,
 --  ta.paid_search_bid_strategy,
-    ta.paid_search_keyword,
+--     ta.paid_search_keyword,
 --     ta.keyword_id,
 --     ta.ad_id
     ta.paid_search_campaign
 
 
-
-
--- SELECT date_trunc('week', DATE '08/23/2013') + 1
---
--- date_trunc('week', DATE cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date)) + 1
