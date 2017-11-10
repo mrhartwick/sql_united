@@ -48,7 +48,7 @@ commit;
 select
 --     ta.user_id,
 --  ta.date,
-        ta.week as week,
+    ta.week as week,
     ta.advertiser,
 --  ta.campaign,
     ta.site_dcm,
