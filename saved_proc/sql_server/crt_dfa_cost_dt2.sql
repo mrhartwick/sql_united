@@ -279,7 +279,6 @@ insert into master.dbo.dfa_cost_dt2
                         when t6.cost is null
                         then cast(0 as decimal(20,10))
 
-
 -- --                      TEMPORARY CONDITION FOR SAN JOSE
                          when t6.costmethod like '[Dd][Cc][Pp][Mm]%'
                          then t6.cost
@@ -869,7 +868,14 @@ from (
                     then 'dCPM' else  prs.costmethod end                                              as costmethod,
                     prs.cost_id                                                                           as cost_id,
                     prs.planned_amt                                                                       as planned_amt,
-                    prs.planned_cost                                                                      as planned_cost,
+--                     prs.planned_cost                                                                      as planned_cost,
+
+                    case
+                    when (t1.dcmdate between '2017-10-01' and '2017-12-31') and
+                         t1.site_id_dcm = 1190273
+                    then cast( ((prs.planned_amt*6)/1000) as decimal(20,10))
+                    else cast(prs.planned_cost as decimal(20,10)) end                                                as planned_cost,
+
                     prs.placementstart                                                                    as placementstart,
                     case
                     when t1.campaign_id = 9923634 and
@@ -1062,11 +1068,11 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
---     where prs.cost_id = 'PFHH1N'
+--     where prs.cost_id = 'PJDGVX'
 -- where t1.site_id_dcm =1578478
 --                      and prs.eddate >= 20170101
 
@@ -1128,7 +1134,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
