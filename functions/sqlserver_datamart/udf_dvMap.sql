@@ -22,7 +22,8 @@ as
              -------Correction to SF 2017
 
                  when @campaign_id = 20177168 and
-                      @site_id_dcm = 1516084 -- Spotify
+                      (@site_id_dcm = 1516084 -- Spotify
+                   or @site_id_dcm = 1995643) -- Verve
                       then 'M'
 
                  when @campaign_id = 20177168 and @site_id_dcm <> 1516084

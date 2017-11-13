@@ -1,5 +1,5 @@
 
-------SF REPORT
+
 --      Version incorporating capped cost and DBM cost
 --
 --  this query is a bit of a hack. non-optimal aspects are necessitated by the particularities of the current tech stack on united.
@@ -30,8 +30,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-10-20';
-set @report_st = '2017-01-01';
+set @report_ed = '2017-10-27';
+set @report_st = '2017-09-28';
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -42,10 +42,15 @@ select
     cast(t3.dcmdate as date)                                                                           as "date",
 -- dcm ad server week (from date)
     cast(dateadd(week,datediff(week,0,cast(t3.dcmdate as date)),0) as date)                            as "week",
+    case
+    when cast(t3.dcmdate as date) between '2017-09-28' and '2017-10-08' then 'week 1'
+    when cast(t3.dcmdate as date) between '2017-10-09' and '2017-10-15' then 'week 2'
+    when cast(t3.dcmdate as date) between '2017-10-16' and '2017-10-29' then 'week 3' end as game_week,
 -- dcm ad server month (from date)
     datename(month,cast(t3.dcmdate as date))                                                           as "month",
 -- dcm ad server quarter + year (from date)
     'Q' + datename(quarter,cast(t3.dcmdate as date)) + ' ' + datename(year,cast(t3.dcmdate as date))   as "quarter",
+    t3.team as team,
 -- reference/optional: difference, in months, between placement end date and report date. field is used deterministically in other fields below.
 --  t3.diff                                                                                              as diff,
 -- reference/optional: match key from the dv table; only present when dv data is available.
@@ -63,7 +68,6 @@ select
 -- dcm campaign id
     t3.campaign_id  as "campaign id",
 
-
 -- preferred, friendly site name; also corresponds to what's used in the joinkey fields across dfa, dv, and moat.
     [dbo].udf_sitename(t3.site_dcm)                                                                    as "site",
 
@@ -80,10 +84,6 @@ select
 -- reference/optional: planned package end date, from prisma; attributed to all placements within package.
     t3.placementend                                                                                    as "placement end",
     t3.placementstart                                                                                  as "placement start",
-
-case when campaign_id='20177168' AND t3.placement  like '%_MOB_%'  then 'Mobile'
-     when campaign_id='20177168' AND (t3.placement  like '%_DESK_%' or t3.placement  like '%_DSK_%') then 'Desktop'
-     else 'Desktop'  end                                                                               as "Device Type",
     t3.dv_map                                                                                          as "dv map",
     t3.rate                                                                                            as rate,
     t3.planned_amt                                                                                     as "planned amt",
@@ -93,6 +93,7 @@ case when campaign_id='20177168' AND t3.placement  like '%_MOB_%'  then 'Mobile'
 --  new field, with flat cost from dfa_cost_dt2
     sum(case when t3.costmethod like '[Ff]lat' then t3.flatcost else t3.cost end)                      as cost,
     sum(t3.tot_led)                                                                                    as leads,
+  sum(t3.qual_led)      as qual_led,
     sum(t3.dlvrimps)                                                                                   as "delivered impressions",
     sum(t3.billimps)                                                                                   as "billable impressions",
     sum(t3.cnslimps)                                                                                   as "dfa impressions",
@@ -122,13 +123,14 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-10-20';
--- set @report_st = '2017-01-01';
+-- set @report_ed = '2017-10-27';
+-- set @report_st = '2017-09-28';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
     t2.dcmmonth                                                                as dcmmonth,
     t2.dcmmatchdate                                                            as dcmmatchdate,
+    t2.team,
     t2.diff                                                                    as diff,
     dv.joinkey                                                                 as dvjoinkey,
     mt.joinkey                                                                 as mtjoinkey,
@@ -259,12 +261,6 @@ select
                           (cast(mt.groupm_passed_impressions as decimal) /
                             nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
 
-             when (t2.dv_map = 'M' and (len(isnull(dv.joinkey,''))>0))
-               then cast(
-             (((t2.vew_rev) *
-                          (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
-
 --         subject to viewability; dv source
              when (t2.dv_map = 'Y')
                then cast(
@@ -280,6 +276,7 @@ select
                             nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as billrevenue,
 
+-- ==============================================================================================================================================
  --         Billable revenue with United discounts applied
             sum(case
 --         not subject to viewability, DBM
@@ -438,11 +435,6 @@ select
                                        (cast(mt.groupm_passed_impressions as decimal) /
                                          nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
 
-                          when (t2.dv_map = 'M' and (len(isnull(dv.joinkey,''))>0))
-                            then cast((
-                          (((t2.vew_rev) *
-                                       (cast(dv.groupm_passed_impressions as decimal) /
-                                         nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
              --         subject to viewability; dv source
                           when (t2.dv_map = 'Y')
                             then cast((
@@ -500,9 +492,10 @@ select
     sum(case when t2.costmethod = 'dCPM' then cst.vew_con else  t2.vew_con end)      as vew_con,
     sum(case when t2.costmethod = 'dCPM' then cst.vew_rev else  t2.vew_rev end)      as vew_rev,
     sum(case when t2.costmethod = 'dCPM' then cst.vew_tix else  t2.vew_tix end)      as vew_tix,
-    sum(case when t2.costmethod = 'dCPM' then cst.clk_led else  t2.clk_led end)      as clk_led,
-    sum(case when t2.costmethod = 'dCPM' then cst.vew_led else  t2.vew_led end)      as vew_led,
-    sum(case when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led
+--     sum(case when t2.costmethod = 'dCPM' then cst.clk_led else  t2.clk_led end)      as clk_led,
+--     sum(case when t2.costmethod = 'dCPM' then cst.vew_led else  t2.vew_led end)      as vew_led,
+    sum(case when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led,
+  sum(t2.qual_led)      as qual_led
 
 
 
@@ -518,6 +511,7 @@ select
 -- set @report_st = '2016-10-10';
            select
                t1.dcmdate                                   as dcmdate,
+               t1.team,
                cast(month(cast(t1.dcmdate as date)) as int) as dcmmonth,
                [dbo].udf_dateToInt(t1.dcmdate)              as dcmmatchdate,
                t1.campaign                                  as campaign,
@@ -545,9 +539,10 @@ select
                cast(prs.rate as decimal(10,2))              as rate,
                sum(t1.impressions)                          as impressions,
                sum(t1.clicks)                               as clicks,
-               sum(t1.vew_led)                              as vew_led,
-               sum(t1.clk_led)                              as clk_led,
+--                sum(t1.vew_led)                              as vew_led,
+--                sum(t1.clk_led)                              as clk_led,
                sum(t1.led)                                  as led,
+               sum(t1.qual_led)                             as qual_led,
                sum(t1.vew_con)                              as vew_con,
                sum(t1.clk_con)                              as clk_con,
                sum(t1.con)                                  as con,
@@ -618,6 +613,10 @@ select
 '
 select
 cast(r1.date as date)                     as dcmdate,
+case
+when r1.placement_id in (206143991,206221119,206221110,206221410,206200039,206144000,206188150,206143994,206143982,206139113) then ''CH''
+when r1.placement_id in (206220615,206139095,206220612,206211132,206220876,206220888,206197882,206143958,206220885) then ''NY''
+when r1.placement_id in (206220900,206197894,206197900,206220627,206143964,206197897,206220897) then ''SF'' else ''Other'' end as team,
 cast(month(cast(r1.date as date)) as int) as reportmonth,
 campaign.campaign                         as campaign,
 r1.campaign_id                            as campaign_id,
@@ -629,9 +628,8 @@ replace(replace(p1.placement ,'','', ''''),''"'','''') as placement,
 r1.placement_id                           as placement_id,
 sum(r1.impressions)                       as impressions,
 sum(r1.clicks)                            as clicks,
-sum(r1.vew_led)                           as vew_led,
-sum(r1.clk_led)                           as clk_led,
-sum(r1.vew_led) + sum(r1.clk_led)         as led,
+sum(r1.led)                               as led,
+sum(r1.qual_led)                               as qual_led,
 sum(r1.vew_con)                           as vew_con,
 sum(r1.clk_con)                           as clk_con,
 sum(r1.vew_con) + sum(r1.clk_con)         as con,
@@ -645,33 +643,62 @@ from (
 
 
 select
-cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as date ) as "date"
+cast(timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as date) as "date"
 ,ta.campaign_id as campaign_id
 ,ta.site_id_dcm as site_id_dcm
 ,ta.placement_id as placement_id
 ,0 as impressions
 ,0 as clicks
-,sum(case when activity_id = 1086066 and ta.conversion_id = 1 then 1 else 0 end) as clk_led
+,sum(case when activity_id = 1086066 and (ta.conversion_id = 1 or ta.conversion_id = 2) then 1 else 0 end) as led
+,sum(case when activity_id = 1086066 and (ta.conversion_id = 1 or ta.conversion_id = 2) and (
+(
+(cast(timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as date) between ''2017-09-28'' and ''2017-10-08'') and
+(ta.orig = ''SFO'' and ta.dest = ''IND'')
+) or
+(
+(cast(timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as date) between ''2017-10-09'' and ''2017-10-15'') and
+(
+(ta.orig = ''ORD'' and ta.dest = ''BWI'') or
+(ta.orig = ''EWR'' and ta.dest = ''DEN'') or
+(ta.orig = ''SFO'' and ta.dest = ''IAD'')
+)
+) or
+(
+(cast(timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as date) between ''2017-10-16'' and ''2017-10-29'') and
+(
+(ta.orig = ''ORD'' and ta.dest = ''MSY'') or
+(ta.orig = ''SFO'' and ta.dest = ''PHL'')
+)
+)
+)
+then 1 else 0 end) as qual_led
+
 ,sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then 1 else 0 end ) as clk_con
 ,sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as clk_tix
 ,sum(case when ta.conversion_id = 1 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as clk_rev
-,sum(case when activity_id = 1086066 and ta.conversion_id = 2 then 1 else 0 end) as vew_led
 ,sum(case when activity_id = 978826  and ta.conversion_id = 2 and ta.total_revenue <> 0 then 1 else 0 end ) as vew_con
 ,sum(case when activity_id = 978826  and ta.conversion_id = 2 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as vew_tix
 ,sum(case when ta.conversion_id = 2 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as vew_rev
 ,sum(ta.total_revenue * 1000000/rates.exchange_rate) as rev
 
+
+-- select *
 from
 (
-select *
+select *,
+case when REGEXP_LIKE(other_data,''(u5=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'') then REGEXP_SUBSTR(other_data,''(u5=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'', 3)
+when REGEXP_LIKE(other_data,''(u5=)([A-Z][A-Z][A-Z])\;'',''ib'') then REGEXP_SUBSTR(other_data,''(u5=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'', 2) end as orig,
+case when REGEXP_LIKE(other_data,''(u7=)(.+?)\(([A-Z][A-Z][A-Z])'',''ib'') then REGEXP_SUBSTR(other_data,''(u7=)(.+?)\(([A-Z][A-Z][A-Z])'',1,1,''ib'', 3)
+when REGEXP_LIKE(other_data,''(u7=)([A-Z][A-Z][A-Z])\;'',''ib'') then REGEXP_SUBSTR(other_data,''(u7=)([A-Z][A-Z][A-Z])\;'',1,1,''ib'', 2) end as dest
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-10-20''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-09-28'' and ''2017-10-27''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
-and campaign_id = 20177168 -- SF 2017
+and campaign_id = 20343755 -- display 2017
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
+--  limit 100
 
 left join diap01.mec_us_mecexchangerates_20067.exchange_rates as rates
 on upper ( substring (other_data,(instr(other_data,''u3='')+3),3)) = upper (rates.currency)
@@ -692,11 +719,11 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 ,ti.placement_id as placement_id
 ,count (*) as impressions
 ,0 as clicks
-,0 as clk_led
+,0 as led
+,0 as qual_led
 ,0 as clk_con
 ,0 as clk_tix
 ,0 as clk_rev
-,0 as vew_led
 ,0 as vew_con
 ,0 as vew_tix
 ,0 as vew_rev
@@ -705,8 +732,8 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-10-20''
-and campaign_id = 20177168 -- SF 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-09-28'' and ''2017-10-27''
+and campaign_id = 20343755 -- display 2017
 
 and (advertiser_id <> 0)
 ) as ti
@@ -725,11 +752,11 @@ cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date ) as
 ,tc.placement_id as placement_id
 ,0 as impressions
 ,count (*) as clicks
-,0 as clk_led
+,0 as led
+,0 as qual_led
 ,0 as clk_con
 ,0 as clk_tix
 ,0 as clk_rev
-,0 as vew_led
 ,0 as vew_con
 ,0 as vew_tix
 ,0 as vew_rev
@@ -739,8 +766,8 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-10-20''
-and campaign_id = 20177168 -- SF 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-09-28'' and ''2017-10-27''
+and campaign_id = 20343755 -- display 2017
 and (advertiser_id <> 0)
 ) as tc
 
@@ -781,17 +808,12 @@ from diap01.mec_us_united_20056.dfa2_sites
 ) as directory
 on r1.site_id_dcm = directory.site_id_dcm
 
-where  regexp_like(p1.placement,''P.?'',''ib'')
-and not regexp_like(p1.placement,''.?do\s?not\s?use.?'',''ib'')
--- and not regexp_like(campaign.campaign,''.*2016.*'',''ib'')
-and  regexp_like(campaign.campaign,''.*2017.*'',''ib'')
-and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
-and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
--- and r1.site_id_dcm <>''1485655''
+
 group by
 cast (r1.date as date )
 ,directory.site_dcm
 ,r1.site_id_dcm
+-- ,r1.team
 ,r1.campaign_id
 ,campaign.campaign
 ,r1.placement_id
@@ -814,9 +836,22 @@ cast (r1.date as date )
         and t1.campaign not like '%[_]UK[_]%'
         and t1.campaign not like '%2016%'
         and t1.campaign not like '%2015%'
-        and t1.campaign_id != 10698273  -- UK Acquisition 2017
-        and t1.campaign_id != 11221036  -- Hong Kong 2017
-        and t1.campaign_id != 11385662  -- Monagas (Venezuela) -> SFO 2017
+        and t1.campaign_id not in (10698273, 11221036, 11385662, 11476144, 20111873, 20185173, 20194378, 20155963, 20251942, 20167074, 20161167, 20156614, 20346348, 20360363)
+        -- and t1.campaign_id != 10698273  -- UK Acquisition 2017
+        -- and t1.campaign_id != 11221036  -- Hong Kong 2017
+        -- and t1.campaign_id != 11385662  -- Monagas (Venezuela) -> SFO 2017
+        -- and t1.campaign_id != 11476144  -- FT TestCampaign 2017
+        -- and t1.campaign_id != 20111873  -- Tel Aviv EU 2017
+        -- and t1.campaign_id != 20185173  -- Taipei Polaris 2017
+        -- and t1.campaign_id != 20194378  -- United Airlines_Acquisition_Jan / Dec Campaign_2017_North_South
+        -- and t1.campaign_id != 20155963  -- United Airlines_EU Campaign_Netherlands_2017
+        -- and t1.campaign_id != 20251942  -- United Airlines_EU Campaign_Italy_2017
+        -- and t1.campaign_id != 20167074  -- United Airlines_EU Campaign_FR_2017
+        -- and t1.campaign_id != 20161167  -- United Airlines_EU Campaign_DE_2017
+        -- and t1.campaign_id != 20156614  -- United Airlines_EU Campaign_Switzerland_2017
+        -- and t1.campaign_id != 20346348  -- UA0117_SG__SIN-LAX Route Launch_201709_United Airlines
+        -- and t1.campaign_id != 20360363  -- ARG_United Airlines_Seasonal_02102017
+
 
     group by
        t1.dcmdate
@@ -824,6 +859,7 @@ cast (r1.date as date )
       ,t1.campaign
       ,t1.campaign_id
       ,t1.site_dcm
+        ,t1.team
       ,t1.site_id_dcm
       ,t1.plce_id
       ,t1.placement
@@ -903,6 +939,7 @@ group by
   ,t2.dv_map
 --   ,t2.dv_map_2
   ,t2.site_dcm
+    ,t2.team
   ,t2.site_id_dcm
   ,t2.packagecat
   ,t2.placementend
@@ -934,6 +971,7 @@ group by
   ,t3.dcmmonth
   ,t3.diff
   ,t3.dvjoinkey
+    ,t3.team
   ,t3.mtjoinkey
   ,t3.packagecat
   ,t3.cost_id
@@ -958,4 +996,4 @@ group by
 
 order by
   t3.cost_id,
-  t3.dcmdate;
+  t3.dcmdate

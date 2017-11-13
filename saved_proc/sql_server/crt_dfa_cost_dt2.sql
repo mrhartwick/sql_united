@@ -1,4 +1,4 @@
-alter procedure dbo.crt_dfa_cost_dt2
+create procedure dbo.crt_dfa_cost_dt2
 as
 if OBJECT_ID('master.dbo.dfa_cost_dt2',N'U') is not null
     drop table master.dbo.dfa_cost_dt2;
@@ -278,7 +278,6 @@ insert into master.dbo.dfa_cost_dt2
                         case
                         when t6.cost is null
                         then cast(0 as decimal(20,10))
-
 
 -- --                      TEMPORARY CONDITION FOR SAN JOSE
                          when t6.costmethod like '[Dd][Cc][Pp][Mm]%'
@@ -601,7 +600,7 @@ from (
              --  Click-based cost; source Innovid
              when   (
                     (t2.dv_map = 'Y' or t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV') and
                     (len(isnull(iv.joinkey,'')) > 0)
                     )
@@ -610,25 +609,35 @@ from (
              --  Click-based cost; source DCM
              when   (
                     (t2.dv_map = 'Y' or t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV')
                     )
              then   cast((sum(cast(t2.clicks as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
+-- ===========================================================================================================================
+             --  Impression-based cost; not subject to viewability; Innovid source - CPE
+             when   (
+                    (t2.dv_map = 'N') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPE') and
+                    (len(isnull(iv.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(iv.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as
+                           decimal(20,10))
 
              --  Impression-based cost; not subject to viewability; Innovid source
              when   (
                     (t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(iv.joinkey,'')) > 0)
                     )
              then   cast((sum(cast(iv.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as
                            decimal(20,10))
-
+-- ===========================================================================================================================
              --  Impression-based cost; not subject to viewability; DCM source - CPE
              when   (
                     (t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPE')
                     )
              then   cast((sum(cast(t2.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
@@ -636,7 +645,7 @@ from (
              --  Impression-based cost; not subject to viewability; DCM source
              when   (
                     (t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV')
                     )
              then   cast((sum(cast(t2.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
@@ -644,41 +653,78 @@ from (
 
              -- COST FOR PLACEMENTS SUBJECT TO VIEWABILITY ====================================================================
 
+-- ===========================================================================================================================
+              --  Impression-based cost; DV flag; DV data present - CPE
+             when   (
+                    (t2.dv_map = 'Y') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPE') and
+                    (len(isnull(dv.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(dv.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10)))  as decimal(20,10))
 
              --  Impression-based cost; DV flag; DV data present
              when   (
                     (t2.dv_map = 'Y') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(dv.joinkey,'')) > 0)
                     )
              then   cast((sum(cast(dv.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+-- ===========================================================================================================================
+             --  Impression-based cost; DV flag; DV data not present; MT data present - CPE
+             when   (
+                    (t2.dv_map = 'Y') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPE') and
+                    (len(isnull(dv.joinkey,'')) = 0) and
+                    (len(isnull(mt.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
 
              --  Impression-based cost; DV flag; DV data not present; MT data present
              when   (
                     (t2.dv_map = 'Y') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(dv.joinkey,'')) = 0) and
                     (len(isnull(mt.joinkey,'')) > 0)
                     )
              then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
+-- ===========================================================================================================================
 
-
+             --  Impression-based cost; MT flag; MT data present - CPE
+             when   (
+                    (t2.dv_map = 'M') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPE') and
+                    (len(isnull(mt.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
              --  Impression-based cost; MT flag; MT data present
              when   (
                     (t2.dv_map = 'M') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(mt.joinkey,'')) > 0)
                     )
              then   cast((sum(cast(mt.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
 
+-- ===========================================================================================================================
+             --  Impression-based cost; MT flag; MT data not present; DV data present - CPE
+             when   (
+                    (t2.dv_map = 'M') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPE') and
+                    (len(isnull(mt.joinkey,'')) = 0) and
+                    (len(isnull(dv.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(dv.groupm_billable_impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10)))  as decimal(20,10))
              --  Impression-based cost; MT flag; MT data not present; DV data present
              when   (
                     (t2.dv_map = 'M') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(mt.joinkey,'')) = 0) and
                     (len(isnull(dv.joinkey,'')) > 0)
                     )
@@ -692,7 +738,7 @@ from (
                     (t2.dv_map = 'M') and
                     (t2.campaign_id = 10918234) and
                     (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841)) and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
                     (len(isnull(mt.joinkey,'')) = 0)
                     )
@@ -773,6 +819,11 @@ from (
 
                     when t2.dv_map = 'M' and
                         (len(isnull(mt.joinkey,'')) = 0) and
+                        (len(isnull(dv.joinkey,'')) > 0)
+                    then dv.total_impressions
+
+                    when t2.dv_map = 'M' and
+                        (len(isnull(mt.joinkey,'')) = 0) and
                         (t2.campaign_id = 10918234) and
                         (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841)) and
                         (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
@@ -791,6 +842,10 @@ from (
                         (len(isnull(dv.joinkey,'')) = 0) and
                         (len(isnull(mt.joinkey,'')) > 0)
                     then mt.groupm_billable_impressions
+                    when t2.dv_map = 'M' and
+                        (len(isnull(mt.joinkey,'')) = 0) and
+                        (len(isnull(dv.joinkey,'')) > 0)
+                    then dv.groupm_billable_impressions
                     when t2.dv_map = 'Y' then dv.groupm_billable_impressions
                     when t2.dv_map = 'M' and
                         (len(isnull(mt.joinkey,'')) = 0) and
@@ -860,7 +915,14 @@ from (
                     then 'dCPM' else  prs.costmethod end                                              as costmethod,
                     prs.cost_id                                                                           as cost_id,
                     prs.planned_amt                                                                       as planned_amt,
-                    prs.planned_cost                                                                      as planned_cost,
+--                     prs.planned_cost                                                                      as planned_cost,
+
+                    case
+                    when (t1.dcmdate between '2017-10-01' and '2017-12-31') and
+                         t1.site_id_dcm = 1190273
+                    then cast( ((prs.planned_amt*6)/1000) as decimal(20,10))
+                    else cast(prs.planned_cost as decimal(20,10)) end                                                as planned_cost,
+
                     prs.placementstart                                                                    as placementstart,
                     case
                     when t1.campaign_id = 9923634 and
@@ -1053,11 +1115,11 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
---     where prs.cost_id = 'PFHH1N'
+--     where prs.cost_id = 'PJ5ZZX'
 -- where t1.site_id_dcm =1578478
 --                      and prs.eddate >= 20170101
 
@@ -1119,7 +1181,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
