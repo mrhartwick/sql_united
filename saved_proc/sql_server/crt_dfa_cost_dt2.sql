@@ -1,4 +1,4 @@
-alter procedure dbo.crt_dfa_cost_dt2
+create procedure dbo.crt_dfa_cost_dt2
 as
 if OBJECT_ID('master.dbo.dfa_cost_dt2',N'U') is not null
     drop table master.dbo.dfa_cost_dt2;
@@ -600,7 +600,7 @@ from (
              --  Click-based cost; source Innovid
              when   (
                     (t2.dv_map = 'Y' or t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV') and
                     (len(isnull(iv.joinkey,'')) > 0)
                     )
@@ -609,7 +609,7 @@ from (
              --  Click-based cost; source DCM
              when   (
                     (t2.dv_map = 'Y' or t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV')
                     )
              then   cast((sum(cast(t2.clicks as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
@@ -617,7 +617,7 @@ from (
              --  Impression-based cost; not subject to viewability; Innovid source - CPE
              when   (
                     (t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPE') and
                     (len(isnull(iv.joinkey,'')) > 0)
                     )
@@ -627,7 +627,7 @@ from (
              --  Impression-based cost; not subject to viewability; Innovid source
              when   (
                     (t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(iv.joinkey,'')) > 0)
                     )
@@ -637,7 +637,7 @@ from (
              --  Impression-based cost; not subject to viewability; DCM source - CPE
              when   (
                     (t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPE')
                     )
              then   cast((sum(cast(t2.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
@@ -645,7 +645,7 @@ from (
              --  Impression-based cost; not subject to viewability; DCM source
              when   (
                     (t2.dv_map = 'N') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV')
                     )
              then   cast((sum(cast(t2.impressions as decimal(20,10))) * cast(t2.rate as decimal(20,10))) / 1000 as decimal(20,10))
@@ -657,7 +657,7 @@ from (
               --  Impression-based cost; DV flag; DV data present - CPE
              when   (
                     (t2.dv_map = 'Y') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPE') and
                     (len(isnull(dv.joinkey,'')) > 0)
                     )
@@ -666,7 +666,7 @@ from (
              --  Impression-based cost; DV flag; DV data present
              when   (
                     (t2.dv_map = 'Y') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(dv.joinkey,'')) > 0)
                     )
@@ -675,7 +675,7 @@ from (
              --  Impression-based cost; DV flag; DV data not present; MT data present - CPE
              when   (
                     (t2.dv_map = 'Y') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPE') and
                     (len(isnull(dv.joinkey,'')) = 0) and
                     (len(isnull(mt.joinkey,'')) > 0)
@@ -685,7 +685,7 @@ from (
              --  Impression-based cost; DV flag; DV data not present; MT data present
              when   (
                     (t2.dv_map = 'Y') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(dv.joinkey,'')) = 0) and
                     (len(isnull(mt.joinkey,'')) > 0)
@@ -696,7 +696,7 @@ from (
              --  Impression-based cost; MT flag; MT data present - CPE
              when   (
                     (t2.dv_map = 'M') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPE') and
                     (len(isnull(mt.joinkey,'')) > 0)
                     )
@@ -704,7 +704,7 @@ from (
              --  Impression-based cost; MT flag; MT data present
              when   (
                     (t2.dv_map = 'M') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(mt.joinkey,'')) > 0)
                     )
@@ -714,7 +714,7 @@ from (
              --  Impression-based cost; MT flag; MT data not present; DV data present - CPE
              when   (
                     (t2.dv_map = 'M') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPE') and
                     (len(isnull(mt.joinkey,'')) = 0) and
                     (len(isnull(dv.joinkey,'')) > 0)
@@ -723,7 +723,7 @@ from (
              --  Impression-based cost; MT flag; MT data not present; DV data present
              when   (
                     (t2.dv_map = 'M') and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV') and
                     (len(isnull(mt.joinkey,'')) = 0) and
                     (len(isnull(dv.joinkey,'')) > 0)
@@ -738,7 +738,7 @@ from (
                     (t2.dv_map = 'M') and
                     (t2.campaign_id = 10918234) and
                     (t2.site_id_dcm in (1995643, 1485655, 2854118, 1329066, 3246841)) and
-                    (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
                     (t2.costmethod = 'CPM' or t2.costmethod = 'CPMV' or t2.costmethod = 'CPE') and
                     (len(isnull(mt.joinkey,'')) = 0)
                     )
