@@ -30,7 +30,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-10-10';
+set @report_ed = '2017-11-10';
 set @report_st = '2017-03-10';
 
 --
@@ -68,6 +68,7 @@ select
 
   case when campaign_id='11069476'  AND placement LIKE '%MICE%' then 'MICE'
         when campaign_id='11069476'  AND placement LIKE '%SME%' then 'SME'
+        when campaign_id='11069476'  AND placement LIKE '%Jetstream%' then 'Jetstream'
         when campaign_id='11069476' then 'Trade'
         else '' end                                                                                as "Campaign Type",
 
@@ -126,7 +127,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-10-10';
+-- set @report_ed = '2017-11-10';
 -- set @report_st = '2017-03-10';
 
 select
@@ -474,7 +475,22 @@ select
                -- Flat-fee, cost-per-click, CPCV, and dynamic CPM should never be subject to viewability
                when prs.costmethod = 'Flat' or prs.costmethod = 'CPC' or prs.costmethod = 'CPCV' or prs.costmethod = 'dCPM'
                    then 'N'
---
+
+               --------Corrections to Trade 2017------
+          when (campaign_id = 11069476
+           and site_id_dcm = 2244596) ---Vistar Media
+              then 'N'
+
+           when (campaign_id = 11069476
+           and site_id_dcm = 1267140 ---Bloomberg
+           and cost_id = 'PG72V8')
+              then 'N'
+
+           when (campaign_id = 11069476
+           and site_id_dcm = 1267140 ---Bloomberg
+           and cost_id <> 'PG72V8')
+              then 'Y'
+
 --                -- Corrections to SME 2016
 --                when t1.campaign_id = '10090315' and
 --                -- Inc
@@ -570,7 +586,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-03-10'' and ''2017-10-10''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-03-10'' and ''2017-11-10''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 and campaign_id in (11069476) -- display 2017
@@ -610,7 +626,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-10'' and ''2017-10-10''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-10'' and ''2017-11-10''
 and campaign_id in (11069476) -- display 2017
 
 and (advertiser_id <> 0)
@@ -644,7 +660,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-10'' and ''2017-10-10''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-03-10'' and ''2017-11-10''
 and campaign_id in (11069476) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
