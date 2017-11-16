@@ -1,4 +1,4 @@
-create procedure dbo.crt_dfa_cost_dt2
+alter procedure dbo.crt_dfa_cost_dt2
 as
 if OBJECT_ID('master.dbo.dfa_cost_dt2',N'U') is not null
     drop table master.dbo.dfa_cost_dt2;
@@ -914,14 +914,18 @@ from (
                     (t1.site_id_dcm = 1578478 OR t1.site_id_dcm = 2202011)
                     then 'dCPM' else  prs.costmethod end                                              as costmethod,
                     prs.cost_id                                                                           as cost_id,
-                    prs.planned_amt                                                                       as planned_amt,
---                     prs.planned_cost                                                                      as planned_cost,
-
                     case
                     when (t1.dcmdate between '2017-10-01' and '2017-12-31') and
-                         t1.site_id_dcm = 1190273
-                    then cast( ((prs.planned_amt*6)/1000) as decimal(20,10))
-                    else cast(prs.planned_cost as decimal(20,10)) end                                                as planned_cost,
+                    t1.site_id_dcm = 1190273 and prs.cost_id ='PJDGVX'
+                    then cast( (45801039) as decimal(20,10))
+                    else cast(prs.planned_amt as decimal(20,10)) end                                      as planned_amt,
+                    prs.planned_cost                                                                      as planned_cost,
+
+                    -- case
+                    -- when (t1.dcmdate between '2017-10-01' and '2017-12-31') and
+                    --      t1.site_id_dcm = 1190273
+                    -- then cast( ((prs.planned_amt*6)/1000) as decimal(20,10))
+                    -- else cast(prs.planned_cost as decimal(20,10)) end                                                as planned_cost,
 
                     prs.placementstart                                                                    as placementstart,
                     case
@@ -1115,7 +1119,7 @@ cast(report.date as date)
                      left join
                      (
                          select *
-                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
@@ -1181,7 +1185,7 @@ cast(report.date as date)
 
              left join (
                            select *
-                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
