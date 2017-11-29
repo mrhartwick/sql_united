@@ -915,17 +915,15 @@ from (
                     then 'dCPM' else  prs.costmethod end                                              as costmethod,
                     prs.cost_id                                                                           as cost_id,
                     case
-                    when (t1.dcmdate between '2017-10-01' and '2017-12-31') and
-                    t1.site_id_dcm = 1190273 and prs.cost_id ='PJDGVX'
-                    then cast( (45801039) as decimal(20,10))
+                    when t1.site_id_dcm = 1190273 and prs.cost_id ='PJDGVX'
+                    then cast( (55885372) as decimal(20,10))
                     else cast(prs.planned_amt as decimal(20,10)) end                                      as planned_amt,
-                    prs.planned_cost                                                                      as planned_cost,
+--                     prs.planned_cost                                                                      as planned_cost,
 
-                    -- case
-                    -- when (t1.dcmdate between '2017-10-01' and '2017-12-31') and
-                    --      t1.site_id_dcm = 1190273
-                    -- then cast( ((prs.planned_amt*6)/1000) as decimal(20,10))
-                    -- else cast(prs.planned_cost as decimal(20,10)) end                                                as planned_cost,
+                    case
+                    when t1.site_id_dcm = 1190273 and prs.cost_id ='PJDGVX'
+                    then cast( (369029) as decimal(20,10))
+                    else cast(prs.planned_cost as decimal(20,10)) end                                                as planned_cost,
 
                     prs.placementstart                                                                    as placementstart,
                     case
