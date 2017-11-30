@@ -27,12 +27,11 @@ from
 (
 select distinct(user_id), activity_id, conversion_id, interaction_time, campaign_id, site_id_dcm, placement_id
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date ) between '2017-08-15' and '2017-10-10'
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date ) between '2017-08-15' and '2017-11-24'
 and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
 and (activity_id = 1086066)
 and (campaign_id = 10742878) -- display 2017
 and (advertiser_id <> 0)
--- and (user_id <> '0')
 and (length(isnull(event_sub_type,'')) > 0)
 ) as ta
 
@@ -76,7 +75,7 @@ from diap01.mec_us_united_20056.dfa2_sites
 ) as directory
 on r1.site_id_dcm = directory.site_id_dcm
 
-where p1.placement like '%PROS_FT%'
+where p1.placement like '%PROS_FT%' or p1.placement like '%Weather%'
 
 group by
 cast (r1.date as date )
