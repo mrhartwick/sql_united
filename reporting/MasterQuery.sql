@@ -12,7 +12,7 @@
 -- */
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
--- -- --
+-- -- -- --
 -- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
@@ -30,7 +30,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-10-10';
+set @report_ed = '2017-11-30';
 set @report_st = '2017-01-01';
 
 --
@@ -105,7 +105,9 @@ select
     sum(t3.vew_rev)                                                                                    as vew_rev,
     sum(t3.clk_rev)                                                                                    as clk_thru_rev,
 --     sum(t3.billrevenue)                                                                                as "billable revenue",
-    sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue"
+    sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue",
+    sum(t3.adjs_view_revenue)                                                                          as adjusted_view_revenue,
+    sum(t3.adjs_click_revenue)                                                                         as adjusted_click_revenue
 
 
 
@@ -117,7 +119,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-10-10';
+-- set @report_ed = '2017-11-30';
 -- set @report_st = '2017-01-01';
 
 select
@@ -271,190 +273,577 @@ select
 
 -- ==============================================================================================================================================
  --         Billable revenue with United discounts applied
-            sum(case
+sum(case
 --         not subject to viewability, DBM
-              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .015) * .9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .025) * .9 as decimal(10,2))
 
-              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                          (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .015) *.9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .025) *.9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .025) *.9 as decimal(10,2))
 
 
-              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .0225) * .9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .0375) * .9 as decimal(10,2))
 
-              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
-              then cast((((
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
+  then cast((((
 (t2.vew_rev) *
-                          (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .0225) * .9 as decimal(10,2))
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .0375) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .0375) *.9 as decimal(10,2))
 
 
-              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .06) * .9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .1) * .9 as decimal(10,2))
 
-              when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                          (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .06) * .9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .1) * .9 as decimal(10,2))
 
-
-              when (t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%' and (len(isnull(dv.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .06) * .9 as decimal(10,2))
-
-              when (t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                          (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .06) * .9 as decimal(10,2))
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .1) *.9 as decimal(10,2))
 
 
-              when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08) *.9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                          OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .1) * .9 as decimal(10,2))
 
-              when (t2.costmethod = 'dCPM' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                          (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .08) *.9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                          OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .1) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                                        OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .1) *.9 as decimal(10,2))
+
+
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
+then cast(((((t2.vew_rev) *
+                  (cast(dv.groupm_passed_impressions as decimal) /
+                              nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .03) * .9 as decimal(10,2))
+
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
+then cast(((((t2.vew_rev) *
+                            (cast(mt.groupm_passed_impressions as decimal) /
+                              nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .03) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .03) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08) *.9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .08) *.9 as decimal(10,2))
 
 --         not subject to viewability
-              when (t2.dv_map = 'N' and (len(isnull(dv.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                (cast(dv.groupm_passed_impressions as decimal) /
-                            nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08) *.9 as decimal(10,2))
+  when (t2.dv_map = 'N' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .08) *.9 as decimal(10,2))
 
-              when (t2.dv_map = 'N' and (len(isnull(mt.joinkey,''))>0))
-              then cast(((((t2.vew_rev) *
-                          (cast(mt.groupm_passed_impressions as decimal) /
-                            nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
+  when (t2.dv_map = 'N' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
 
-             --         Win NY TapAd placements, which Medialets failed to tag
-             --         using average viewability rate for Feb, Mar, Apr
+ --         Win NY TapAd placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
 
-                          when (
-                                 (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))=0)) or
-                                 (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))=0))
-                               )
-                          then
-                                 case
-                                 when t2.dcmmonth = 2
-                                 then cast( (( (t2.vew_rev * .41) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 when t2.dcmmonth = 3
-                                 then cast( (( (t2.vew_rev * .48) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 when t2.dcmmonth = 4
-                                 then cast( (( (t2.vew_rev * .56) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 end
-             --         Win NY Verve placements, which Medialets failed to tag
-             --         using average viewability rate for Feb, Mar, Apr
-                          when (
-                                 (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))=0)) or
-                                 (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))=0))
-                               )
-                          then
-                                 case
-                                 when t2.dcmmonth = 2
-                                 then cast( (( (t2.vew_rev * .59) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 when t2.dcmmonth = 3
-                                 then cast( (( (t2.vew_rev * .77) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 when t2.dcmmonth = 4
-                                 then cast( (( (t2.vew_rev * .79) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 end
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .41) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.vew_rev * .48) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( (t2.vew_rev * .56) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     end
+ --         Win NY Verve placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .59) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.vew_rev * .77) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( (t2.vew_rev * .79) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     end
 
-             --         Win NY Forbes placements, which Medialets failed to tag
-             --         using average viewability rate for Feb, Mar, Apr
+ --         Win NY Forbes placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
 
-                          when (
-                                 (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))=0)) or
-                                 (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))=0))
-                               )
-                          then
-                                 case
-                                 when t2.dcmmonth = 2
-                                 then cast( (( (t2.vew_rev * .38) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 when t2.dcmmonth = 3
-                                 then cast( (( (t2.vew_rev * .59) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 when t2.dcmmonth = 4
-                                 then cast( (( (t2.vew_rev * .64) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 end
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .38) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.vew_rev * .59) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( (t2.vew_rev * .64) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     end
 
-             --         Win NY Ninth Decimal placements, which Medialets failed to tag
-             --         using average viewability rate for Feb, Mar, Apr
-                          when (
-                                 (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))=0)) or
-                                 (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))=0))
-                               )
-                          then
-                                 case
-                                 when t2.dcmmonth = 2
-                                 then cast( (( (t2.vew_rev * .78) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 when t2.dcmmonth = 3
-                                 then cast( (( (t2.vew_rev * .89) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 when t2.dcmmonth = 4
-                                 then cast( ( ((t2.vew_rev * .68) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+ --         Win NY Ninth Decimal placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .78) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.vew_rev * .89) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( ( ((t2.vew_rev * .68) + t2.clk_rev) * .08) *.9 as decimal(10,2))
 
-                                 end
+                     end
 
-             --         Win NY NewYorkMagazine placements, which Medialets failed to tag
-             --         using average viewability rate for Feb, Mar, Apr
-                          when (
-                                 (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))=0)) or
-                                 (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))=0))
-                               )
-                          then
-                                 case
-                                 when t2.dcmmonth = 2
-                                 then cast( (( (t2.vew_rev * .54) + t2.clk_rev) * .08) *.9 as decimal(10,2))
-                                 when t2.dcmmonth = 3
-                                 then cast( ( ((t2.vew_rev * .62) + t2.clk_rev) * .08) *.9  as decimal(10,2))
-                                 when t2.dcmmonth = 4
-                                 then cast( ( ((t2.vew_rev * .64) + t2.clk_rev) * .08) *.9  as decimal(10,2))
-                                 end
+ --         Win NY NewYorkMagazine placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .54) + t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( ( ((t2.vew_rev * .62) + t2.clk_rev) * .08) *.9  as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( ( ((t2.vew_rev * .64) + t2.clk_rev) * .08) *.9  as decimal(10,2))
+                     end
 
-             --         subject to viewability with flag; mt source
-                          when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
-                            then cast((
-                          (((t2.vew_rev) *
-                                       (cast(mt.groupm_passed_impressions as decimal) /
-                                         nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
+ --         subject to viewability with flag; mt source
+              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
+                then cast((
+              (((t2.vew_rev) *
+                           (cast(mt.groupm_passed_impressions as decimal) /
+                             nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
 
-             --         subject to viewability; dv source
-                          when (t2.dv_map = 'Y')
-                            then cast((
-                          (((t2.vew_rev) *
-                             (cast(dv.groupm_passed_impressions as decimal) /
-                                         nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
+ --         subject to viewability; dv source
+              when (t2.dv_map = 'Y' and (len(isnull(dv.joinkey,''))>0))
+                then cast((
+              (((t2.vew_rev) *
+                 (cast(dv.groupm_passed_impressions as decimal) /
+                             nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
 
-             --         subject to viewability; moat source
-                          when (t2.dv_map = 'M')
-                            then cast((
-                          (((t2.vew_rev) *
-                                       (cast(mt.groupm_passed_impressions as decimal) /
-                                         nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
+ --         subject to viewability; moat source
+              when (t2.dv_map = 'M' and (len(isnull(mt.joinkey,''))>0))
+                then cast((
+              (((t2.vew_rev) *
+                           (cast(mt.groupm_passed_impressions as decimal) /
+                             nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .08) *.9 as decimal(10,2))
 
-                          when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%')
-              then cast((((t2.vew_rev) + t2.clk_rev)  * .015) *.9 as decimal(10,2))
+  else (((t2.vew_rev + t2.clk_rev ) * .08) *.9)  end) as            adjsrevenue,
 
-              when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%')
-              then cast((((t2.vew_rev)  + t2.clk_rev) * .0225) *.9 as decimal(10,2))
+sum(case
+--         not subject to viewability, DBM
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))))  * .025) * .9 as decimal(10,2))
 
-              when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%')
-              then cast((((t2.vew_rev)  + t2.clk_rev) * .06) *.9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))))  * .025) *.9 as decimal(10,2))
 
-             when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%First and Business%%')
-              then cast((((t2.vew_rev)  + t2.clk_rev) * .06) *.9 as decimal(10,2))
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev))  * .025) *.9 as decimal(10,2))
 
-              else (((t2.vew_rev + t2.clk_rev ) * .08) *.9)  end) as            adjsrevenue,
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0)))) * .0375) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
+  then cast((((
+(t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0)))) * .0375) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev))  * .0375) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0)))) * .1) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0)))) * .1) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev))  * .1) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                          OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0)))) * .1) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                          OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0)))) * .1) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                                        OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev))  * .1) *.9 as decimal(10,2))
+
+
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
+then cast(((((t2.vew_rev) *
+                  (cast(dv.groupm_passed_impressions as decimal) /
+                              nullif(cast(dv.total_impressions as decimal),0)))) * .03) * .9 as decimal(10,2))
+
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
+then cast(((((t2.vew_rev) *
+                            (cast(mt.groupm_passed_impressions as decimal) /
+                              nullif(cast(mt.total_impressions as decimal),0)))) * .03) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev))  * .03) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))))  * .08) *.9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))))  * .08) *.9 as decimal(10,2))
+
+--         not subject to viewability
+  when (t2.dv_map = 'N' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))))  * .08) *.9 as decimal(10,2))
+
+  when (t2.dv_map = 'N' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0)))) * .08) *.9 as decimal(10,2))
+
+ --         Win NY TapAd placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .41) ) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.vew_rev * .48) ) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( (t2.vew_rev * .56) ) * .08) *.9 as decimal(10,2))
+                     end
+ --         Win NY Verve placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .59) ) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.vew_rev * .77) ) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( (t2.vew_rev * .79) ) * .08) *.9 as decimal(10,2))
+                     end
+
+ --         Win NY Forbes placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .38)) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.vew_rev * .59) ) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( (t2.vew_rev * .64) ) * .08) *.9 as decimal(10,2))
+                     end
+
+ --         Win NY Ninth Decimal placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .78) ) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.vew_rev * .89) ) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( ( ((t2.vew_rev * .68) ) * .08) *.9 as decimal(10,2))
+
+                     end
+
+ --         Win NY NewYorkMagazine placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.vew_rev * .54) ) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( ( ((t2.vew_rev * .62) ) * .08) *.9  as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( ( ((t2.vew_rev * .64) ) * .08) *.9  as decimal(10,2))
+                     end
+
+ --         subject to viewability with flag; mt source
+              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
+                then cast((
+              (((t2.vew_rev) *
+                           (cast(mt.groupm_passed_impressions as decimal) /
+                             nullif(cast(mt.total_impressions as decimal),0)))) * .08) *.9 as decimal(10,2))
+
+ --         subject to viewability; dv source
+              when (t2.dv_map = 'Y' and (len(isnull(dv.joinkey,''))>0))
+                then cast((
+              (((t2.vew_rev) *
+                 (cast(dv.groupm_passed_impressions as decimal) /
+                             nullif(cast(dv.total_impressions as decimal),0)))) * .08) *.9 as decimal(10,2))
+
+ --         subject to viewability; moat source
+              when (t2.dv_map = 'M' and (len(isnull(mt.joinkey,''))>0))
+                then cast((
+              (((t2.vew_rev) *
+                           (cast(mt.groupm_passed_impressions as decimal) /
+                             nullif(cast(mt.total_impressions as decimal),0)))) * .08) *.9 as decimal(10,2))
+
+  else (((t2.vew_rev) * .08) *.9)  end) as            adjs_view_revenue,
+
+
+sum(case
+--         not subject to viewability, DBM
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
+  then cast((( t2.clk_rev )  * .025) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
+  then cast((( t2.clk_rev )  * .025) *.9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((( t2.clk_rev)  * .025) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .0375) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .0375) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((( t2.clk_rev)  * .0375) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .1) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .1) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((( t2.clk_rev)  * .1) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                          OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(dv.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .1) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                          OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(mt.joinkey,''))>0))
+  then cast(((  t2.clk_rev ) * .1) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                                        OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((( t2.clk_rev)  * .1) *.9 as decimal(10,2))
+
+
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
+then cast((( t2.clk_rev ) * .03) * .9 as decimal(10,2))
+
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
+then cast((( t2.clk_rev ) * .03) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast(((t2.clk_rev)  * .03) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
+  then cast((( t2.clk_rev )  * .08) *.9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and (len(isnull(mt.joinkey,''))>0))
+  then cast((( t2.clk_rev )  * .08) *.9 as decimal(10,2))
+
+--         not subject to viewability
+  when (t2.dv_map = 'N' and (len(isnull(dv.joinkey,''))>0))
+  then cast((( t2.clk_rev )  * .08) *.9 as decimal(10,2))
+
+  when (t2.dv_map = 'N' and (len(isnull(mt.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .08) *.9 as decimal(10,2))
+
+ --         Win NY TapAd placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     end
+ --         Win NY Verve placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     end
+
+ --         Win NY Forbes placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     end
+
+ --         Win NY Ninth Decimal placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( ( (t2.clk_rev) * .08) *.9 as decimal(10,2))
+
+                     end
+
+ --         Win NY NewYorkMagazine placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( t2.clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( ( ( t2.clk_rev) * .08) *.9  as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( ( ( t2.clk_rev) * .08) *.9  as decimal(10,2))
+                     end
+
+ --         subject to viewability with flag; mt source
+              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
+                then cast((
+              (t2.clk_rev ) * .08) *.9 as decimal(10,2))
+
+ --         subject to viewability; dv source
+              when (t2.dv_map = 'Y' and (len(isnull(dv.joinkey,''))>0))
+                then cast((
+              ( t2.clk_rev ) * .08) *.9 as decimal(10,2))
+
+ --         subject to viewability; moat source
+              when (t2.dv_map = 'M' and (len(isnull(mt.joinkey,''))>0))
+                then cast((
+              ( t2.clk_rev ) * .08) *.9 as decimal(10,2))
+
+  else ((( t2.clk_rev ) * .08) *.9)  end) as            adjs_click_revenue,
 
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.billimps end) as billimps,
@@ -650,7 +1039,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-10-10''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-11-30''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
@@ -690,7 +1079,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-10-10''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-11-30''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -724,7 +1113,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-10-10''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-11-30''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
