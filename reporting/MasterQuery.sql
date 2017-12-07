@@ -30,7 +30,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-11-30';
+set @report_ed = '2017-12-05';
 set @report_st = '2017-01-01';
 
 --
@@ -119,7 +119,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-11-30';
+-- set @report_ed = '2017-12-05';
 -- set @report_st = '2017-01-01';
 
 select
@@ -865,18 +865,30 @@ then cast(((t2.clk_rev)  * .03) *.9 as decimal(10,2))
     sum(case
         when (len(isnull(iv.joinkey,'')) > 0) then iv.click_thrus
         else t2.clicks end)                                                       as clicks,
-    sum(case when t2.costmethod = 'dCPM' then cst.clk_con else  t2.clk_con end)      as clk_con,
-    sum(case when t2.costmethod = 'dCPM' then cst.clk_rev else  t2.clk_rev end)      as clk_rev,
-    sum(case when t2.costmethod = 'dCPM' then cst.clk_tix else  t2.clk_tix end)      as clk_tix,
-    sum(case when t2.costmethod = 'dCPM' then cst.con     else  t2.con     end)      as tot_con,
-    sum(case when t2.costmethod = 'dCPM' then cst.rev     else  t2.rev     end)      as tot_rev,
-    sum(case when t2.costmethod = 'dCPM' then cst.tix     else  t2.tix     end)      as tot_tix,
-    sum(case when t2.costmethod = 'dCPM' then cst.vew_con else  t2.vew_con end)      as vew_con,
-    sum(case when t2.costmethod = 'dCPM' then cst.vew_rev else  t2.vew_rev end)      as vew_rev,
-    sum(case when t2.costmethod = 'dCPM' then cst.vew_tix else  t2.vew_tix end)      as vew_tix,
-    sum(case when t2.costmethod = 'dCPM' then cst.clk_led else  t2.clk_led end)      as clk_led,
-    sum(case when t2.costmethod = 'dCPM' then cst.vew_led else  t2.vew_led end)      as vew_led,
-    sum(case when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led
+    sum(case when t2.site_id_dcm = '1239319' then t2.clk_con
+        when t2.costmethod = 'dCPM' then cst.clk_con else  t2.clk_con end)      as clk_con,
+    sum(case when t2.site_id_dcm = '1239319' then t2.clk_rev
+        when t2.costmethod = 'dCPM' then cst.clk_rev else  t2.clk_rev end)      as clk_rev,
+    sum(case when t2.site_id_dcm = '1239319' then t2.clk_tix
+        when t2.costmethod = 'dCPM' then cst.clk_tix else  t2.clk_tix end)      as clk_tix,
+    sum(case when t2.site_id_dcm = '1239319' then t2.con
+        when t2.costmethod = 'dCPM' then cst.con     else  t2.con     end)      as tot_con,
+    sum(case when t2.site_id_dcm = '1239319' then t2.rev
+        when t2.costmethod = 'dCPM' then cst.rev     else  t2.rev     end)      as tot_rev,
+    sum(case when t2.site_id_dcm = '1239319' then t2.tix
+        when t2.costmethod = 'dCPM' then cst.tix     else  t2.tix     end)      as tot_tix,
+    sum(case when t2.site_id_dcm = '1239319' then t2.vew_con
+        when t2.costmethod = 'dCPM' then cst.vew_con else  t2.vew_con end)      as vew_con,
+    sum(case when t2.site_id_dcm = '1239319' then t2.vew_rev
+        when t2.costmethod = 'dCPM' then cst.vew_rev else  t2.vew_rev end)      as vew_rev,
+    sum(case when t2.site_id_dcm = '1239319' then t2.vew_tix
+        when t2.costmethod = 'dCPM' then cst.vew_tix else  t2.vew_tix end)      as vew_tix,
+    sum(case when t2.site_id_dcm = '1239319' then t2.clk_led
+        when t2.costmethod = 'dCPM' then cst.clk_led else  t2.clk_led end)      as clk_led,
+    sum(case when t2.site_id_dcm = '1239319' then t2.vew_led
+        when t2.costmethod = 'dCPM' then cst.vew_led else  t2.vew_led end)      as vew_led,
+    sum(case when t2.site_id_dcm = '1239319' then t2.led
+        when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led
 
 
 
@@ -1039,7 +1051,7 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-11-30''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-12-05''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
@@ -1079,7 +1091,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-11-30''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-12-05''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 
 and (advertiser_id <> 0)
@@ -1113,7 +1125,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-11-30''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-12-05''
 -- and campaign_id in (10768497, 9801178, 10742878, 10812738, 10740457) -- display 2017
 and (advertiser_id <> 0)
 ) as tc
