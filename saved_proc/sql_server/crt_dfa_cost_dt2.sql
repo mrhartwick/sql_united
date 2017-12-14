@@ -907,6 +907,8 @@ from (
                     when t1.campaign_id = 9923634 and
                          t1.site_id_dcm != 1190258
                     then 20161022
+                    when t1.site_id_dcm = 1190273 and prs.cost_id ='PJDGVX'
+                    then 20171231
                     else prs.eddate end                                                                   as eddate,
                     prs.packagecat                                                                        as packagecat,
                     case
@@ -930,6 +932,8 @@ from (
                     when t1.campaign_id = 9923634 and
                          t1.site_id_dcm != 1190258
                     then '2016-10-22'
+                    when t1.site_id_dcm = 1190273 and prs.cost_id ='PJDGVX'
+                    then '2017-12-31'
                     else prs.placementend end                                                             as placementend,
 
                     sum((cast(t1.impressions as decimal(20,10)) / nullif(
@@ -1256,6 +1260,7 @@ group by
 -- where t5.costmethod != 'Flat'
                   ) as t6
          ) as t7
+where cost_id = 'PJDGVX'
         -- where (len(isnull(t7.cost_id,'')) != 0)
 ) as t8
 go
