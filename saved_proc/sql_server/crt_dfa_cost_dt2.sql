@@ -1260,7 +1260,6 @@ group by
 -- where t5.costmethod != 'Flat'
                   ) as t6
          ) as t7
-where cost_id = 'PJDGVX'
         -- where (len(isnull(t7.cost_id,'')) != 0)
 ) as t8
 go
