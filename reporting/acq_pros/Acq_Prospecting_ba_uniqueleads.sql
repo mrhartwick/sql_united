@@ -34,13 +34,13 @@ cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),'SS') as date 
 ,sum(case when activity_id = 1086066 and ta.conversion_id = 1 then 1 else 0 end) as clk_led
 ,sum(case when activity_id = 1086066 and (ta.conversion_id = 1) and (
 (ta.orig = 'EWR') and
-(ta.dest = 'EVE')
+(ta.dest = 'EZE')
 )
 then 1 else 0 end) as clk_qual_led
 ,sum(case when activity_id = 1086066 and ta.conversion_id = 2 then 1 else 0 end) as vew_led
 ,sum(case when activity_id = 1086066 and (ta.conversion_id = 2) and (
 (ta.orig = 'EWR') and
-(ta.dest = 'EVE')
+(ta.dest = 'EZE')
 )
 then 1 else 0 end) as vew_qual_led
 

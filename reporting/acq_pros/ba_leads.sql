@@ -653,7 +653,7 @@ cast(timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as date
 ,sum(case when activity_id = 1086066 and (ta.conversion_id = 1 or ta.conversion_id = 2) then 1 else 0 end) as led
 ,sum(case when activity_id = 1086066 and (ta.conversion_id = 1 or ta.conversion_id = 2) and (
 (ta.orig = ''EWR'') and
-(ta.dest = ''EVE'')
+(ta.dest = ''EZE'')
 )
 then 1 else 0 end) as qual_led
 
@@ -661,7 +661,7 @@ then 1 else 0 end) as qual_led
 ,sum(case when activity_id = 978826 and (ta.conversion_id = 1 or ta.conversion_id = 2) and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as tix
 ,sum(case when activity_id = 978826 and (ta.conversion_id = 1 or ta.conversion_id = 2) and ta.total_revenue <> 0 and (
 (ta.orig = ''EWR'') and
-(ta.dest = ''EVE'')
+(ta.dest = ''EZE'')
 )
 then ta.total_conversions else 0 end) as qual_tix
 ,sum(case when ta.conversion_id = 1 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as clk_rev
