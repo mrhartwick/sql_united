@@ -104,7 +104,7 @@ on r1.site_id_dcm = directory.site_id_dcm
 
 -- where p1.placement like '%PROS_FT%' or p1.placement like '%Weather%'
 -- and r1.site_id_dcm in (1190273,1239319, 1853562, 3267410)
-where ((r1.campaign_id = 20377442) or (r1.campaign_id = 10742878 and r1.site_id_dcm = 1190273 and p1.placement like '%_WinHubs_%'))
+where (r1.campaign_id = 10742878 and r1.site_id_dcm = 1190273 and p1.placement like '%_BuenosAires_%')
 
 group by
 cast (r1.date as date )
