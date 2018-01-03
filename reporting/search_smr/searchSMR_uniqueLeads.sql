@@ -45,22 +45,23 @@ commit;
 
 
 -- pull unique leads at desired level
+
 select
 --     ta.user_id,
 --  ta.date,
         ta.week as week,
-    ta.advertiser,
+    -- ta.advertiser,
 --  ta.campaign,
-    ta.site_dcm,
-    ta.site_id_dcm    as siteid_dcm,
+    -- ta.site_dcm,
+    -- ta.site_id_dcm    as siteid_dcm,
 --     ta.paid_search_keyword,
 --     ta.keyword_id as keyword_id,
 --     ta.ad_id,
-    ta.paid_search_campaign,
+    -- ta.paid_search_campaign,
     ta.paid_search_ad_group,
 --  ta.paid_search_bid_strategy,
 --  sum(thing)        as thing,
-    count(ta.user_id) as u_leads,
+    count(distinct ta.user_id) as u_leads,
 --     count(r1) as r1,
 --  count(r2)         as r2,
     sum(tot_con)      as tot_con
@@ -103,7 +104,7 @@ from
 -- left join diap01.mec_us_united_20056.dfa2_campaigns as c1
 -- on a.campaign_id = c1.campaign_id
 
-        where cast(timestamp_trunc(to_timestamp(a.interaction_time / 1000000),'SS') as date) between '2017-10-01' and '2017-10-31'
+        where cast(timestamp_trunc(to_timestamp(a.interaction_time / 1000000),'SS') as date) between '2017-12-01' and '2017-12-31'
             and (a.activity_id = 1086066)
             and (a.advertiser_id <> 0)
             and (length(isnull (a.event_sub_type,'')) > 0)
@@ -126,20 +127,12 @@ from
             s1.paid_search_ad_group
 
     ) as ta
--- where ta.r1 = 1
-
+where ta.advertiser = 'United_Search'
 group by
 --  ta.date,
     ta.week,
 --  ta.campaign,
-    ta.site_id_dcm,
-    ta.advertiser,
-    ta.site_dcm,
-    ta.paid_search_ad_group,
---  ta.paid_search_bid_strategy,
---     ta.paid_search_keyword,
---     ta.keyword_id,
---     ta.ad_id
-    ta.paid_search_campaign
-
-
+    -- ta.site_id_dcm,
+    -- ta.advertiser,
+    -- ta.site_dcm,
+    ta.paid_search_ad_group
