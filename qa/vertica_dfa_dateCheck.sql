@@ -1,3 +1,6 @@
+---DFA QA
+
+
 select
     cast(t1.dateTime as date) as "date",
     t2.act_date,
