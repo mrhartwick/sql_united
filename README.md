@@ -29,5 +29,4 @@ This is a central repository for SQL code on United.
 
 ### Who do I talk to? ###
 
-* Send questions or comments to [Matthew Hartwick](mailto:matthew.hartwick@wmglobal.com)
-* Other community or team contact
+* Send questions or comments to [Matthew Hartwick](mailto:matthew.hartwick@wmglobal.com) or [Tammam Ahmed](mailto:matthew.hartwick@wmglobal.com)

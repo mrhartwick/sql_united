@@ -124,7 +124,7 @@ from (
 
      ) as t1
 
-    left join [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.UALUS_DIM_PaidSearch_Campaign as c1
+    left join [10.2.186.148,4721].dm_1161_unitedairlinesusa.dbo.UALUS_DIM_Paid_SearchCampaign as c1
     on t1.pdsearch_campaign_id = c1.Paid_Search_Campaign_ID
 
 --     left join [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.UALUS_DIM_Paid_SearchKeyword as k1
@@ -476,3 +476,14 @@ group by
     t2.Paid_SearchEngine,
 --     t2.pdsearch_adgroup_id,
     t2.Paid_Search_AdGroup
+
+(44700015848196400,
+44700015848639300,
+44700015848549400,
+44700015844002100,
+44700015848639400,
+44700015844002000,
+44700015848536400,
+44700015852602300)
+
+        282194489
