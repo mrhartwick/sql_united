@@ -27,10 +27,10 @@ from
 (
 select distinct(user_id), activity_id, conversion_id, interaction_time, campaign_id, site_id_dcm, placement_id
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date ) between '2017-08-15' and '2017-11-24'
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date ) between '2018-01-01' and '2018-01-25'
 and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
 and (activity_id = 1086066)
-and (campaign_id = 10742878) -- display 2017
+and (campaign_id = 20606595) -- display 2018
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'')) > 0)
 and (user_id <> '0')
