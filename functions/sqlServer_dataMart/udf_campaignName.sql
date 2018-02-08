@@ -46,6 +46,9 @@ as
                                  when @campaignID = 20334410 or @campaignID = 20337019 or @campaignID = 20336827 then 'Singapore Route Launch 2017'
                 								 when @campaignID = 20353010 then 'Chicago 2017'
                                  when @campaignID = 20606595 then 'GM Acquisition 2018'
+                                 when @campaignID = 20681311 or @campaignID = 20609762 then 'Winter Olympics 2018'
+                                 when @campaignID = 20629714 then 'New Zealand Onshore 2018'
+                                 when @campaignID = 20634533 then 'Singapore Onshore 2018'
 
 
 
