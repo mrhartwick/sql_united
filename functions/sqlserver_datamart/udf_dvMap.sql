@@ -19,10 +19,16 @@ as
         set @final_dv_map = case
                -- These cost methods should never be subject to viewability
 
-              ----2018 olympics 
+              ----2018 olympics
 
                when @campaign_id = 20681311 then 'Y'
                when @campaign_id = 20609762 then 'Y'
+
+
+            ---Prospecting gm acq
+
+            when @campaign_id = 20606595 AND
+            @placement like '%[Pp][Rr][Oo][Ss]_[Ff][Tt]%' then 'Y'
 
              -------Correction to SF 2017
 
