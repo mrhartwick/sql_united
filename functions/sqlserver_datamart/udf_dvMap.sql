@@ -19,6 +19,11 @@ as
         set @final_dv_map = case
                -- These cost methods should never be subject to viewability
 
+              ----2018 olympics 
+
+               when @campaign_id = 20681311 then 'Y'
+               when @campaign_id = 20609762 then 'Y'
+
              -------Correction to SF 2017
 
                  when @campaign_id = 20177168 and
