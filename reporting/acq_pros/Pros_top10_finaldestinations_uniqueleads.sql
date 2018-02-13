@@ -1,6 +1,6 @@
 select
 -- final.date as "Date"
-,final.destination                                             as destination
+final.destination                                             as destination
 -- ,final.route_1_destination                                    as "Route1_destination"
 -- ,final.route_2_destination                                    as "Route2_destination"
 -- ,final.site                                                   as site
@@ -72,8 +72,10 @@ from (
 
                         select distinct(user_id), activity_id, conversion_id, interaction_time, campaign_id, site_id_dcm, placement_id, other_data
                         from diap01.mec_us_united_20056.dfa2_activity
-                        where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date ) between '2018-01-01' and '2018-01-25'
+                        where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date ) between '2018-01-01' and '2018-01-31'
                             and campaign_id = '20606595'
+                            and site_id_dcm = '1239319' --Sojern
+                            and site_id_dcm = '1190273' --Adara
                             and advertiser_id <> 0
                             and (length(isnull(event_sub_type,'')) > 0)
                             and (user_id <> '0')
@@ -121,8 +123,7 @@ and conversions.site_id_dcm  = Placements.site_id_dcm
         where report.traveldate_1 is not null
 
        and report.placement LIKE '%GEN_INT_PROS_FT%' OR report.placement LIKE '%GEN_DOM_PROS_FT%'
-       and report.site_id = 1239319 --Sojern
---        and report.site_id = 1190273 --Adara
+
 
         group by
 
