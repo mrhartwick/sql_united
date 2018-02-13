@@ -22,8 +22,8 @@ as
               ----2018 olympics
 
                when @campaign_id = 20681311 then 'Y'
-               when @campaign_id = 20609762 then 'Y'
-
+               when @campaign_id = 20609762 AND @site_id_dcm = 2937979 then 'N' --Flipboard
+               when @campaign_id = 20609762 AND (@site_id_dcm = 1654929 OR @site_id_dcm = 3379026 OR @site_id_dcm = 4442708 OR @site_id_dcm = 4440401 OR @site_id_dcm = 1669385) then 'Y'
 
             ---Prospecting gm acq
 
