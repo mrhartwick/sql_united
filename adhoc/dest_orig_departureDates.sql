@@ -1,0 +1,116 @@
+
+    select
+        t3.rt_1_orig        as rt_1_orig,
+        t3.rt_1_dest        as rt_1_dest,
+        t3.traveldate_1     as traveldate_1,
+        t3.rt_2_orig        as rt_2_orig,
+        t3.rt_2_dest        as rt_2_dest,
+        t3.traveldate_2     as traveldate_2
+
+
+    from (
+
+             select
+
+                 cast(t2.date as date) as "Date",
+--                  t2.campaign           as campaign,
+                 t2.campaign_id        as campaign_id,
+--                  t2.site               as site,
+                 t2.placement          as placement,
+                 t2.placement_id       as placement_id,
+                 t2.traveldate_1       as traveldate_1,
+                 t2.rt_1_orig          as rt_1_orig,
+                 t2.rt_1_dest          as rt_1_dest,
+                 t2.rt_2_orig          as rt_2_orig,
+                 t2.rt_2_dest          as rt_2_dest,
+                 t2.traveldate_2       as traveldate_2,
+                 t2.other_data         as other_data
+
+             from (
+
+                      select
+
+                          cast(timestamp_trunc(to_timestamp(t1.interaction_time / 1000000),'SS') as date) as "Date",
+--                           c1.campaign       as campaign,
+                          t1.campaign_id    as campaign_id,
+--                           s1.site_dcm       as site,
+                          t1.site_id_dcm    as site_id,
+                          p1.placement      as placement,
+                          t1.placement_id   as placement_id,
+                          t1.other_data,
+
+                          case when regexp_like(t1.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;','') then
+                              subString(regexp_substr(t1.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;',1,1,'',2),5,2) || '-' || subString(regexp_substr(t1.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;',1,1,'',2),7,2) || '-' || subString(regexp_substr(t1.other_data,'(u9=)(\d\d\d\d\d\d\d\d)\;',1,1,'',2),1,4)
+                          when regexp_like(t1.other_data,'(u9=)(\d\d[/.\-]\d\d[/.\-]\d\d\d\d)\;','') then
+                              regexp_substr(t1.other_data,'(u9=)(\d\d[/.\-]\d\d[/.\-]\d\d\d\d)\;',1,1,'',2) end                                                       as traveldate_1,
+
+                          case when regexp_like(t1.other_data,'(u10=)(\d\d\d\d\d\d\d\d)\;','') then
+                              subString(regexp_substr(t1.other_data,'(u10=)(\d\d\d\d\d\d\d\d)\;',1,1,'',2),5,2) || '-' || subString(regexp_substr(t1.other_data,'(u10=)(\d\d\d\d\d\d\d\d)\;',1,1,'',2),7,2) || '-' || subString(regexp_substr(t1.other_data,'(u10=)(\d\d\d\d\d\d\d\d)\;',1,1,'',2),1,4)
+                          when regexp_like(t1.other_data,'(u10=)(\d\d[/.\-]\d\d[/.\-]\d\d\d\d)\;','') then
+                              regexp_substr(t1.other_data,'(u10=)(\d\d[/.\-]\d\d[/.\-]\d\d\d\d)\;',1,1,'',2) end                                                       as traveldate_2,
+
+                          case when regexp_like(t1.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then regexp_substr(t1.other_data,'(u5=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3)
+                          when regexp_like(t1.other_data,'(u5=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(t1.other_data,'(u5=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) end as rt_1_orig,
+                          case when regexp_like(t1.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then regexp_substr(t1.other_data,'(u7=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3)
+                          when regexp_like(t1.other_data,'(u7=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(t1.other_data,'(u7=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) end as rt_1_dest,
+
+                          case when regexp_like(t1.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then regexp_substr(t1.other_data,'(u6=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3)
+                          when regexp_like(t1.other_data,'(u6=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(t1.other_data,'(u6=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) end as rt_2_orig,
+                          case when regexp_like(t1.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])','ib') then regexp_substr(t1.other_data,'(u8=)(.+?)\(([A-Z][A-Z][A-Z])',1,1,'ib',3)
+                          when regexp_like(t1.other_data,'(u8=)([A-Z][A-Z][A-Z])\;','ib') then regexp_substr(t1.other_data,'(u8=)([A-Z][A-Z][A-Z])\;',1,1,'ib',2) end as rt_2_dest
+
+
+                      from (
+
+                               select
+                                   *,
+                                   cast(subString(other_data,(instr(other_data,'u9=') + 3),10) as date) as traveldate_1,
+                                   cast(subString(other_data,(instr(other_data,'u10=') + 3),10) as date) as traveldate_2
+                               from diap01.mec_us_united_20056.dfa2_activity
+                               where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date) between '2018-01-01' and '2018-01-30'
+                                   and activity_id = 978826
+                                   and total_revenue <> 0
+                                   and campaign_id = 20606595 -- gm acq
+                                   and site_id_dcm = 1239319 --Sojern
+                                   and total_conversions <> 0
+                                   and advertiser_id <> 0
+                                   and user_id <> '0'
+                                   and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
+
+                           ) as t1
+
+
+
+                          left join
+                          (
+                              select
+                                  p1.placement,p1.placement_id,p1.campaign_id,p1.site_id_dcm
+
+                              from (
+                                   select
+                                   campaign_id,
+                                   site_id_dcm,
+                                   placement_id,
+                                   placement,
+                                   cast(placement_start_date as date) as thisdate,
+                                   row_number() over (partition by campaign_id,site_id_dcm,placement_id
+                                                      order by cast(placement_start_date as date) desc ) as x1
+                              from diap01.mec_us_united_20056.dfa2_placements
+
+                                   ) as p1
+                              where x1 = 1
+                          ) as p1
+                          on t1.placement_id = p1.placement_id
+                              and t1.campaign_id = p1.campaign_id
+                              and t1.site_id_dcm = p1.site_id_dcm
+
+
+
+                  ) as t2
+
+where not t2.placement like '%PROS_FT%'
+
+
+         ) as t3
+
+    where (length(isnull(t3.traveldate_1,'')) > 0)
