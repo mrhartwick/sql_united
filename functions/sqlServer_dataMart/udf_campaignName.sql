@@ -49,6 +49,8 @@ as
                                  when @campaignID = 20681311 or @campaignID = 20609762 then 'Winter Olympics 2018'
                                  when @campaignID = 20629714 then 'New Zealand Onshore 2018'
                                  when @campaignID = 20634533 then 'Singapore Onshore 2018'
+                                 when @campaignID = 20713692 then 'GM Acquisition Fare Sale 2018'
+
 
 
 
