@@ -19,6 +19,12 @@ as
         set @final_dv_map = case
                -- These cost methods should never be subject to viewability
 
+           ----gm acq fare sale 2018
+          when @campaign_id = 20713692 then 'Y'
+
+
+
+
               ----2018 olympics
 
                when @campaign_id = 20681311 then 'Y'
