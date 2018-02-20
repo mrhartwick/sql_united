@@ -137,6 +137,7 @@ case when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placemen
 --  new field, with flat cost from dfa_cost_dt2
     sum(case when t3.costmethod like '[Ff]lat' then t3.flatcost else t3.cost end)                      as cost,
     sum(t3.tot_led)                                                                                    as leads,
+    sum(t3.unq_led)                                                                                    as unq_leads,
     sum(t3.dlvrimps)                                                                                   as "delivered impressions",
     sum(t3.billimps)                                                                                   as "billable impressions",
     sum(t3.cnslimps)                                                                                   as "dfa impressions",
@@ -911,6 +912,9 @@ then cast(((t2.clk_rev)  * .03) *.9 as decimal(10,2))
     sum(cst.mt_imps)                                                              as mt_impressions_chk,
     sum(mt.groupm_passed_impressions)                                             as mt_viewed,
     sum(cast(mt.groupm_billable_impressions as decimal(10,2)))                    as mt_groupmpayable,
+    sum(t2.unq_clk_led)                                                           as unq_clk_led,
+    sum(t2.unq_vew_led)                                                           as unq_vew_led,
+    sum(t2.unq_led)                                                               as unq_led,
     sum(case
         when (len(isnull(iv.joinkey,'')) > 0) then iv.click_thrus
         else t2.clicks end)                                                       as clicks,
@@ -992,54 +996,12 @@ then cast(((t2.clk_rev)  * .03) *.9 as decimal(10,2))
                sum(t1.vew_rev)                              as vew_rev,
                sum(t1.clk_rev)                              as clk_rev,
                sum(t1.rev)                                  as rev,
+               sum(t1.unq_clk_led)                          as unq_clk_led,
+               sum(t1.unq_vew_led)                          as unq_vew_led,
+               sum(t1.unq_led)                              as unq_led,
              case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
              else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
 
---                case
---                -- Flat-fee, cost-per-click, CPCV, and dynamic CPM should never be subject to viewability
---                when prs.costmethod = 'Flat' or prs.costmethod = 'CPC' or prs.costmethod = 'CPCV' or prs.costmethod = 'dCPM'
---                    then 'N'
---
---                -- Corrections to SME 2016
---                when t1.campaign_id = '10090315' and
---                -- Inc
---                    (t1.site_id_dcm = '1513807' or
---                -- Xaxis
---                     t1.site_id_dcm = '1592652')
---                    then 'Y'
---
---                -- Corrections to SFO-SIN 2016
---                when t1.campaign_id = '9923634' and
---                -- Business Insider
---                   ((t1.site_id_dcm = '1534879' and prs.costmethod = 'CPM') or
---                -- Live Intent
---                    (t1.site_id_dcm = '1853564'))
---                    then 'N'
---
---                -- FlipBoard unable to implement Moat tags; must bill off of DFA impressions
---                when t1.site_id_dcm = '2937979' then 'N'
---                -- All targeted marketing subject to viewability; mark "Y"
---                when t1.campaign_id = '9639387' then 'Y'
---
---                -- If it's CPMV and the placement has the words "Mobile," "Video," or "Pre-Roll," then it should be in Moat
---                when prs.CostMethod = 'CPMV' and
---                    (t1.placement like '%[Mm][Oo][Bb][Ii][Ll][Ee]%' or
---                     t1.placement like '%[Vv][Ii][Dd][Ee][Oo]%' or
---                     t1.placement like '%[Pp][Rr][Ee]%[Rr][Oo][Ll][Ll]%' or
---                -- Verve
---                     t1.site_id_dcm = '1995643'
---                ) then 'M'
---
---                -- Look for viewability flags Investment began to include in placement names 6/16.
---                when t1.placement like '%[_]DV[_]%' then 'Y'
---                when t1.placement like '%[_]MOAT[_]%' then 'M'
---                when t1.placement like '%[_]NA[_]%' then 'N'
---
---                -- If it's CPMV and marked "N," change to "Y"
---                when prs.costmethod = 'CPMV' and prs.DV_Map = 'N' then 'Y'
---                else prs.DV_Map end as DV_Map,
-
---             Because dv_map logic exists in more than one query, abstract it into function for easier updating
                [dbo].udf_dvMap(t1.campaign_id,t1.site_id_dcm,t1.placement,prs.CostMethod,prs.dv_map) as dv_map
 
 
@@ -1059,11 +1021,13 @@ r1.campaign_id                            as campaign_id,
 r1.site_id_dcm                            as site_id_dcm,
 directory.site_dcm                        as site_dcm,
 left(p1.placement,6)                      as plce_id,
--- p1.placement                              as placement,
 replace(replace(p1.placement ,'','', ''''),''"'','''') as placement,
 r1.placement_id                           as placement_id,
 sum(r1.impressions)                       as impressions,
 sum(r1.clicks)                            as clicks,
+sum(r1.unq_clk_led)                       as unq_clk_led,
+sum(r1.unq_vew_led)                       as unq_vew_led,
+sum(r1.unq_clk_led) + sum(r1.unq_vew_led) as unq_led,
 sum(r1.vew_led)                           as vew_led,
 sum(r1.clk_led)                           as clk_led,
 sum(r1.vew_led) + sum(r1.clk_led)         as led,
@@ -1086,6 +1050,8 @@ cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as dat
 ,ta.placement_id as placement_id
 ,0 as impressions
 ,0 as clicks
+,0 as unq_clk_led
+,0 as unq_vew_led
 ,sum(case when activity_id = 1086066 and ta.conversion_id = 1 then 1 else 0 end) as clk_led
 ,sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then 1 else 0 end ) as clk_con
 ,sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as clk_tix
@@ -1102,7 +1068,6 @@ select *
 from diap01.mec_us_united_20056.dfa2_activity
 where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-02-08''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
-and (activity_id = 978826 or activity_id = 1086066)
 and campaign_id in (10742878, 20606595) -- gm acq
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
@@ -1127,6 +1092,8 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 ,ti.placement_id as placement_id
 ,count (*) as impressions
 ,0 as clicks
+,0 as unq_clk_led
+,0 as unq_vew_led
 ,0 as clk_led
 ,0 as clk_con
 ,0 as clk_tix
@@ -1160,6 +1127,8 @@ cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date ) as
 ,tc.placement_id as placement_id
 ,0 as impressions
 ,count (*) as clicks
+,0 as unq_clk_led
+,0 as unq_vew_led
 ,0 as clk_led
 ,0 as clk_con
 ,0 as clk_tix
@@ -1184,6 +1153,46 @@ cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date )
 ,tc.campaign_id
 ,tc.site_id_dcm
 ,tc.placement_id
+
+union all
+
+
+select
+cast (timestamp_trunc(to_timestamp(td.interaction_time / 1000000),''SS'') as date ) as "date"
+,td.campaign_id as campaign_id
+,td.site_id_dcm as site_id_dcm
+,td.placement_id as placement_id
+,0 as impressions
+,0 as clicks
+,sum(case when activity_id = 1086066 and td.conversion_id = 1 then 1 else 0 end) as  unq_clk_led
+,sum(case when activity_id = 1086066 and td.conversion_id = 2 then 1 else 0 end) as unq_vew_led
+,0 as clk_led
+,0 as clk_con
+,0 as clk_tix
+,0 as clk_rev
+,0 as vew_led
+,0 as vew_con
+,0 as vew_tix
+,0 as vew_rev
+,0 as rev
+
+from (
+
+select distinct(user_id), activity_id, conversion_id, interaction_time, campaign_id, site_id_dcm, placement_id
+from diap01.mec_us_united_20056.dfa2_activity
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-02-08''
+and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
+and (campaign_id = 20606595) -- display 2018
+and (advertiser_id <> 0)
+and (length(isnull(event_sub_type,'''')) > 0)
+and (user_id <> ''0'')
+) as td
+
+group by
+cast (timestamp_trunc(to_timestamp(td.interaction_time / 1000000),''SS'') as date )
+,td.campaign_id
+,td.site_id_dcm
+,td.placement_id
 
 ) as r1
 
@@ -1218,11 +1227,9 @@ on r1.site_id_dcm = directory.site_id_dcm
 
 where  regexp_like(p1.placement,''P.?'',''ib'')
 and not regexp_like(p1.placement,''.?do\s?not\s?use.?'',''ib'')
--- and not regexp_like(campaign.campaign,''.*2016.*'',''ib'')
--- and  regexp_like(campaign.campaign,''.*2017.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
--- and r1.site_id_dcm <>''1485655''
+
 group by
 cast (r1.date as date )
 ,directory.site_dcm
