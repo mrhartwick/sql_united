@@ -16,7 +16,7 @@
 -- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
--- 
+--
 -- exec [10.2.186.148\SQLINS02, 4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
 -- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
 -- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
@@ -30,8 +30,8 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2017-12-12';
-set @report_st = '2017-01-01';
+set @report_ed = '2018-02-08';
+set @report_st = '2018-01-01';
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -66,8 +66,8 @@ select
 
   --- retargeting vs prospecting partner types for acquisition campaigns                                                                                                                                                                                                                                                                                                                  ,
 
-  case when campaign_id = '10742878'  AND (site_id_dcm = '1853562' OR site_id_dcm = '1190273' OR site_id_dcm = '3267410' ) then 'Prospecting'
-       when campaign_id = '10742878' AND (placement  like '%GEN_INT_PROS_FT%' OR placement LIKE '%GEN_DOM_PROS_FT%') then 'Prospecting'
+  case when (campaign_id = '10742878' or campaign_id = '20606595')  AND (site_id_dcm = '1853562' OR site_id_dcm = '1190273' OR site_id_dcm = '3267410' ) then 'Prospecting'
+       when (campaign_id = '10742878' or campaign_id = '20606595') AND (placement  like '%GEN_INT_PROS_FT%' OR placement LIKE '%GEN_DOM_PROS_FT%')       then 'Prospecting'
 
   else 'Retargeting' end                                                                                       as "partner_type",
 
@@ -90,43 +90,43 @@ select
     t3.placementstart                                                                                  as "placement start",
 
     ---bid group categorization
-  case when campaign_id='10742878' AND (placement LIKE '%Test-BidStrategy1%' OR placement LIKE '%Test_BidStrategy1%')               then 'Test-Bid1'
-   when campaign_id='10742878' AND (placement LIKE '%Test-BidStrategy2%' OR placement LIKE '%Test_BidStrategy2%')                 then 'Test-Bid2'
-   when campaign_id='10742878' AND (placement LIKE '%Test-BidStrategy3%' OR placement LIKE '%Test_BidStrategy3%')                 then 'Test-Bid3'
-   when campaign_id='10742878' AND (placement LIKE '%Control-BidStrategy1%' OR placement LIKE '%Control--BidStrategy1%'
-            OR placement LIKE '%Control_BidStrategy1%' OR placement LIKE '%ControlBidStrategy1%')                                 then 'Control-Bid1'
-   when campaign_id='10742878' AND (placement LIKE '%Control-BidStrategy2%' OR placement LIKE '%Control_BidStrategy2%')           then 'Control-Bid2'
-   when campaign_id='10742878' AND (placement LIKE '%Control-BidStrategy3%' OR placement LIKE '%Control_BidStrategy3%')           then 'Control-Bid3'
-   when campaign_id='10742878' AND (placement LIKE '%Test_First and Business%' OR placement LIKE '%Test_First_Business%')         then 'Test-First/Biz'
-   when campaign_id='10742878' AND (placement LIKE '%Control_First and Business%' OR placement LIKE '%Control_First_Business%'
-                                      OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%')                        then 'Control-First/Biz'
-    when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%Control%')  then 'Control'
-     when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%Test%')  then 'Test'
-   else '' end                                                                                                                    as "Group",
+  case when (campaign_id = '10742878' or campaign_id = '20606595') AND (placement LIKE '%Test-BidStrategy1%' OR placement LIKE '%Test_BidStrategy1%')              then 'Test-Bid1'
+   when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Test-BidStrategy2%' OR placement LIKE '%Test_BidStrategy2%')              then 'Test-Bid2'
+   when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Test-BidStrategy3%' OR placement LIKE '%Test_BidStrategy3%')              then 'Test-Bid3'
+   when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Control-BidStrategy1%' OR placement LIKE '%Control--BidStrategy1%'
+                                  OR placement LIKE '%Control_BidStrategy1%' OR placement LIKE '%ControlBidStrategy1%')                                            then 'Control-Bid1'
+   when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Control-BidStrategy2%' OR placement LIKE '%Control_BidStrategy2%')        then 'Control-Bid2'
+   when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Control-BidStrategy3%' OR placement LIKE '%Control_BidStrategy3%')        then 'Control-Bid3'
+   when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Test_First and Business%' OR placement LIKE '%Test_First_Business%')      then 'Test-First/Biz'
+   when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Control_First and Business%' OR placement LIKE '%Control_First_Business%'
+                                      OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%')                                                        then 'Control-First/Biz'
+    when (campaign_id = '10742878' or campaign_id = '20606595')    AND site_id_dcm='1853562' AND (placement  like '%Control%')                                     then 'Control'
+     when (campaign_id = '10742878' or campaign_id = '20606595')   AND site_id_dcm='1853562' AND (placement  like '%Test%')                                        then 'Test'
+   else '' end                                                                                                                                                     as "Group",
 
-   case when campaign_id='10742878' AND (placement  like '%GEN_INT_PROS_FT%' OR placement LIKE '%GEN_DOM_PROS_FT%')  then 'Prospecting Tests'
-        when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%Weather%')  then 'Weather Test'
-        when campaign_id='10742878' AND site_id_dcm='1190273' AND (placement  like '%BuenosAires%')  then 'Buenos Aires'
-        when campaign_id='10742878' AND site_id_dcm='1190273' AND (placement  like '%WinHubs%')  then 'Win Hubs'
-   else '' end                                                                                as "Placement_Type",
+   case when (campaign_id = '10742878' or campaign_id = '20606595') AND (placement  like '%GEN_INT_PROS_FT%' OR placement LIKE '%GEN_DOM_PROS_FT%')                then 'Prospecting Tests'
+        when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%Weather%')                                    then 'Weather Test'
+        when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1190273' AND (placement  like '%BuenosAires%')                                then 'Buenos Aires'
+        when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1190273' AND (placement  like '%WinHubs%')                                    then 'Win Hubs'
+   else '' end                                                                                                                                                     as "Placement_Type",
 
-case when campaign_id='10742878' AND t3.placement  like '%_TAB_%' then 'Tablet'
-     when campaign_id='10742878' AND t3.placement  like '%_DESK_%' then 'Desktop'
-     when campaign_id='10742878' AND t3.placement  like '%_MOB_%'  then 'Mobile'
+case when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placement  like '%_TAB_%'                                                                  then 'Tablet'
+     when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placement  like '%_DESK_%'                                                                 then 'Desktop'
+     when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placement  like '%_MOB_%'                                                                  then 'Mobile'
 
 
-        else ''  end                                                                               as "Device Type",
+        else ''  end                                                                                                                                               as "Device Type",
 
-  case when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%SAT%')  then 'SAT'
-    when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%ENC%')  then 'ENC'
-    when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%ESC%')  then 'ESC'
-    when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%MID%')  then 'MID'
-    when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%MTN%')  then 'MTN'
-    when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%NEW%')  then 'NEW'
-    when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%PAC%')  then 'PAC'
-    when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%WNC%')  then 'WNC'
-    when campaign_id='10742878' AND site_id_dcm='1853562' AND (placement  like '%WSC%')  then 'WSC'
-    else '' end                                                                                        as Region,
+  case when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%SAT%')  then 'SAT'
+    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%ENC%')     then 'ENC'
+    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%ESC%')     then 'ESC'
+    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%MID%')     then 'MID'
+    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%MTN%')     then 'MTN'
+    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%NEW%')     then 'NEW'
+    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%PAC%')     then 'PAC'
+    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%WNC%')     then 'WNC'
+    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%WSC%')     then 'WSC'
+    else '' end                                                                                                             as Region,
 
     t3.dv_map                                                                                          as "dv map",
     t3.rate                                                                                            as rate,
@@ -168,8 +168,8 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2017-12-12';
--- set @report_st = '2017-01-01';
+-- set @report_ed = '2018-02-08';
+-- set @report_st = '2018-01-01';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -1100,10 +1100,10 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-12-12''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-02-08''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (activity_id = 978826 or activity_id = 1086066)
-and campaign_id = 10742878 -- display 2017
+and campaign_id in (10742878, 20606595) -- gm acq
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
@@ -1140,8 +1140,8 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-12-12''
-and campaign_id = 10742878 -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-02-08''
+and campaign_id in (10742878, 20606595) -- gm acq
 
 and (advertiser_id <> 0)
 ) as ti
@@ -1174,8 +1174,8 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2017-01-01'' and ''2017-12-12''
-and campaign_id = 10742878 -- display 2017
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-02-08''
+and campaign_id in (10742878, 20606595) -- gm acq
 and (advertiser_id <> 0)
 ) as tc
 
@@ -1219,7 +1219,7 @@ on r1.site_id_dcm = directory.site_id_dcm
 where  regexp_like(p1.placement,''P.?'',''ib'')
 and not regexp_like(p1.placement,''.?do\s?not\s?use.?'',''ib'')
 -- and not regexp_like(campaign.campaign,''.*2016.*'',''ib'')
-and  regexp_like(campaign.campaign,''.*2017.*'',''ib'')
+-- and  regexp_like(campaign.campaign,''.*2017.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
 -- and r1.site_id_dcm <>''1485655''
