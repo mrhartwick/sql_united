@@ -132,9 +132,6 @@ case when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placemen
     t3.rate                                                                                            as rate,
     t3.planned_amt                                                                                     as "planned amt",
     t3.planned_cost                                                                                    as "planned cost",
---  old field, with integrated flatCost
---  case when t3.costmethod like '[Ff]lat' then t3.flatcost / max(t3.flat_count) else sum(t3.cost) end as cost,
---  new field, with flat cost from dfa_cost_dt2
     sum(case when t3.costmethod like '[Ff]lat' then t3.flatcost else t3.cost end)                      as cost,
     sum(t3.tot_led)                                                                                    as leads,
     sum(t3.unq_led)                                                                                    as unq_leads,
@@ -192,18 +189,13 @@ select
     sum(1) over (partition by t2.cost_id
         order by t2.dcmmonth asc range between unbounded preceding and current row) as amt_count,
     t2.plce_id                                                                 as plce_id,
---     cst.plce_id as dbm_plce_id,
     t2.placement                                                               as placement,
     t2.placement_id                                                            as placement_id,
     t2.placementend                                                            as placementend,
     t2.placementstart                                                          as placementstart,
     t2.dv_map                                                                  as dv_map,
---     t2.dv_map_2                                                                  as dv_map_2,
     t2.planned_amt                                                             as planned_amt,
     t2.planned_cost                                                            as planned_cost,
---  old field, with integrated flatCost
---  flt.flatcost                                                               as flatcost,
---  new field, with flat cost from dfa_cost_dt2
     sum(cst.flatcost)                                                          as flatcost,
     sum(cst.cost)                                                              as cost,
     t2.rate                                                                    as rate,
@@ -1252,7 +1244,6 @@ cast (r1.date as date )
 
 
         where t1.campaign not like '%Search%'
---         and t1.placement like 'P%'
         and t1.campaign not like '%[_]UK[_]%'
         and t1.campaign not like '%2016%'
         and t1.campaign not like '%2015%'
@@ -1283,14 +1274,6 @@ cast (r1.date as date )
       ,prs.dv_map
 
   ) as t2
-
---   left join
---   (
---     select *
---     from master.dbo.dfa_flatCost_dt2
---   ) as flt
---     on t2.cost_id = flt.cost_id
---        and t2.dcmmatchdate = flt.dcmdate
 
 --    Cost data
       left join
@@ -1336,14 +1319,12 @@ cast (r1.date as date )
       + cast(t2.dcmdate as varchar(10)) = iv.joinkey
 
 
---  where t2.costmethod = 'Flat'
 group by
 
   t2.campaign
   ,t2.campaign_id
   ,t2.cost_id
   ,t2.dv_map
---   ,t2.dv_map_2
   ,t2.site_dcm
   ,t2.site_id_dcm
   ,t2.packagecat
@@ -1366,7 +1347,7 @@ group by
   ,iv.joinkey
   ,cst.plce_id
   ,t2.costmethod
---   ,flt.flatcost
+
 
      ) as t3
 
@@ -1381,12 +1362,10 @@ group by
   ,t3.cost_id
   ,t3.campaign
   ,t3.campaign_id
---   ,t3.newcount
   ,t3.site_dcm
   ,t3.site_id_dcm
   ,t3.costmethod
   ,t3.rate
--- ,t3.plce_id
   ,t3.placement
   ,t3.placement_id
   ,t3.placementend
@@ -1394,8 +1373,7 @@ group by
   ,t3.dv_map
   ,t3.planned_amt
   ,t3.planned_cost
---   ,t3.flatcost
---   ,t3.flatcost_chk
+
 
 
 order by
