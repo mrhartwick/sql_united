@@ -50,6 +50,7 @@ as
                                  when @campaignID = 20629714 then 'New Zealand Onshore 2018'
                                  when @campaignID = 20634533 then 'Singapore Onshore 2018'
                                  when @campaignID = 20713692 then 'GM Acquisition Fare Sale 2018'
+                                 when @campaignID = 20721526 then 'GM Acquisition Meta 2018'
 
 
 
