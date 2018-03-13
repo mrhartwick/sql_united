@@ -6,14 +6,14 @@
 
 
 -- Table 1: users who were served the win ny Impression
-create table diap01.mec_us_united_20056.ual_win_ny_tbl2
+create table diap01.mec_us_united_20056.ual_win_ny_tbl
 (
     user_id        varchar(50) not null,
     campaign_id    int         not null,
     brandtime      int         not null
 );
 
-insert into diap01.mec_us_united_20056.ual_win_ny_tbl2
+insert into diap01.mec_us_united_20056.ual_win_ny_tbl
 (user_id,campaign_id,brandtime)
 
 (select
@@ -41,7 +41,7 @@ commit;
 -- // =================================================================================================================
 ---then served a gm acq imp
 
-create table diap01.mec_us_united_20056.ual_gmacq_tbl5
+create table diap01.mec_us_united_20056.ual_gmacq_tbl2
 (
     user_id        varchar(50) not null,
     campaign_id    int         not null,
@@ -49,11 +49,11 @@ create table diap01.mec_us_united_20056.ual_gmacq_tbl5
     cvr_window_day int         not null
 );
 
-insert into diap01.mec_us_united_20056.ual_gmacq_tbl5
+insert into diap01.mec_us_united_20056.ual_gmacq_tbl2
 (user_id,campaign_id,gmacqtime,cvr_window_day)
 
 (select
-                b.user_id,
+                a.user_id,
                 a.campaign_id,
                 b.gmacqtime,
                 datediff('day',cast(timestamp_trunc(to_timestamp(a.brandtime/ 1000000),'SS') as date),cast(timestamp_trunc(to_timestamp(b.gmacqtime/ 1000000),'SS') as date)) as cvr_window_day
@@ -94,14 +94,14 @@ commit;
 
 --after 7 days, puchased a ticket
 
-create table diap01.mec_us_united_20056.ual_conversion_tbl5
+create table diap01.mec_us_united_20056.ual_conversion_tbl2
 (
     user_id        varchar(50) not null,
     campaign_id    int         not null,
     conversiontime int         not null
 );
 
-insert into diap01.mec_us_united_20056.ual_conversion_tbl5
+insert into diap01.mec_us_united_20056.ual_conversion_tbl2
 (user_id,campaign_id,conversiontime)
 
 (select
@@ -143,9 +143,9 @@ commit;
 
 -- // =================================================================================================================
 -- check to see that user counts go down with each successive query
-select count(distinct user_id) from diap01.mec_us_united_20056.ual_win_ny_tbl2 --unique users who were exposed to win ny
-select count(distinct user_id) from diap01.mec_us_united_20056.ual_gmacq_tbl5 --unique users who were exposed to win ny, then gm acq (sequenced overlap)
-select count(distinct user_id) from diap01.mec_us_united_20056.ual_conversion_tbl5 --unique users who purchased a ticket
+select count(distinct user_id) from diap01.mec_us_united_20056.ual_win_ny_tbl --unique users who were exposed to win ny
+select count(distinct user_id) from diap01.mec_us_united_20056.ual_gmacq_tbl2 --unique users who were exposed to win ny, then gm acq (sequenced overlap)
+select count(distinct user_id) from diap01.mec_us_united_20056.ual_conversion_tbl2 --unique users who purchased a ticket
 
 
 
@@ -399,9 +399,9 @@ and not regexp_like(substring(t1.other_data,(instr(t1.other_data,'u3=') + 3),5),
 
 -----------------------------------------------------------------------------------------------
 
-select count(*) as conversions
+select count(*) as conversions, count(distinct user_id) as users, sum(total_conversions) as tix
 from mec_us_united_20056.dfa2_activity as t1
-where user_id in (select user_id  from diap01.mec_us_united_20056.ual_conversion_tbl)
+where user_id in (select user_id  from diap01.mec_us_united_20056.ual_conversion_tbl2)
 and t1.user_id <> '0'
 and t1.advertiser_id <> '0'
 and cast(to_timestamp(t1.interaction_time / 1000000) as date) between '2017-02-14' and '2017-12-31'
