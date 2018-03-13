@@ -1,7 +1,7 @@
 -- The goal of this query is to find the number of unique users, per partner, who
--- 1.) were served a Brand impression
--- 2.) were then served a GM Acq impression, then within 7 days,
--- 3.) purchased a ticket.
+-- 1.) were served a Brand impression and a GM Acq impression, in whatever order
+-- 2.) then within 7 days, purchased a ticket.
+--
 
 
 -- Table 1: users who were served a Brand Impression
