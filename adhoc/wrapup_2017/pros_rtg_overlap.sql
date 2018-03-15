@@ -1,17 +1,20 @@
+drop table diap01.mec_us_united_20056.ual_overlap_prs
 create table diap01.mec_us_united_20056.ual_overlap_prs
 (
     user_id        varchar(50) not null,
     site_id_dcm    int         not null,
+    placement_id int not null,
     impressiontime int         not null,
     imp_nbr        int         not null
 );
 
 insert into diap01.mec_us_united_20056.ual_overlap_prs
-(user_id,site_id_dcm,impressiontime,imp_nbr)
+(user_id,site_id_dcm,placement_id,impressiontime,imp_nbr)
 
 (select
                                 t2.user_id,
                                 t2.site_id_dcm,
+                                t2.placement_id,
                                 t2.event_time                                   as impressiontime,
                                 row_number() over ()                            as imp_nbr
                 from
@@ -31,21 +34,23 @@ insert into diap01.mec_us_united_20056.ual_overlap_prs
 commit;
 
 -- // =================================================================================================================
-
+drop table diap01.mec_us_united_20056.ual_overlap_rtg
 create table diap01.mec_us_united_20056.ual_overlap_rtg
 (
     user_id        varchar(50) not null,
     site_id_dcm    int         not null,
-    impressiontime int         not null,
+        placement_id int not null,
+        impressiontime int         not null,
     imp_nbr        int         not null
 );
 
 insert into diap01.mec_us_united_20056.ual_overlap_rtg
-(user_id,site_id_dcm,impressiontime,imp_nbr)
+(user_id,site_id_dcm,placement_id,impressiontime,imp_nbr)
 
 (select
                                 t2.user_id,
                                 t2.site_id_dcm,
+                                t2.placement_id,
                                 t2.event_time                                   as impressiontime,
                                 row_number() over ()                            as imp_nbr
                 from
@@ -70,16 +75,18 @@ create table diap01.mec_us_united_20056.ual_overlap
 (
     user_id        varchar(50) not null,
     site_id_dcm    int         not null,
+    placement_id int not null,
     impressiontime int         not null,
     imp_nbr        int         not null
 );
 
 insert into diap01.mec_us_united_20056.ual_overlap
-(user_id,site_id_dcm,impressiontime,imp_nbr)
+(user_id,site_id_dcm,placement_id,impressiontime,imp_nbr)
 
 (select
                                 a.user_id,
                                 a.site_id_dcm,
+                                a.placement_id,
                                 a.impressiontime,
                                 a.imp_nbr
                 from
@@ -303,13 +310,16 @@ commit;
 -- check user counts for each table
 select count(distinct user_id) as users, count(distinct imp_nbr) as imps from diap01.mec_us_united_20056.ual_overlap_prs
 select count(distinct user_id) as users, count(distinct imp_nbr) as imps from diap01.mec_us_united_20056.ual_overlap_rtg
-
+select count(distinct user_id) as users, count(distinct imp_nbr) as imps from diap01.mec_us_united_20056.ual_overlap
 
 select count(distinct user_id) as users, count(distinct cvr_nbr) as con, sum(tickets) as tickets, sum(rev) as rev from diap01.mec_us_united_20056.ual_overlap_prs_cnv
 select count(distinct user_id) as users, count(distinct cvr_nbr) as con, sum(tickets) as tickets, sum(rev) as rev from diap01.mec_us_united_20056.ual_overlap_rtg_cnv
 select count(distinct user_id) as users, count(distinct cvr_nbr) as con, sum(tickets) as tickets, sum(rev) as rev from diap01.mec_us_united_20056.ual_overlap_cnv
 
-select count(distinct user_id) as users, count(distinct imp_nbr) as imps from diap01.mec_us_united_20056.ual_overlap
+
 
 -- // =================================================================================================================
 
+select placement_id, site_id_dcm, count(distinct imp_nbr) as imps from diap01.mec_us_united_20056.ual_overlap_prs group by placement_id, site_id_dcm
+select placement_id, site_id_dcm, count(distinct imp_nbr) as imps from diap01.mec_us_united_20056.ual_overlap_rtg group by placement_id, site_id_dcm
+select placement_id, site_id_dcm, count(distinct imp_nbr) as imps from diap01.mec_us_united_20056.ual_overlap group by placement_id, site_id_dcm
