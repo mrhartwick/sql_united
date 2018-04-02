@@ -1,4 +1,4 @@
-copy diap01.mec_us_united_20056.ual_dfa2_paid_search_meta from local 'C:\Users\matthew.hartwick\Documents\paid_search_match_20180101_20180131.csv' with DELIMITER ',' DIRECT commit;
+copy diap01.mec_us_united_20056.ual_dfa2_paid_search_meta from local 'C:\Users\matthew.hartwick\Documents\paid_search_match_20180301_20180331.csv' with DELIMITER ',' DIRECT commit;
 
 -- drop existing uniques table
 drop table diap01.mec_us_united_20056.ual_dfa2_paid_search_meta_u;
@@ -113,7 +113,7 @@ from
 -- left join diap01.mec_us_united_20056.dfa2_campaigns as c1
 -- on a.campaign_id = c1.campaign_id
 
-        where cast(timestamp_trunc(to_timestamp(a.event_time / 1000000),'SS') as date) between '2018-02-01' and '2018-02-28'
+        where cast(timestamp_trunc(to_timestamp(a.event_time / 1000000),'SS') as date) between '2018-03-01' and '2018-03-31'
             and a.activity_id = 1086066
             and a.advertiser_id <> 0
             and (a1.advertiser = 'United_Search' or a1.advertiser = 'United')
