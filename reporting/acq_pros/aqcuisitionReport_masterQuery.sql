@@ -12,7 +12,7 @@
 -- */
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
--- -- --
+-- -- -- --
 -- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
@@ -30,7 +30,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2018-02-08';
+set @report_ed = '2018-03-31';
 set @report_st = '2018-01-01';
 
 --
@@ -38,58 +38,31 @@ set @report_st = '2018-01-01';
 -- set @report_st = dateadd(day, 1 - datepart(day, @report_ed), @report_ed);
 
 select
--- dcm ad server date
     cast(t3.dcmdate as date)                                                                           as "date",
--- dcm ad server week (from date)
     cast(dateadd(week,datediff(week,0,cast(t3.dcmdate as date)),0) as date)                            as "week",
--- dcm ad server month (from date)
     datename(month,cast(t3.dcmdate as date))                                                           as "month",
--- dcm ad server quarter + year (from date)
     'Q' + datename(quarter,cast(t3.dcmdate as date)) + ' ' + datename(year,cast(t3.dcmdate as date))   as "quarter",
--- reference/optional: difference, in months, between placement end date and report date. field is used deterministically in other fields below.
---  t3.diff                                                                                              as diff,
--- reference/optional: match key from the dv table; only present when dv data is available.
     t3.dvjoinkey                                                                                       as dvjoinkey,
--- reference/optional: match key from the moat table; only present when moat data is available.
     t3.mtjoinkey                                                                                       as mtjoinkey,
--- reference/optional: package category from prisma (standalone; package; child). useful for exchanging info with planning/investment
     t3.packagecat                                                                                      as packagecat,
--- reference/optional: first six characters of package-level placement name, used to join 1) prisma table, and 2) flat fee table
     t3.cost_id                                                                                         as cost_id,
--- dcm campaign name
---  t3.campaign                                                                                               as "dcm campaign",
--- friendly campaign name
     [dbo].udf_campaignname(t3.campaign_id,t3.campaign)                                                 as campaign,
--- dcm campaign id
-    t3.campaign_id  as "campaign id",
+    t3.campaign_id                                                                                     as "campaign id",
+  --- Retargeting vs Prospecting partner designation:                                                                                                                                                                                                                                                                                                          ,
+  case when (campaign_id = '10742878' or campaign_id = '20606595')
+            AND (site_id_dcm = '1853562' OR site_id_dcm = '1190273' OR site_id_dcm = '3267410' )      then 'Prospecting'
+      when (campaign_id = '10742878' or campaign_id = '20606595') AND (placement  like '%_PROS_FT%')  then 'Prospecting'
+       else 'Retargeting' end                                                                         as "partner_type",
+    [dbo].udf_sitename(t3.site_dcm)                                                                   as "site",
+    t3.site_id_dcm                                                                                    as "site id",
+    t3.costmethod                                                                                     as "cost method",
+    t3.placement                                                                                      as placement,
+    t3.placement_id                                                                                   as placement_id,
+    t3.placementend                                                                                   as "placement end",
+    t3.placementstart                                                                                 as "placement start",
 
-
-  --- retargeting vs prospecting partner types for acquisition campaigns                                                                                                                                                                                                                                                                                                                  ,
-
-  case when (campaign_id = '10742878' or campaign_id = '20606595')  AND (site_id_dcm = '1853562' OR site_id_dcm = '1190273' OR site_id_dcm = '3267410' ) then 'Prospecting'
-       when (campaign_id = '10742878' or campaign_id = '20606595') AND (placement  like '%GEN_INT_PROS_FT%' OR placement LIKE '%GEN_DOM_PROS_FT%')       then 'Prospecting'
-
-  else 'Retargeting' end                                                                                       as "partner_type",
-
-
--- preferred, friendly site name; also corresponds to what's used in the joinkey fields across dfa, dv, and moat.
-    [dbo].udf_sitename(t3.site_dcm)                                                                    as "site",
-
--- dcm site id
-    t3.site_id_dcm                                                                                     as "site id",
--- reference/optional: package cost/pricing model, from prisma; attributed to all placements within package.
-    t3.costmethod                                                                                      as "cost method",
--- reference/optional: first six characters of placement name. used for matching across datasets when no common placement id is available, e.g. dfa-dv.
---  t3.plce_id                                                                       as plce_id,
--- dcm placement name
-    t3.placement                                                                                       as placement,
--- dcm placement id
-    t3.placement_id                                                                                    as placement_id,
--- reference/optional: planned package end date, from prisma; attributed to all placements within package.
-    t3.placementend                                                                                    as "placement end",
-    t3.placementstart                                                                                  as "placement start",
-
-    ---bid group categorization
+    ---RTG bid group/Weather Test group categorization:
+  --RTG:
   case when (campaign_id = '10742878' or campaign_id = '20606595') AND (placement LIKE '%Test-BidStrategy1%' OR placement LIKE '%Test_BidStrategy1%')              then 'Test-Bid1'
    when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Test-BidStrategy2%' OR placement LIKE '%Test_BidStrategy2%')              then 'Test-Bid2'
    when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Test-BidStrategy3%' OR placement LIKE '%Test_BidStrategy3%')              then 'Test-Bid3'
@@ -100,22 +73,24 @@ select
    when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Test_First and Business%' OR placement LIKE '%Test_First_Business%')      then 'Test-First/Biz'
    when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Control_First and Business%' OR placement LIKE '%Control_First_Business%'
                                       OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%')                                                        then 'Control-First/Biz'
-    when (campaign_id = '10742878' or campaign_id = '20606595')    AND site_id_dcm='1853562' AND (placement  like '%Control%')                                     then 'Control'
-     when (campaign_id = '10742878' or campaign_id = '20606595')   AND site_id_dcm='1853562' AND (placement  like '%Test%')                                        then 'Test'
-   else '' end                                                                                                                                                     as "Group",
+   when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%')                          then 'Other'
 
-   case when (campaign_id = '10742878' or campaign_id = '20606595') AND (placement  like '%GEN_INT_PROS_FT%' OR placement LIKE '%GEN_DOM_PROS_FT%')                then 'Prospecting Tests'
+ --Weather Test:
+    when (campaign_id = '10742878' or campaign_id = '20606595')    AND site_id_dcm='1853562' AND (placement  like '%Control%')                                     then 'Control'
+    when (campaign_id = '10742878' or campaign_id = '20606595')   AND site_id_dcm='1853562' AND (placement  like '%Test%')                                         then 'Test'
+    else '' end                                                                                                                                                    as "Group",
+ --Placement Type:
+   case when (campaign_id = '10742878' or campaign_id = '20606595') AND (placement  like '%PROS_FT%')                                                              then 'Prospecting'
         when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%Weather%')                                    then 'Weather Test'
         when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1190273' AND (placement  like '%BuenosAires%')                                then 'Buenos Aires'
         when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1190273' AND (placement  like '%WinHubs%')                                    then 'Win Hubs'
    else '' end                                                                                                                                                     as "Placement_Type",
 
+  --Device Type designation:
 case when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placement  like '%_TAB_%'                                                                  then 'Tablet'
      when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placement  like '%_DESK_%'                                                                 then 'Desktop'
      when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placement  like '%_MOB_%'                                                                  then 'Mobile'
-
-
-        else ''  end                                                                                                                                               as "Device Type",
+     else ''  end                                                                                                                                                  as "Device Type",
 
   case when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%SAT%')  then 'SAT'
     when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%ENC%')     then 'ENC'
@@ -166,7 +141,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2018-02-08';
+-- set @report_ed = '2018-03-31';
 -- set @report_st = '2018-01-01';
 
 select
@@ -313,81 +288,81 @@ select
                             nullif(cast(mt.total_impressions as decimal),0)))) + t2.clk_rev as decimal(10,2))
              else 0 end)                                                            as billrevenue,
 
-             --         Billable revenue with United discounts applied
+ --         Billable revenue with United discounts applied
 sum(case
 --         not subject to viewability, DBM
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
     (cast(dv.groupm_passed_impressions as decimal) /
-                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .025) * .9 as decimal(10,2))
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev )  * .014) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
               (cast(mt.groupm_passed_impressions as decimal) /
-                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .025) *.9 as decimal(10,2))
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev )  * .014) *.9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev) + t2.clk_rev)  * .025) *.9 as decimal(10,2))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .014) *.9 as decimal(10,2))
 
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
     (cast(dv.groupm_passed_impressions as decimal) /
-                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .0375) * .9 as decimal(10,2))
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .00525) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
   then cast((((
 (t2.vew_rev) *
               (cast(mt.groupm_passed_impressions as decimal) /
-                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .0375) * .9 as decimal(10,2))
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .00525) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev) + t2.clk_rev)  * .0375) *.9 as decimal(10,2))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .00525) *.9 as decimal(10,2))
 
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
     (cast(dv.groupm_passed_impressions as decimal) /
-                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .1) * .9 as decimal(10,2))
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .0035) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
               (cast(mt.groupm_passed_impressions as decimal) /
-                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .1) * .9 as decimal(10,2))
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .0035) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev) + t2.clk_rev)  * .1) *.9 as decimal(10,2))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .0035) *.9 as decimal(10,2))
 
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                           OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(dv.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
     (cast(dv.groupm_passed_impressions as decimal) /
-                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .1) * .9 as decimal(10,2))
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .0035) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                           OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(mt.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
               (cast(mt.groupm_passed_impressions as decimal) /
-                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .1) * .9 as decimal(10,2))
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .0035) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                                         OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev) + t2.clk_rev)  * .1) *.9 as decimal(10,2))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .0035) *.9 as decimal(10,2))
 
 
-when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
 then cast(((((t2.vew_rev) *
                   (cast(dv.groupm_passed_impressions as decimal) /
-                              nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .03) * .9 as decimal(10,2))
+                              nullif(cast(dv.total_impressions as decimal),0))) + t2.clk_rev ) * .007) * .9 as decimal(10,2))
 
-when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
 then cast(((((t2.vew_rev) *
                             (cast(mt.groupm_passed_impressions as decimal) /
-                              nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .03) * .9 as decimal(10,2))
+                              nullif(cast(mt.total_impressions as decimal),0))) + t2.clk_rev ) * .007) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev) + t2.clk_rev)  * .03) *.9 as decimal(10,2))
+then cast((((t2.vew_rev) + t2.clk_rev)  * .007) *.9 as decimal(10,2))
 
 
   when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
@@ -518,78 +493,78 @@ then cast((((t2.vew_rev) + t2.clk_rev)  * .03) *.9 as decimal(10,2))
 
 sum(case
 --         not subject to viewability, DBM
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
     (cast(dv.groupm_passed_impressions as decimal) /
-                nullif(cast(dv.total_impressions as decimal),0))))  * .025) * .9 as decimal(10,2))
+                nullif(cast(dv.total_impressions as decimal),0))))  * .014) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
               (cast(mt.groupm_passed_impressions as decimal) /
-                nullif(cast(mt.total_impressions as decimal),0))))  * .025) *.9 as decimal(10,2))
+                nullif(cast(mt.total_impressions as decimal),0))))  * .014) *.9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev))  * .025) *.9 as decimal(10,2))
+then cast((((t2.vew_rev))  * .014) *.9 as decimal(10,2))
 
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
     (cast(dv.groupm_passed_impressions as decimal) /
-                nullif(cast(dv.total_impressions as decimal),0)))) * .0375) * .9 as decimal(10,2))
+                nullif(cast(dv.total_impressions as decimal),0)))) * .00525) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
   then cast((((
 (t2.vew_rev) *
               (cast(mt.groupm_passed_impressions as decimal) /
-                nullif(cast(mt.total_impressions as decimal),0)))) * .0375) * .9 as decimal(10,2))
+                nullif(cast(mt.total_impressions as decimal),0)))) * .00525) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev))  * .0375) *.9 as decimal(10,2))
+then cast((((t2.vew_rev))  * .00525) *.9 as decimal(10,2))
 
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
     (cast(dv.groupm_passed_impressions as decimal) /
-                nullif(cast(dv.total_impressions as decimal),0)))) * .1) * .9 as decimal(10,2))
+                nullif(cast(dv.total_impressions as decimal),0)))) * .0035) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
               (cast(mt.groupm_passed_impressions as decimal) /
-                nullif(cast(mt.total_impressions as decimal),0)))) * .1) * .9 as decimal(10,2))
+                nullif(cast(mt.total_impressions as decimal),0)))) * .0035) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev))  * .1) *.9 as decimal(10,2))
+then cast((((t2.vew_rev))  * .0035) *.9 as decimal(10,2))
 
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                           OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(dv.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
     (cast(dv.groupm_passed_impressions as decimal) /
-                nullif(cast(dv.total_impressions as decimal),0)))) * .1) * .9 as decimal(10,2))
+                nullif(cast(dv.total_impressions as decimal),0)))) * .0035) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                           OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(mt.joinkey,''))>0))
   then cast(((((t2.vew_rev) *
               (cast(mt.groupm_passed_impressions as decimal) /
-                nullif(cast(mt.total_impressions as decimal),0)))) * .1) * .9 as decimal(10,2))
+                nullif(cast(mt.total_impressions as decimal),0)))) * .0035) * .9 as decimal(10,2))
 
-when (t2.dv_map = 'N' and t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                                         OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev))  * .1) *.9 as decimal(10,2))
+then cast((((t2.vew_rev))  * .0035) *.9 as decimal(10,2))
 
 
-when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
 then cast(((((t2.vew_rev) *
                   (cast(dv.groupm_passed_impressions as decimal) /
-                              nullif(cast(dv.total_impressions as decimal),0)))) * .03) * .9 as decimal(10,2))
+                              nullif(cast(dv.total_impressions as decimal),0)))) * .007) * .9 as decimal(10,2))
 
-when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
 then cast(((((t2.vew_rev) *
                             (cast(mt.groupm_passed_impressions as decimal) /
-                              nullif(cast(mt.total_impressions as decimal),0)))) * .03) * .9 as decimal(10,2))
+                              nullif(cast(mt.total_impressions as decimal),0)))) * .007) * .9 as decimal(10,2))
 
-when (t2.dv_map = 'N' and t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((((t2.vew_rev))  * .03) *.9 as decimal(10,2))
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.vew_rev))  * .007) *.9 as decimal(10,2))
 
 
   when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
@@ -721,57 +696,57 @@ then cast((((t2.vew_rev))  * .03) *.9 as decimal(10,2))
 
 sum(case
 --         not subject to viewability, DBM
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
-  then cast((( t2.clk_rev )  * .025) * .9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
+  then cast((( t2.clk_rev )  * .014) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
-  then cast((( t2.clk_rev )  * .025) *.9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
+  then cast((( t2.clk_rev )  * .014) *.9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((( t2.clk_rev)  * .025) *.9 as decimal(10,2))
+then cast((( t2.clk_rev)  * .014) *.9 as decimal(10,2))
 
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
-  then cast((( t2.clk_rev ) * .0375) * .9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .00525) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
-  then cast((( t2.clk_rev ) * .0375) * .9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .00525) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((( t2.clk_rev)  * .0375) *.9 as decimal(10,2))
+then cast((( t2.clk_rev)  * .00525) *.9 as decimal(10,2))
 
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
-  then cast((( t2.clk_rev ) * .1) * .9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .0035) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
-  then cast((( t2.clk_rev ) * .1) * .9 as decimal(10,2))
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
+  then cast((( t2.clk_rev ) * .0035) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((( t2.clk_rev)  * .1) *.9 as decimal(10,2))
+then cast((( t2.clk_rev)  * .0035) *.9 as decimal(10,2))
 
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                           OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(dv.joinkey,''))>0))
-  then cast((( t2.clk_rev ) * .1) * .9 as decimal(10,2))
+  then cast((( t2.clk_rev ) * .0035) * .9 as decimal(10,2))
 
-  when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                           OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(mt.joinkey,''))>0))
-  then cast(((  t2.clk_rev ) * .1) * .9 as decimal(10,2))
+  then cast(((  t2.clk_rev ) * .0035) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                                         OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast((( t2.clk_rev)  * .1) *.9 as decimal(10,2))
+then cast((( t2.clk_rev)  * .0035) *.9 as decimal(10,2))
 
 
-when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
-then cast((( t2.clk_rev ) * .03) * .9 as decimal(10,2))
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
+then cast((( t2.clk_rev ) * .007) * .9 as decimal(10,2))
 
-when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
-then cast((( t2.clk_rev ) * .03) * .9 as decimal(10,2))
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
+then cast((( t2.clk_rev ) * .007) * .9 as decimal(10,2))
 
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
-then cast(((t2.clk_rev)  * .03) *.9 as decimal(10,2))
+then cast(((t2.clk_rev)  * .007) *.9 as decimal(10,2))
 
 
   when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
@@ -885,7 +860,6 @@ then cast(((t2.clk_rev)  * .03) *.9 as decimal(10,2))
               ( t2.clk_rev ) * .08) *.9 as decimal(10,2))
 
   else ((( t2.clk_rev ) * .08) *.9)  end) as            adjs_click_revenue,
-
 
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.billimps end) as billimps,
@@ -1058,9 +1032,8 @@ from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-02-08''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-03-31''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
-and campaign_id in (10742878, 20606595) -- gm acq
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 ) as ta
@@ -1099,8 +1072,8 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-02-08''
-and campaign_id in (10742878, 20606595) -- gm acq
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-03-31''
+
 
 and (advertiser_id <> 0)
 ) as ti
@@ -1135,8 +1108,7 @@ from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-02-08''
-and campaign_id in (10742878, 20606595) -- gm acq
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-03-31''
 and (advertiser_id <> 0)
 ) as tc
 
@@ -1172,9 +1144,8 @@ from (
 
 select distinct(user_id), activity_id, conversion_id, interaction_time, campaign_id, site_id_dcm, placement_id
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-02-08''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-03-31''
 and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
-and (campaign_id = 20606595) -- display 2018
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 and (user_id <> ''0'')
@@ -1221,6 +1192,9 @@ where  regexp_like(p1.placement,''P.?'',''ib'')
 and not regexp_like(p1.placement,''.?do\s?not\s?use.?'',''ib'')
 and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
+and  regexp_like(campaign.campaign,''.*2018.*'',''ib'')
+and r1.campaign_id = 20606595
+
 
 group by
 cast (r1.date as date )
@@ -1247,9 +1221,6 @@ cast (r1.date as date )
         and t1.campaign not like '%[_]UK[_]%'
         and t1.campaign not like '%2016%'
         and t1.campaign not like '%2015%'
-        and t1.campaign_id != 10698273  -- UK Acquisition 2017
-        and t1.campaign_id != 11221036  -- Hong Kong 2017
-        and t1.campaign_id != 11385662  -- Monagas (Venezuela) -> SFO 2017
 
     group by
        t1.dcmdate
