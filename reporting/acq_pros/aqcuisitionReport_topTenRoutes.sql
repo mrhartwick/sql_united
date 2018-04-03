@@ -126,11 +126,13 @@ from (
                                    *,
                                    cast(subString(other_data,(instr(other_data,'u9=') + 3),10) as date) as traveldate_1
                                from diap01.mec_us_united_20056.dfa2_activity
-                               where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date) between '2017-01-01' and '2017-03-21'
+                               where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date) between '2018-01-01' and '2018-01-31'
                                    and activity_id = 978826
                                    and total_revenue <> 0
                                    and total_conversions <> 0
                                    and advertiser_id <> 0
+                                   and campaign_id = '20606595'
+                                   and site_id_dcm = '1239319'
                                    and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
 
                            ) as t1
@@ -165,15 +167,12 @@ from (
                           on t1.site_id_dcm = s1.site_id_dcm
 
                   ) as t2
-
+where not t2.placement like '%PROS_FT%'
          ) as t3
     where (length(isnull(t3.traveldate_1,'')) > 0)
+
     group by
 
--- cast(t3.date as date),
--- t3.month,
--- t3.site,
--- t3.campaign,
         t3.route
 
 ) as t4
@@ -181,4 +180,3 @@ from (
 order by tickets desc
 
 ) as t5
-limit 10
