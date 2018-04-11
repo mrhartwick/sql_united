@@ -2,7 +2,7 @@
 --PROSPECTING DESTINATIONS: COST-EFFICIENT METRICS
 --Step1: Create table that includes imps, rev, tickets, and leads in the route-level (RUN THIS IN VERTICA)
 
-create table diap01.mec_us_united_20056.ual_route_cost2
+create table diap01.mec_us_united_20056.ual_route_cost3
 (
 user_id      varchar(50),
 con_tim      int,
@@ -26,7 +26,7 @@ vew_rev      decimal(20,10),
 rev          decimal(20,10)
 );
 
-insert into  diap01.mec_us_united_20056.ual_route_cost2
+insert into  diap01.mec_us_united_20056.ual_route_cost3
 (user_id,
 con_tim,
 imp_tim,
@@ -131,6 +131,7 @@ rev)
 
 commit;
 
+
 --//=======================================================================================================================================
 
 --Step 2: Query to pull Sojern & Adara cost-efficient metrics for the specific-destinations (RUN THIS IN SQL SERVER)
@@ -198,9 +199,9 @@ from
             sum(t1.clk_rev)                                                                              as clk_rev,
             sum(case
                 when t1.site_id_dcm = 1190273 -- Adara
-                then (((((t1.vew_rev * 0.652586332)  + t1.clk_rev)  * .08) * .9) as decimal(10,2))
+                then cast(((((t1.vew_rev * 0.652586332)  + t1.clk_rev)  * .08) * .9) as decimal(10,2))
                 when t1.site_id_dcm = 1239319 -- Sojern
-                then (((((t1.vew_rev * 0.729118116)  + t1.clk_rev)  * .08) * .9) as decimal(10,2)) end)  as rev,
+                then cast(((((t1.vew_rev * 0.729118116)  + t1.clk_rev)  * .08) * .9) as decimal(10,2)) end)  as rev,
 
             case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
             else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
@@ -238,7 +239,7 @@ from
                                 sum(vew_tix) as vew_tix,
                                 sum(vew_rev) as vew_rev,
                                 sum(rev) as rev
-                                from diap01.mec_us_united_20056.ual_route_cost2 as t1
+                                from diap01.mec_us_united_20056.ual_route_cost3 as t1
 
                                 left join
                                 (
@@ -304,6 +305,8 @@ from
                 from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
             ) as prs
             on t1.placement_id = prs.adserverplacementid
+
+          where t1.dcmdate between '2018-01-01' and '2018-03-31'
 
         group by
             t1.dcmdate
@@ -381,7 +384,7 @@ group by
 select
     t2.dcmdate               as "Date",
     t2.destination           as destination,
-    t2.route_2_origin        as origin,
+    t2.route_1_origin        as origin,
     sum(t2.impressions)      as imps,
     sum(t2.led)              as leads,
     sum(t2.tix)              as tix,
@@ -435,7 +438,7 @@ from
             sum(t1.clk_rev)                                                                              as clk_rev,
                 sum(case
                 when t1.site_id_dcm = 3267410 -- Quantcast
-                then (((((t1.vew_rev * 0.713885347)  + t1.clk_rev)  * .08) * .9) as decimal(10,2)) end)  as rev,
+                then cast(((((t1.vew_rev * 0.713885347)  + t1.clk_rev)  * .08) * .9) as decimal(10,2)) end)  as rev,
             case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
             else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
             [dbo].udf_dvMap(t1.campaign_id,t1.site_id_dcm,t1.placement,prs.CostMethod,prs.dv_map)        as dv_map
@@ -471,7 +474,7 @@ from
                                 sum(vew_tix) as vew_tix,
                                 sum(vew_rev) as vew_rev,
                                 sum(rev) as rev
-                                from diap01.mec_us_united_20056.ual_route_cost2 as t1
+                                from diap01.mec_us_united_20056.ual_route_cost3 as t1
 
                                 left join
                                 (
@@ -537,6 +540,8 @@ from
             ) as prs
             on t1.placement_id = prs.adserverplacementid
 
+          where t1.dcmdate between '2018-01-01' and '2018-03-31'
+
         group by
             t1.dcmdate
             ,cast(month(cast(t1.dcmdate as date)) as int)
@@ -569,4 +574,4 @@ from
 group by
     t2.dcmdate,
     t2.destination,
-    t2.route_2_origin
+    t2.route_1_origin
