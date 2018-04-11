@@ -66,7 +66,7 @@ ta.type,
     count(distinct ta.user_id)/sum(leads) as rate,
     count(distinct ta.user_id) as u_leads,
 --     count(r1) as r1,
---  count(r2)         as r2,
+ count(r2)         as r2,
 --     sum(tot_con)      as tot_con,
     sum(leads) as leads
 --     sum(ta.r1) as row_count
