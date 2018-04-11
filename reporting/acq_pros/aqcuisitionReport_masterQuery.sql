@@ -85,6 +85,10 @@ select
         when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1190273' AND (placement  like '%BuenosAires%')                                then 'Buenos Aires'
         when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1190273' AND (placement  like '%WinHubs%')                                    then 'Win Hubs'
    else '' end                                                                                                                                                     as "Placement_Type",
+--Upper Funnel vs Lower Funnel:
+case when (campaign_id = '10742878' or campaign_id = '20606595') AND (site_id_dcm = '1190273' OR site_id_dcm = '1239319' )                                         then 'Lower Funnel'
+     when (campaign_id = '10742878' or campaign_id = '20606595') AND (site_id_dcm = '3267410')                                                                     then 'Upper Funnel'
+      else '' end                                                                                                                                                  as "Prospecting_Category",
 
   --Device Type designation:
 case when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placement  like '%_TAB_%'                                                                  then 'Tablet'
@@ -108,25 +112,22 @@ case when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placemen
     t3.planned_amt                                                                                     as "planned amt",
     t3.planned_cost                                                                                    as "planned cost",
     sum(case when t3.costmethod like '[Ff]lat' then t3.flatcost else t3.cost end)                      as cost,
-    sum(t3.tot_led)                                                                                    as leads,
+    sum(t3.led)                                                                                        as leads,
     sum(t3.unq_led)                                                                                    as unq_leads,
     sum(t3.dlvrimps)                                                                                   as "delivered impressions",
     sum(t3.billimps)                                                                                   as "billable impressions",
     sum(t3.cnslimps)                                                                                   as "dfa impressions",
     sum(t3.iv_impressions)                                                                             as "innovid impressions",
     sum(t3.clicks)                                                                                     as clicks,
-    sum(t3.tot_con)                                                                                    as transactions,
-    sum(t3.vew_con)                                                                                    as vew_trns,
-    sum(t3.clk_con)                                                                                    as clck_thru_trns,
-    sum(t3.tot_tix)                                                                                    as tix,
-    sum(t3.vew_tix)                                                                                    as vew_tix,
-    sum(t3.clk_tix)                                                                                    as clk_tix,
+    sum(t3.con)                                                                                        as transactions,
+    sum(t3.tix)                                                                                        as tix,
     sum(t3.tot_rev)                                                                                    as revenue,
     sum(t3.vew_rev)                                                                                    as vew_rev,
     sum(t3.clk_rev)                                                                                    as clk_thru_rev,
     sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue",
     sum(t3.adjs_view_revenue)                                                                          as adjusted_view_revenue,
     sum(t3.adjs_click_revenue)                                                                         as adjusted_click_revenue,
+    sum(t3.mil_adjsrevenue)                                                                            as mil_adjusted_revenue,
     sum(t3.dv_viewed)                                                                                  as dv_viewed,
     sum(t3.dv_impressions)                                                                             as dv_total_imps,
     sum(t3.dv_groupmpayable)                                                                           as dv_bill_imps
@@ -744,7 +745,6 @@ then cast((( t2.clk_rev ) * .007) * .9 as decimal(10,2))
 
 when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
 then cast((( t2.clk_rev ) * .007) * .9 as decimal(10,2))
-
 when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
 then cast(((t2.clk_rev)  * .007) *.9 as decimal(10,2))
 
@@ -861,10 +861,214 @@ then cast(((t2.clk_rev)  * .007) *.9 as decimal(10,2))
 
   else ((( t2.clk_rev ) * .08) *.9)  end) as            adjs_click_revenue,
 
+
+
+--mil members adjusted revenue
+sum(case
+--         not subject to viewability, DBM
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.mil_clk_rev )  * .014) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.mil_clk_rev )  * .014) *.9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.mil_vew_rev) + t2.mil_clk_rev)  * .014) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .00525) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (len(isnull(mt.joinkey,''))>0))
+  then cast((((
+(t2.mil_vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .00525) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.mil_vew_rev) + t2.mil_clk_rev)  * .00525) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .0035) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .0035) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%' and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.mil_vew_rev) + t2.mil_clk_rev)  * .0035) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                          OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .0035) * .9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                          OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .0035) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
+                                        OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.mil_vew_rev) + t2.mil_clk_rev)  * .0035) *.9 as decimal(10,2))
+
+
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(dv.joinkey,''))>0))
+then cast(((((t2.mil_vew_rev) *
+                  (cast(dv.groupm_passed_impressions as decimal) /
+                              nullif(cast(dv.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .007) * .9 as decimal(10,2))
+
+when (t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (len(isnull(mt.joinkey,''))>0))
+then cast(((((t2.mil_vew_rev) *
+                            (cast(mt.groupm_passed_impressions as decimal) /
+                              nullif(cast(mt.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .007) * .9 as decimal(10,2))
+
+when (t2.dv_map = 'N' and t2.costmethod = 'dCPM' and (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%') and (((len(isnull(mt.joinkey,''))=0)) or (len(isnull(dv.joinkey,''))=0)))
+then cast((((t2.mil_vew_rev) + t2.mil_clk_rev)  * .007) *.9 as decimal(10,2))
+
+
+  when (t2.costmethod = 'dCPM' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.mil_clk_rev )  * .08) *.9 as decimal(10,2))
+
+  when (t2.costmethod = 'dCPM' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.mil_clk_rev )  * .08) *.9 as decimal(10,2))
+
+--         not subject to viewability
+  when (t2.dv_map = 'N' and (len(isnull(dv.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+    (cast(dv.groupm_passed_impressions as decimal) /
+                nullif(cast(dv.total_impressions as decimal),0))) + t2.mil_clk_rev )  * .08) *.9 as decimal(10,2))
+
+  when (t2.dv_map = 'N' and (len(isnull(mt.joinkey,''))>0))
+  then cast(((((t2.mil_vew_rev) *
+              (cast(mt.groupm_passed_impressions as decimal) /
+                nullif(cast(mt.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .08) *.9 as decimal(10,2))
+
+ --         Win NY TapAd placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 2854118 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 2854118 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.mil_vew_rev * .41) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.mil_vew_rev * .48) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( (t2.mil_vew_rev * .56) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     end
+ --         Win NY Verve placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1995643 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1995643 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.mil_vew_rev * .59) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.mil_vew_rev * .77) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( (t2.mil_vew_rev * .79) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     end
+
+ --         Win NY Forbes placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1485655 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1485655 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.mil_vew_rev * .38) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.mil_vew_rev * .59) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( (( (t2.mil_vew_rev * .64) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     end
+
+ --         Win NY Ninth Decimal placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 1329066 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 1329066 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.mil_vew_rev * .78) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( (( (t2.mil_vew_rev * .89) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( ( ((t2.mil_vew_rev * .68) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+
+                     end
+
+ --         Win NY NewYorkMagazine placements, which Medialets failed to tag
+ --         using average viewability rate for Feb, Mar, Apr
+              when (
+                     (t2.dv_map = 'Y' and t2.site_id_dcm = 3246841 and (len(isnull(dv.joinkey,''))=0)) or
+                     (t2.dv_map = 'M' and t2.site_id_dcm = 3246841 and (len(isnull(mt.joinkey,''))=0))
+                   )
+              then
+                     case
+                     when t2.dcmmonth = 2
+                     then cast( (( (t2.mil_vew_rev * .54) + t2.mil_clk_rev) * .08) *.9 as decimal(10,2))
+                     when t2.dcmmonth = 3
+                     then cast( ( ((t2.mil_vew_rev * .62) + t2.mil_clk_rev) * .08) *.9  as decimal(10,2))
+                     when t2.dcmmonth = 4
+                     then cast( ( ((t2.mil_vew_rev * .64) + t2.mil_clk_rev) * .08) *.9  as decimal(10,2))
+                     end
+
+ --         subject to viewability with flag; mt source
+              when (t2.dv_map = 'Y' and (len(isnull(mt.joinkey,''))>0))
+                then cast((
+              (((t2.mil_vew_rev) *
+                           (cast(mt.groupm_passed_impressions as decimal) /
+                             nullif(cast(mt.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .08) *.9 as decimal(10,2))
+
+ --         subject to viewability; dv source
+              when (t2.dv_map = 'Y' and (len(isnull(dv.joinkey,''))>0))
+                then cast((
+              (((t2.mil_vew_rev) *
+                 (cast(dv.groupm_passed_impressions as decimal) /
+                             nullif(cast(dv.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .08) *.9 as decimal(10,2))
+
+ --         subject to viewability; moat source
+              when (t2.dv_map = 'M' and (len(isnull(mt.joinkey,''))>0))
+                then cast((
+              (((t2.mil_vew_rev) *
+                           (cast(mt.groupm_passed_impressions as decimal) /
+                             nullif(cast(mt.total_impressions as decimal),0))) + t2.mil_clk_rev ) * .08) *.9 as decimal(10,2))
+
+  else (((t2.mil_vew_rev + t2.mil_clk_rev ) * .08) *.9)  end) as            mil_adjsrevenue,
+
+
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.billimps end) as billimps,
---      dcm impressions (for comparison (qa) to dcm console)
---     sum(cst.dfa_imps)                                                             as cnslimps,
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dfa_imps end) as cnslimps,
     sum(iv.impressions)                                                           as iv_impressions,
     sum(cst.iv_imps)                                                              as iv_impressions_chk,
@@ -878,36 +1082,22 @@ then cast(((t2.clk_rev)  * .007) *.9 as decimal(10,2))
     sum(cst.mt_imps)                                                              as mt_impressions_chk,
     sum(mt.groupm_passed_impressions)                                             as mt_viewed,
     sum(cast(mt.groupm_billable_impressions as decimal(10,2)))                    as mt_groupmpayable,
-    sum(t2.unq_clk_led)                                                           as unq_clk_led,
-    sum(t2.unq_vew_led)                                                           as unq_vew_led,
-    sum(t2.unq_led)                                                               as unq_led,
+     sum(t2.unq_led)                                                              as unq_led,
     sum(case
         when (len(isnull(iv.joinkey,'')) > 0) then iv.click_thrus
-        else t2.clicks end)                                                       as clicks,
-    sum(case when t2.site_id_dcm = '1239319' then t2.clk_con
-        when t2.costmethod = 'dCPM' then cst.clk_con else  t2.clk_con end)      as clk_con,
+        else t2.clicks end)                                                     as clicks,
     sum(case when t2.site_id_dcm = '1239319' then t2.clk_rev
         when t2.costmethod = 'dCPM' then cst.clk_rev else  t2.clk_rev end)      as clk_rev,
-    sum(case when t2.site_id_dcm = '1239319' then t2.clk_tix
-        when t2.costmethod = 'dCPM' then cst.clk_tix else  t2.clk_tix end)      as clk_tix,
     sum(case when t2.site_id_dcm = '1239319' then t2.con
-        when t2.costmethod = 'dCPM' then cst.con     else  t2.con     end)      as tot_con,
+        when t2.costmethod = 'dCPM' then cst.con     else  t2.con     end)      as con,
     sum(case when t2.site_id_dcm = '1239319' then t2.rev
         when t2.costmethod = 'dCPM' then cst.rev     else  t2.rev     end)      as tot_rev,
     sum(case when t2.site_id_dcm = '1239319' then t2.tix
-        when t2.costmethod = 'dCPM' then cst.tix     else  t2.tix     end)      as tot_tix,
-    sum(case when t2.site_id_dcm = '1239319' then t2.vew_con
-        when t2.costmethod = 'dCPM' then cst.vew_con else  t2.vew_con end)      as vew_con,
+        when t2.costmethod = 'dCPM' then cst.tix     else  t2.tix     end)      as tix,
     sum(case when t2.site_id_dcm = '1239319' then t2.vew_rev
         when t2.costmethod = 'dCPM' then cst.vew_rev else  t2.vew_rev end)      as vew_rev,
-    sum(case when t2.site_id_dcm = '1239319' then t2.vew_tix
-        when t2.costmethod = 'dCPM' then cst.vew_tix else  t2.vew_tix end)      as vew_tix,
-    sum(case when t2.site_id_dcm = '1239319' then t2.clk_led
-        when t2.costmethod = 'dCPM' then cst.clk_led else  t2.clk_led end)      as clk_led,
-    sum(case when t2.site_id_dcm = '1239319' then t2.vew_led
-        when t2.costmethod = 'dCPM' then cst.vew_led else  t2.vew_led end)      as vew_led,
     sum(case when t2.site_id_dcm = '1239319' then t2.led
-        when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as tot_led
+        when t2.costmethod = 'dCPM' then cst.led     else  t2.led     end)      as led
 
 
 
@@ -929,42 +1119,33 @@ then cast(((t2.clk_rev)  * .007) *.9 as decimal(10,2))
                t1.campaign_id                               as campaign_id,
                t1.site_dcm                                  as site_dcm,
                t1.site_id_dcm                               as site_id_dcm,
-               case when t1.plce_id in ('PBKB7J','PBKB7H','PBKB7K') then 'PBKB7J'
-               else t1.plce_id end                          as plce_id,
-               case when t1.placement like 'PBKB7J%' or t1.placement like 'PBKB7H%' or t1.placement like 'PBKB7K%' or t1.placement = 'United 360 - Polaris 2016 - Q4 - Amobee' then 'PBKB7J_UAC_BRA_016_Mobile_AMOBEE_Video360_InViewPackage_640x360_MOB_MOAT_Fixed Placement_Other_P25-54_1 x 1_Standard_Innovid_PUB PAID'
-               else t1.placement end                        as placement,
---        amobee video 360 placements, tracked differently across dcm, innovid, and moat; this combines the three placements into one
-               case when t1.placement_id in (137412510,137412401,137412609) then 137412609
-               else t1.placement_id end                     as placement_id,
+               t1.plce_id                                   as plce_id,
+               t1.placement                                 as placement,
+               t1.placement_id                              as placement_id,
                prs.stdate                                   as stdate,
-               case when t1.campaign_id = 9923634 and t1.site_id_dcm != 1190258 then 20161022
-               else prs.eddate end                          as eddate,
+               prs.eddate                                   as eddate,
                prs.packagecat                               as packagecat,
                prs.costmethod                               as costmethod,
                prs.cost_id                                  as cost_id,
                prs.planned_amt                              as planned_amt,
                prs.planned_cost                             as planned_cost,
                prs.placementstart                           as placementstart,
-               case when t1.campaign_id = 9923634 and t1.site_id_dcm != 1190258 then '2016-10-22'
-               else prs.placementend end                    as placementend,
+               prs.placementend                             as placementend,
                cast(prs.rate as decimal(10,2))              as rate,
                sum(t1.impressions)                          as impressions,
                sum(t1.clicks)                               as clicks,
-               sum(t1.vew_led)                              as vew_led,
-               sum(t1.clk_led)                              as clk_led,
                sum(t1.led)                                  as led,
-               sum(t1.vew_con)                              as vew_con,
-               sum(t1.clk_con)                              as clk_con,
                sum(t1.con)                                  as con,
-               sum(t1.vew_tix)                              as vew_tix,
-               sum(t1.clk_tix)                              as clk_tix,
                sum(t1.tix)                                  as tix,
                sum(t1.vew_rev)                              as vew_rev,
                sum(t1.clk_rev)                              as clk_rev,
                sum(t1.rev)                                  as rev,
-               sum(t1.unq_clk_led)                          as unq_clk_led,
-               sum(t1.unq_vew_led)                          as unq_vew_led,
                sum(t1.unq_led)                              as unq_led,
+               sum(t1.mil_clk_rev)                          as mil_clk_rev,
+               sum(t1.mil_vew_rev)                          as mil_vew_rev,
+               sum(t1.mil_rev)                              as mil_rev,
+
+
              case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
              else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
 
@@ -991,21 +1172,17 @@ replace(replace(p1.placement ,'','', ''''),''"'','''') as placement,
 r1.placement_id                           as placement_id,
 sum(r1.impressions)                       as impressions,
 sum(r1.clicks)                            as clicks,
-sum(r1.unq_clk_led)                       as unq_clk_led,
-sum(r1.unq_vew_led)                       as unq_vew_led,
-sum(r1.unq_clk_led) + sum(r1.unq_vew_led) as unq_led,
-sum(r1.vew_led)                           as vew_led,
-sum(r1.clk_led)                           as clk_led,
-sum(r1.vew_led) + sum(r1.clk_led)         as led,
-sum(r1.vew_con)                           as vew_con,
-sum(r1.clk_con)                           as clk_con,
-sum(r1.vew_con) + sum(r1.clk_con)         as con,
-sum(r1.vew_tix)                           as vew_tix,
-sum(r1.clk_tix)                           as clk_tix,
-sum(r1.vew_tix) + sum(r1.clk_tix)         as tix,
+sum(r1.unq_led)                           as unq_led,
+sum(r1.led)                               as led,
+sum(r1.con)                               as con,
+sum(r1.tix)                               as tix,
 sum(r1.vew_rev)                           as vew_rev,
 sum(r1.clk_rev)                           as clk_rev,
-sum(r1.rev)                               as rev
+sum(r1.rev)                               as rev,
+sum(r1.mil_clk_rev)                       as mil_clk_rev,
+sum(r1.mil_vew_rev)                       as mil_vew_rev,
+sum(r1.mil_rev)                           as mil_rev
+
 from (
 
 
@@ -1016,26 +1193,25 @@ cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as dat
 ,ta.placement_id as placement_id
 ,0 as impressions
 ,0 as clicks
-,0 as unq_clk_led
-,0 as unq_vew_led
-,sum(case when activity_id = 1086066 and ta.conversion_id = 1 then 1 else 0 end) as clk_led
-,sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then 1 else 0 end ) as clk_con
-,sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as clk_tix
+,0 as unq_led
+,sum(case when activity_id = 1086066 then 1 else 0 end) as led
+,sum(case when activity_id = 978826 and ta.total_revenue <> 0 then 1 else 0 end ) as con
+,sum(case when activity_id = 978826 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as tix
 ,sum(case when ta.conversion_id = 1 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as clk_rev
-,sum(case when activity_id = 1086066 and ta.conversion_id = 2 then 1 else 0 end) as vew_led
-,sum(case when activity_id = 978826  and ta.conversion_id = 2 and ta.total_revenue <> 0 then 1 else 0 end ) as vew_con
-,sum(case when activity_id = 978826  and ta.conversion_id = 2 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as vew_tix
 ,sum(case when ta.conversion_id = 2 then (ta.total_revenue * 1000000) / (rates.exchange_rate) else 0 end ) as vew_rev
-,sum(ta.total_revenue * 1000000/rates.exchange_rate) as rev
+,sum(((ta.total_revenue * 1000000)/rates.exchange_rate)) as rev
+,sum(case when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 1 then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) else 0 end) as mil_clk_rev
+,sum(case when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 2 then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) else 0  end ) as mil_vew_rev
+,sum(case when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) end) as mil_rev
 
 from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
 where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-03-31''
-and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
+and conversion_id in (1,2)
 ) as ta
 
 left join diap01.mec_us_mecexchangerates_20067.exchange_rates as rates
@@ -1047,6 +1223,7 @@ cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as dat
 ,ta.campaign_id
 ,ta.site_id_dcm
 ,ta.placement_id
+,ta.other_data
 
 union all
 
@@ -1057,17 +1234,16 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 ,ti.placement_id as placement_id
 ,count (*) as impressions
 ,0 as clicks
-,0 as unq_clk_led
-,0 as unq_vew_led
-,0 as clk_led
-,0 as clk_con
-,0 as clk_tix
+,0 as unq_led
+,0 as led
+,0 as con
+,0 as tix
 ,0 as clk_rev
-,0 as vew_led
-,0 as vew_con
-,0 as vew_tix
 ,0 as vew_rev
 ,0 as rev
+,0 as mil_clk_rev
+,0 as mil_vew_rev
+,0 as mil_rev
 
 from (
 select *
@@ -1092,17 +1268,16 @@ cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date ) as
 ,tc.placement_id as placement_id
 ,0 as impressions
 ,count (*) as clicks
-,0 as unq_clk_led
-,0 as unq_vew_led
-,0 as clk_led
-,0 as clk_con
-,0 as clk_tix
+,0 as unq_led
+,0 as led
+,0 as con
+,0 as tix
 ,0 as clk_rev
-,0 as vew_led
-,0 as vew_con
-,0 as vew_tix
 ,0 as vew_rev
 ,0 as rev
+,0 as mil_clk_rev
+,0 as mil_vew_rev
+,0 as mil_rev
 
 from (
 
@@ -1128,17 +1303,16 @@ cast (timestamp_trunc(to_timestamp(td.interaction_time / 1000000),''SS'') as dat
 ,td.placement_id as placement_id
 ,0 as impressions
 ,0 as clicks
-,sum(case when activity_id = 1086066 and td.conversion_id = 1 then 1 else 0 end) as  unq_clk_led
-,sum(case when activity_id = 1086066 and td.conversion_id = 2 then 1 else 0 end) as unq_vew_led
-,0 as clk_led
-,0 as clk_con
-,0 as clk_tix
+,sum(case when activity_id = 1086066 then 1 else 0 end) as  unq_led
+,0 as led
+,0 as con
+,0 as tix
 ,0 as clk_rev
-,0 as vew_led
-,0 as vew_con
-,0 as vew_tix
 ,0 as vew_rev
 ,0 as rev
+,0 as mil_clk_rev
+,0 as mil_vew_rev
+,0 as mil_rev
 
 from (
 
@@ -1197,7 +1371,7 @@ and r1.campaign_id = 20606595
 
 
 group by
-cast (r1.date as date )
+cast (r1.date as date)
 ,directory.site_dcm
 ,r1.site_id_dcm
 ,r1.campaign_id
