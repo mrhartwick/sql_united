@@ -382,8 +382,9 @@ group by
 --Prospecting Quantcast: Top 10 destinations & origins, with cost-efficient metrics (RUN THIS IN SQL SERVER)
 
 select
-    t2.dcmdate               as "Date",
     t2.destination           as destination,
+    t2.route_1_destination   as destination1,
+    t2.route_2_destination   as destination2,
     t2.route_1_origin        as origin,
     sum(t2.impressions)      as imps,
     sum(t2.led)              as leads,
@@ -436,9 +437,9 @@ from
             sum(t1.tix)                                                                                  as tix,
             sum(t1.vew_rev)                                                                              as vew_rev,
             sum(t1.clk_rev)                                                                              as clk_rev,
-                sum(case
+            sum(case
                 when t1.site_id_dcm = 3267410 -- Quantcast
-                then cast(((((t1.vew_rev * 0.713885347)  + t1.clk_rev)  * .08) * .9) as decimal(10,2)) end)  as rev,
+                then cast(((t1.vew_rev  + t1.clk_rev)  * .048)  as decimal(10,2)) end)  as rev,
             case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
             else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
             [dbo].udf_dvMap(t1.campaign_id,t1.site_id_dcm,t1.placement,prs.CostMethod,prs.dv_map)        as dv_map
@@ -513,7 +514,7 @@ from
                                 where regexp_like(p1.placement,''.*_PROS_FT.*'',''ib'')
                                 and t1.site_id_dcm = 3267410
                                 and t1.campaign_id = 20606595
-                                and cast(timestamp_trunc(to_timestamp(con_tim / 1000000),''SS'') as date) between ''2018-01-01'' and ''2018-03-31''
+                                and cast(timestamp_trunc(to_timestamp(con_tim / 1000000),''SS'') as date) between ''2018-01-01'' and ''2018-04-30''
 
                                 group by
 
@@ -540,7 +541,7 @@ from
             ) as prs
             on t1.placement_id = prs.adserverplacementid
 
-          where t1.dcmdate between '2018-01-01' and '2018-03-31'
+          where t1.dcmdate between '2018-01-01' and '2018-04-30'
 
         group by
             t1.dcmdate
@@ -572,6 +573,7 @@ from
 
 
 group by
-    t2.dcmdate,
     t2.destination,
-    t2.route_1_origin
+    t2.route_1_origin,
+    t2.route_1_destination,
+    t2.route_2_destination
