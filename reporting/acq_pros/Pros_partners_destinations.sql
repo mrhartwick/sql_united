@@ -199,9 +199,9 @@ from
             sum(t1.clk_rev)                                                                              as clk_rev,
             sum(case
                 when t1.site_id_dcm = 1190273 -- Adara
-                then cast(((((t1.vew_rev * 0.652586332)  + t1.clk_rev)  * .08) * .9) as decimal(10,2))
+                then cast(((t1.vew_rev + t1.clk_rev)  * .08)  as decimal(10,2))
                 when t1.site_id_dcm = 1239319 -- Sojern
-                then cast(((((t1.vew_rev * 0.729118116)  + t1.clk_rev)  * .08) * .9) as decimal(10,2)) end)  as rev,
+                then cast(((t1.vew_rev  + t1.clk_rev)  * .08) as decimal(10,2)) end)  as rev,
 
             case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
             else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
