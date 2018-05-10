@@ -30,7 +30,7 @@
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2018-03-31';
+set @report_ed = '2018-04-30';
 set @report_st = '2018-01-01';
 
 --
@@ -74,17 +74,7 @@ select
    when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%Control_First and Business%' OR placement LIKE '%Control_First_Business%'
                                       OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%')                                                        then 'Control-First/Biz'
    when (campaign_id = '10742878' or campaign_id = '20606595')     AND (placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%')                          then 'Other'
-
- --Weather Test:
-    when (campaign_id = '10742878' or campaign_id = '20606595')    AND site_id_dcm='1853562' AND (placement  like '%Control%')                                     then 'Control'
-    when (campaign_id = '10742878' or campaign_id = '20606595')   AND site_id_dcm='1853562' AND (placement  like '%Test%')                                         then 'Test'
-    else '' end                                                                                                                                                    as "Group",
- --Placement Type:
-   case when (campaign_id = '10742878' or campaign_id = '20606595') AND (placement  like '%PROS_FT%')                                                              then 'Prospecting'
-        when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%Weather%')                                    then 'Weather Test'
-        when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1190273' AND (placement  like '%BuenosAires%')                                then 'Buenos Aires'
-        when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1190273' AND (placement  like '%WinHubs%')                                    then 'Win Hubs'
-   else '' end                                                                                                                                                     as "Placement_Type",
+   else '' end                                                                                                                                                     as "Group",
 --Upper Funnel vs Lower Funnel:
 case when (campaign_id = '10742878' or campaign_id = '20606595') AND (site_id_dcm = '1190273' OR site_id_dcm = '1239319' )                                         then 'Lower Funnel'
      when (campaign_id = '10742878' or campaign_id = '20606595') AND (site_id_dcm = '3267410')                                                                     then 'Upper Funnel'
@@ -95,17 +85,6 @@ case when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placemen
      when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placement  like '%_DESK_%'                                                                 then 'Desktop'
      when (campaign_id = '10742878' or campaign_id = '20606595') AND t3.placement  like '%_MOB_%'                                                                  then 'Mobile'
      else ''  end                                                                                                                                                  as "Device Type",
-
-case when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%SAT%')    then 'SAT'
-    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%ENC%')     then 'ENC'
-    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%ESC%')     then 'ESC'
-    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%MID%')     then 'MID'
-    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%MTN%')     then 'MTN'
-    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%NEW%')     then 'NEW'
-    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%PAC%')     then 'PAC'
-    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%WNC%')     then 'WNC'
-    when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm='1853562' AND (placement  like '%WSC%')     then 'WSC'
-    else '' end                                                                                                             as Region,
 
     t3.dv_map                                                                                          as "dv map",
     t3.rate                                                                                            as rate,
@@ -125,8 +104,6 @@ case when (campaign_id = '10742878' or campaign_id = '20606595') AND site_id_dcm
     sum(t3.vew_rev)                                                                                    as vew_rev,
     sum(t3.clk_rev)                                                                                    as clk_thru_rev,
     sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue",
-    sum(t3.mil_adjsrevenue)                                                                            as mil_adjusted_revenue,
-    sum(t3.adjsrevenue + t3.mil_adjsrevenue)                                                           as total_adj_rev,
     sum(t3.dv_viewed)                                                                                  as dv_viewed,
     sum(t3.dv_impressions)                                                                             as dv_total_imps,
     sum(t3.dv_groupmpayable)                                                                           as dv_bill_imps
@@ -141,7 +118,7 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2018-03-31';
+-- set @report_ed = '2018-04-30';
 -- set @report_st = '2018-01-01';
 
 select
@@ -178,43 +155,35 @@ select
    --Adjusted revenue (non-miles) with United discounts applied:
 sum(case
   when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%')
-  then cast(((t2.rev)  * .014)  as decimal(10,2))
+  then cast(((t2.rev)  *  0.0070)  as decimal(10,2))
 
   when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%')
-  then cast(((t2.rev)  * .00525)  as decimal(10,2))
+  then cast(((t2.rev)  * 0.0088)  as decimal(10,2))
 
   when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%')
-  then cast(((t2.rev)  * .0035)  as decimal(10,2))
+  then cast(((t2.rev)  *  0.0175)  as decimal(10,2))
 
   when (t2.costmethod = 'dCPM' and(placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
                           OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%'))
-  then cast(((t2.rev)  * .0035)  as decimal(10,2))
+  then cast(((t2.rev)  * 0.0175)  as decimal(10,2))
 
   when (t2.costmethod = 'dCPM' and(placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%'))
-  then cast(((t2.rev)  * .007)  as decimal(10,2))
+  then cast(((t2.rev)  * 0.0105)  as decimal(10,2))
 
-  else ((t2.rev) * .032)  end)                                                  as adjsrevenue,
+  when (t2.campaign_id = 20713692) --Fare Sale
+  then cast(((t2.rev)  * 0.0480)  as decimal(10,2))
 
+  when (t2.campaign_id = 20721526) --Display Meta
+  then cast(((t2.rev)  * 0.0480)  as decimal(10,2))
 
---Miles Adjusted Revenue with united discounts:
-sum(case
-  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy1%')
-  then cast(((t2.mil_vew_rev + t2.mil_clk_rev)  * .014)  as decimal(10,2))
+  when (t2.campaign_id = 20606595 and t2.site_id_dcm in (1190273, 1239319)) --GM Acq: Adara & Sojern
+  then cast(((t2.rev)  * 0.0800)  as decimal(10,2))
 
-  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy2%')
-  then cast(((t2.mil_vew_rev + t2.mil_clk_rev)  * .00525)  as decimal(10,2))
+  when (t2.campaign_id = 20606595 and t2.site_id_dcm = 3267410) --GM Acq: Quantcast
+  then cast(((t2.rev)  * 0.0480)  as decimal(10,2))
 
-  when (t2.costmethod = 'dCPM' and placement LIKE '%BidStrategy3%')
-  then cast(((t2.mil_vew_rev + t2.mil_clk_rev)  * .0035)  as decimal(10,2))
+  else cast(((t2.rev) * 0.0480) as decimal (10,2))  end)                                                  as adjsrevenue,
 
-  when (t2.costmethod = 'dCPM' and(placement LIKE '%First and Business%' OR placement LIKE '%First_Business%'
-                          OR placement LIKE '%BusinessClass%' OR placement LIKE '%FirstClass%'))
-  then cast(((t2.mil_vew_rev + t2.mil_clk_rev)  * .0035)  as decimal(10,2))
-
-  when (t2.costmethod = 'dCPM' and(placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%'))
-  then cast(((t2.mil_vew_rev + t2.mil_clk_rev)  * .007)  as decimal(10,2))
-
-  else ((t2.mil_vew_rev + t2.mil_clk_rev) * .032)  end)                             as mil_adjsrevenue,
 
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.billimps end) as billimps,
@@ -288,14 +257,8 @@ sum(case
                sum(t1.clk_rev)                              as clk_rev,
                sum(t1.rev)                                  as rev,
                sum(t1.unq_led)                              as unq_led,
-               sum(t1.mil_clk_rev)                          as mil_clk_rev,
-               sum(t1.mil_vew_rev)                          as mil_vew_rev,
-               sum(t1.mil_rev)                              as mil_rev,
-
-
-             case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
-             else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
-
+               case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
+               else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
                [dbo].udf_dvMap(t1.campaign_id,t1.site_id_dcm,t1.placement,prs.CostMethod,prs.dv_map) as dv_map
 
 
@@ -325,10 +288,7 @@ sum(r1.con)                               as con,
 sum(r1.tix)                               as tix,
 sum(r1.vew_rev)                           as vew_rev,
 sum(r1.clk_rev)                           as clk_rev,
-sum(r1.rev)                               as rev,
-sum(r1.mil_clk_rev)                       as mil_clk_rev,
-sum(r1.mil_vew_rev)                       as mil_vew_rev,
-sum(r1.mil_rev)                           as mil_rev
+sum(r1.rev)                               as rev
 
 from (
 
@@ -344,18 +304,18 @@ cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as dat
 ,sum(case when activity_id = 1086066 then 1 else 0 end) as led
 ,sum(case when activity_id = 978826 and ta.total_revenue <> 0 then 1 else 0 end ) as con
 ,sum(case when activity_id = 978826 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as tix
-,sum(case when not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 1 then ((ta.total_revenue * 1000000) /(rates.exchange_rate)) else 0 end ) as clk_rev
-,sum(case when not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 2 then ((ta.total_revenue * 1000000) /(rates.exchange_rate)) else 0 end ) as vew_rev
-,sum(case when not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') then ((ta.total_revenue * 1000000)/rates.exchange_rate) end) as rev
-,sum(case when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 1 then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) else 0 end) as mil_clk_rev
-,sum(case when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 2 then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) else 0  end ) as mil_vew_rev
-,sum(case when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) end) as mil_rev
+,sum(case when not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 1 then ((ta.total_revenue * 1000000) /(rates.exchange_rate))
+     when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 1 then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) else 0 end ) as clk_rev
+,sum(case when not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 2 then ((ta.total_revenue * 1000000) /(rates.exchange_rate))
+     when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 2 then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) else 0 end ) as vew_rev
+,sum(case when not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') then ((ta.total_revenue * 1000000)/rates.exchange_rate)
+     when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) end) as rev
 
 from
 (
 select *
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-03-31''
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-04-30''
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 and (activity_id = 978826 or activity_id = 1086066)
@@ -389,14 +349,12 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 ,0 as clk_rev
 ,0 as vew_rev
 ,0 as rev
-,0 as mil_clk_rev
-,0 as mil_vew_rev
-,0 as mil_rev
+
 
 from (
 select *
 from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-03-31''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-04-30''
 
 
 and (advertiser_id <> 0)
@@ -423,15 +381,13 @@ cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date ) as
 ,0 as clk_rev
 ,0 as vew_rev
 ,0 as rev
-,0 as mil_clk_rev
-,0 as mil_vew_rev
-,0 as mil_rev
+
 
 from (
 
 select *
 from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-03-31''
+where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-04-30''
 and (advertiser_id <> 0)
 ) as tc
 
@@ -458,18 +414,16 @@ cast (timestamp_trunc(to_timestamp(td.interaction_time / 1000000),''SS'') as dat
 ,0 as clk_rev
 ,0 as vew_rev
 ,0 as rev
-,0 as mil_clk_rev
-,0 as mil_vew_rev
-,0 as mil_rev
+
 
 from (
 
 select distinct(user_id), activity_id, conversion_id, interaction_time, campaign_id, site_id_dcm, placement_id
 from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-03-31''
-and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
+where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-01-01'' and ''2018-04-30''
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
+and conversion_id in (1,2)
 and (user_id <> ''0'')
 ) as td
 
@@ -516,6 +470,7 @@ and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
 and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
 and  regexp_like(campaign.campaign,''.*2018.*'',''ib'')
 and r1.campaign_id = 20606595
+and r1.site_id_dcm in (1190273, 1239319, 3267410)
 
 
 group by
