@@ -22,6 +22,11 @@ as
            ----gm acq fare sale 2018
           when @campaign_id = 20713692 then 'Y'
 
+          ----------------------additional 2018 campaigns
+          when @campaign_id = 21086860 then 'Y' --trade Jetstream
+          when @campaign_id = 21206832 then 'Y'--trade rightsized
+          when @campaign_id = 21182874 then 'Y' --economy Plus
+          when @campaign_id = 21057553 then 'Y' --MileagePlus
 
 
 
@@ -31,10 +36,9 @@ as
                when @campaign_id = 20609762 AND @site_id_dcm = 2937979 then 'N' --Flipboard
                when @campaign_id = 20609762 AND (@site_id_dcm = 1654929 OR @site_id_dcm = 3379026 OR @site_id_dcm = 4442708 OR @site_id_dcm = 4440401 OR @site_id_dcm = 1669385) then 'Y'
 
-            ---Prospecting gm acq
+            ---gm acq 2018
 
-            when @campaign_id = 20606595 AND
-            @placement like '%[Pp][Rr][Oo][Ss]_[Ff][Tt]%' then 'Y'
+            when @campaign_id = 20606595 then 'Y'
 
              -------Correction to SF 2017
 
