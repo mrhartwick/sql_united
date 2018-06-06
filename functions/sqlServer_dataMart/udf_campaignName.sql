@@ -51,11 +51,18 @@ as
                                  when @campaignID = 20634533 then 'Singapore Onshore 2018'
                                  when @campaignID = 20713692 then 'GM Acquisition Fare Sale 2018'
                                  when @campaignID = 20721526 then 'GM Acquisition Meta 2018'
+                                 when @campaignID = 21086860 then 'Trade Jetstream 2018'
+                                 when @campaignID = 21206832 then 'Trade Right Sized 2018'
+                                 when @campaignID = 21187099 then 'PGA 2018'
+                                 when @campaignID = 21182874 then 'Economy Plus 2018'
+                                 when @campaignID = 21128474 then 'Personal Threshold 2018'
+                                 when @campaignID = 21230517 then 'Sydney Premium Cabin Sale 2018'
+                                 when @campaignID = 20820574 then 'BRA Native 2018'
+                                 when @campaignID = 20819775 then 'Native Outbrain 2018'
+                                 when @campaignID = 20945117 then 'Social Extension 2018'
+                                 when @campaignID = 21057553 then 'MileagePlus 2018'
 
-
-
-
-                                 else @campaignName end;
+                               else @campaignName end;
         return @finalCampaignName
     end
 go
