@@ -103,6 +103,7 @@ AS
 				when @site_name like '[Cc]aptify%' then 'Captify'
         		when @site_name like '[Tt]ravel[Ww]eekly%' then 'TravelWeekly'
 			  	when @site_name like '[Pp]lace%[Ii][Qq]%' then 'PlaceIQ'
+					when @site_name like '[Aa]dara%[Mm]edia%' then 'Adara Media'
 				else @site_name end
 				;
 
