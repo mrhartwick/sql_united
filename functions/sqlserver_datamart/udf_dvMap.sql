@@ -27,6 +27,9 @@ as
           when @campaign_id = 21206832 then 'Y'--trade rightsized
           when @campaign_id = 21182874 then 'Y' --economy Plus
           when @campaign_id = 21057553 then 'Y' --MileagePlus
+          when @campaign_id = 21128474 then 'Y' --personal threshold
+          when @campaign_id = 20945117 then 'Y' --social extension
+
 
 
 
