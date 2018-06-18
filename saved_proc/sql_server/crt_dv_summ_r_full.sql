@@ -70,6 +70,7 @@ insert into master.dbo.dv_summ
 
 
                    where t0.placement_name <> 'Rolled-up Placements'
+                   -- and dvDate >= '2018-01-01'
 
 
                    ) as t1

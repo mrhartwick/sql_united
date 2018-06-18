@@ -1,10 +1,10 @@
-CREATE procedure dbo.crt_dfa_flatCost_dt2
+CREATE procedure dbo.crt_dfa_flatCost_dt2_r
 as
-if OBJECT_ID('master.dbo.dfa_flatCost_dt2',N'U') is not null
-    drop table master.dbo.dfa_flatCost_dt2;
+if OBJECT_ID('master.dbo.dfa_flatCost_dt2_r',N'U') is not null
+    drop table master.dbo.dfa_flatCost_dt2_r;
 
 
-create table master.dbo.dfa_flatCost_dt2
+create table master.dbo.dfa_flatCost_dt2_r
 (
     Cost_ID        nvarchar(10)    not null,
     dcmDate        int            not null,
@@ -29,7 +29,7 @@ create table master.dbo.dfa_flatCost_dt2
 
 );
 
-insert into master.dbo.dfa_flatCost_dt2
+insert into master.dbo.dfa_flatCost_dt2_r
 
 
     select
@@ -210,13 +210,13 @@ insert into master.dbo.dfa_flatCost_dt2
                                   (
                                       select
                                           Prisma.adserverPlacementID                 as adserverPlacementID,
-                                          dcmReport.PlacementNumber                  as PlacementNumber,
-                                          dcmReport.placement                   as placement,
-                                          MONTH(cast(dcmReport.dcmDate as date))     as dcmMonth,
-                                          YEAR(cast(dcmReport.dcmDate as date))      as dcmYear,
-                                          [dbo].udf_yrmoToInt(dcmReport.dcmDate)     as dcmYrMo,
-                                          [dbo].udf_dateToInt(dcmReport.dcmDate)     as dcmDate,
-                                          dcmReport.site_dcm,
+                                          r1.plce_id                  as plce_id,
+                                          r1.placement                   as placement,
+                                          MONTH(cast(r1.dcmDate as date))     as dcmMonth,
+                                          YEAR(cast(r1.dcmDate as date))      as dcmYear,
+                                          [dbo].udf_yrmoToInt(r1.dcmDate)     as dcmYrMo,
+                                          [dbo].udf_dateToInt(r1.dcmDate)     as dcmDate,
+                                          r1.site_dcm,
                                           Prisma.CostMethod                          as Cost_Method,
                                           Prisma.Cost_ID                             as Cost_ID,
                                           Prisma.Rate                                as Rate,
@@ -225,83 +225,47 @@ insert into master.dbo.dfa_flatCost_dt2
                                           Prisma.edYrMo                              as edYrMo,
                                           [dbo].udf_dateToInt(Prisma.PlacementStart) as stDate,
                                           [dbo].udf_dateToInt(Prisma.PlacementEnd)   as edDate,
-                                          SUM(dcmReport.Impressions)                 as impressions,
-                                          SUM(dcmReport.clicks)                      as clicks,
-                                          SUM(dcmReport.tix)                     as tix,
+                                          SUM(r1.Impressions)                 as impressions,
+                                          SUM(r1.clicks)                      as clicks,
                                           Prisma.Planned_Amt                         as Planned_Amt
 
                                       from (
                                                --
                                                select *
-                                               from openQuery(VerticaUnited,
+                                               from openQuery(redshift,
 '
 select
-cast(report.date as date)    as dcmdate,
-cast(month(cast(report.date as date)) as int) as reportmonth,
-campaign.campaign            as campaign,
-report.campaign_id           as campaign_id,
-report.site_id_dcm           as site_id_dcm,
-directory.site_dcm           as site_dcm,
-left(placements.placement,6) as ''placementnumber'',
-placements.placement         as placement,
-report.placement_id          as placement_id,
-sum(report.impressions)      as impressions,
-sum(report.clicks)           as clicks,
-sum(report.conv)             as conv,
-sum(report.tix)              as tix
+r1.date    as dcmdate,
+cast(date_part(month,(r1.date)) as int) as reportmonth,
+c1.campaign            as campaign,
+r1.campaign_id           as campaign_id,
+r1.site_id_dcm           as site_id_dcm,
+s1.site_dcm           as site_dcm,
+cast(left(p1.placement,6) as varchar(6)) as plce_id,
+replace(replace(p1.placement ,'','', ''''),''"'','''') as placement,
+r1.placement_id          as placement_id,
+sum(r1.impressions)      as impressions,
+sum(r1.clicks)           as clicks
 
 from (
 
 select
-cast(timestamp_trunc(to_timestamp(ta.interaction_time / 1000000), ''SS'') as date) as "date"
-,ta.campaign_id  as campaign_id
-,ta.site_id_dcm  as site_id_dcm
-,ta.placement_id as placement_id
-,0               as impressions
-,0               as clicks
-,sum(case when ta.conversion_id = 1 or ta.conversion_id = 2 then 1 else 0 end) as conv
-,sum(case when ta.conversion_id = 1 or ta.conversion_id = 2 then ta.total_conversions else 0 end) as tix
-
-from
-(
-select *
-from diap01.mec_us_united_20056.dfa2_activity
-where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000), ''SS'') as date) > ''2017-01-01''
-and upper(substring(other_data, (instr(other_data,''u3='')+3), 3)) != ''mil''
-and substring(other_data, (instr(other_data,''u3='')+3), 5) != ''miles''
-and total_revenue != 0
-and total_conversions != 0
-and activity_id = 978826
-and (advertiser_id <> 0)
-) as ta
-
-group by
-cast(timestamp_trunc(to_timestamp(ta.interaction_time / 1000000), ''SS'') as date)
-,ta.campaign_id
-,ta.site_id_dcm
-,ta.placement_id
-
-union all
-
-select
-cast(timestamp_trunc(to_timestamp(ti.event_time / 1000000), ''SS'') as date) as "date"
+ ti.md_event_date_loc as "date"
 ,ti.campaign_id  as campaign_id
 ,ti.site_id_dcm  as site_id_dcm
 ,ti.placement_id as placement_id
 ,count(*)        as impressions
 ,0               as clicks
-,0               as conv
-,0               as tix
 
 from  (
 select *
-from diap01.mec_us_united_20056.dfa2_impression
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
+from wmprodfeeds.united.dfa2_impression
+where md_event_date_loc >= ''2018-01-01''
 and (advertiser_id <> 0)
 ) as ti
 
 group by
-cast(timestamp_trunc(to_timestamp(ti.event_time / 1000000), ''SS'') as date)
+ ti.md_event_date_loc
 ,ti.campaign_id
 ,ti.site_id_dcm
 ,ti.placement_id
@@ -309,81 +273,65 @@ cast(timestamp_trunc(to_timestamp(ti.event_time / 1000000), ''SS'') as date)
 union all
 
 select
- cast(timestamp_trunc(to_timestamp(tc.event_time / 1000000), ''SS'') as date) as "date"
+ tc.md_event_date_loc as "date"
 ,tc.campaign_id  as campaign_id
 ,tc.site_id_dcm  as site_id_dcm
 ,tc.placement_id as placement_id
 ,0               as impressions
 ,count(*)        as clicks
-,0               as conv
-,0               as tix
 
 from  (
 select *
-from diap01.mec_us_united_20056.dfa2_click
-where cast(timestamp_trunc(to_timestamp(event_time / 1000000), ''SS'') as date) > ''2017-01-01''
+from wmprodfeeds.united.dfa2_click
+where md_event_date_loc >= ''2018-01-01''
 and (advertiser_id <> 0)
 ) as tc
 
 group by
- cast(timestamp_trunc(to_timestamp(tc.event_time / 1000000), ''SS'') as date)
+ tc.md_event_date_loc
 ,tc.campaign_id
 ,tc.site_id_dcm
 ,tc.placement_id
 
-) as report
+) as r1
 
 left join
 (
-select cast(campaign as varchar(4000)) as ''campaign'', campaign_id as ''campaign_id''
-from diap01.mec_us_united_20056.dfa2_campaigns
-) as campaign
-on report.campaign_id = campaign.campaign_id
+select cast (campaign as varchar (4000)) as campaign,campaign_id as campaign_id
+from wmprodfeeds.united.dfa2_campaigns
+) as c1
+on r1.campaign_id = c1.campaign_id
 
 left join
 (
-select cast(t1.placement as varchar(4000)) as ''placement''
-,t1.placement_id as ''placement_id''
-,t1.campaign_id  as ''campaign_id''
-,t1.site_id_dcm  as ''site_id_dcm''
-
-from (select campaign_id as campaign_id, site_id_dcm as site_id_dcm, placement_id as placement_id, placement as placement, cast(placement_start_date as date) as thisdate,
-    row_number() over (partition by campaign_id, site_id_dcm, placement_id  order by cast(placement_start_date as date) desc) as r1
-    from diap01.mec_us_united_20056.dfa2_placements
-
-) as t1
-where r1 = 1
-) as placements
-on  report.placement_id = placements.placement_id
-and report.campaign_id  = placements.campaign_id
-and report.site_id_dcm  = placements.site_id_dcm
+select cast (placement as varchar (4000)) as placement,placement_id as placement_id
+from wmprodfeeds.united.dfa2_placements
+) as p1
+on r1.placement_id = p1.placement_id
 
 left join
 (
-select
-cast(site_dcm as varchar(4000)) as ''site_dcm'',
-site_id_dcm as ''site_id_dcm''
-from diap01.mec_us_united_20056.dfa2_sites
-) as directory
-on report.site_id_dcm = directory.site_id_dcm
+select cast (site_dcm as varchar (4000)) as site_dcm,site_id_dcm as site_id_dcm
+from wmprodfeeds.united.dfa2_sites
+) as s1
+on r1.site_id_dcm = s1.site_id_dcm
 
-where not regexp_like(placements.placement,''.do\s*not\s*use.'',''ib'')
--- and not regexp_like(campaign.campaign,''.2016.'',''ib'')
-and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
-and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
+where
+    regexp_instr(p1.placement,''.?do\s?not\s?use.?'') =0
+and regexp_instr(c1.campaign,''.*Search.*'') = 0
 
 group by
- cast(report.date as date)
-,directory.site_dcm
-,report.site_id_dcm
-,report.campaign_id
-,campaign.campaign
-,report.placement_id
-,placements.placement
+ cast(r1.date as date)
+,s1.site_dcm
+,r1.site_id_dcm
+,r1.campaign_id
+,c1.campaign
+,r1.placement_id
+,p1.placement
 
 ')
 
-                                           ) as dcmReport
+                                           ) as r1
                                           -- =========================================================================================================================
                                           left join
                                           (
@@ -391,23 +339,23 @@ group by
                                               from [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.prs_summ
 
                                           ) as Prisma
-                                              on dcmReport.Placement_ID = Prisma.AdserverPlacementId
+                                              on r1.Placement_ID = Prisma.AdserverPlacementId
 
                                       where Prisma.CostMethod = 'Flat'
-                                      and dcmReport.campaign not like '%Search%'
-                                      and dcmReport.campaign not like '%[_]UK[_]%'
-                                      and dcmReport.campaign not like '%2016%'
-                                      and dcmReport.campaign not like '%2015%'
-                                      and dcmReport.campaign_id != 10698273  -- UK Acquisition 2017
-                                      and dcmReport.campaign_id != 11221036  -- Hong Kong 2017
+                                      and r1.campaign not like '%Search%'
+                                      and r1.campaign not like '%[_]UK[_]%'
+                                      and r1.campaign not like '%2016%'
+                                      and r1.campaign not like '%2015%'
+                                      and r1.campaign_id != 10698273  -- UK Acquisition 2017
+                                      and r1.campaign_id != 11221036  -- Hong Kong 2017
 
 -- =========================================================================================================================
                                       group by
-                                          cast(dcmReport.dcmDate as date)
-                                          ,dcmReport.PlacementNumber
+                                          cast(r1.dcmDate as date)
+                                          ,r1.plce_id
                                           ,Prisma.CostMethod
-                                          ,[dbo].udf_dateToInt(dcmReport.dcmDate)
-                                          ,[dbo].udf_yrmoToInt(dcmReport.dcmDate)
+                                          ,[dbo].udf_dateToInt(r1.dcmDate)
+                                          ,[dbo].udf_yrmoToInt(r1.dcmDate)
                                           ,Prisma.stYrMo
                                           ,Prisma.edYrMo
                                           ,Prisma.PlacementStart
@@ -416,8 +364,8 @@ group by
                                           ,Prisma.Planned_Amt
                                           ,Prisma.PackageCat
                                           ,Prisma.adserverPlacementID
-                                          ,dcmReport.site_dcm
-                                          ,dcmReport.placement
+                                          ,r1.site_dcm
+                                          ,r1.placement
                                           ,Prisma.Cost_ID
                                   ) as f0
 

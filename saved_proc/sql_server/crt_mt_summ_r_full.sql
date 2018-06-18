@@ -1,10 +1,10 @@
-CREATE procedure dbo.crt_mt_summ
+CREATE procedure dbo.crt_mt_summ_r_full
 as
-if OBJECT_ID('master.dbo.mt_summ',N'U') is not null
-  drop table master.dbo.mt_summ;
+if OBJECT_ID('master.dbo.mt_summ_r_full',N'U') is not null
+  drop table master.dbo.mt_summ_r_full;
 
 
-create table master.dbo.mt_summ
+create table master.dbo.mt_summ_r_full
 (
   joinKey                     varchar(255),
   mtDate                      date         not null,
@@ -17,7 +17,7 @@ create table master.dbo.mt_summ
   groupm_billable_impressions int          not null
 );
 
-insert into master.dbo.mt_summ
+insert into master.dbo.mt_summ_r_full
   select distinct
     replace(left(t2.placement_name,6) + '_' +
               [dbo].udf_siteKey(t2.media_property)
@@ -136,26 +136,27 @@ insert into master.dbo.mt_summ
 
                        from (
                               select *
-                              from openquery(VerticaUnited,
+                              from openquery(redshift,
                                '
-                                     select
-                     cast(event_date as date)                                    as ''mtDate'',
-                     cast(campaign_id as varchar(255))                          as ''campaign_id'',
-                     cast(campaign_label as varchar(255))                         as ''campaign_label'',
-                     cast(site_id as varchar(255))                        as ''site_id'',
-                     cast(site_label as varchar(255))                        as ''site_label'',
-                     cast(placement_id as varchar(255))                        as ''placement_id'',
-                     cast(placement_label as varchar(255))                        as ''placement_label'',
-                     human_impressions                                        as ''human_impressions'',
-                     half_duration_impressions                                as ''half_duration_impressions'',
-                     groupm_payable_impressions                               as ''groupm_payable_impressions''
-                     from diap01.mec_us_united_20056.moat_impression
-              where REGEXP_LIKE(cast(placement_id as varchar(255)),''\d'',''ib'')
-                                         and campaign_id <> ''undefined''
-                                            and site_id <> ''undefined''
-                                and placement_id <> ''undefined''
+                                select
+                                cast(event_date as date)                                    as mtDate,
+                                cast(campaign_id as varchar(255))                          as campaign_id,
+                                cast(campaign_label as varchar(255))                         as campaign_label,
+                                cast(site_id as varchar(255))                        as site_id,
+                                cast(site_label as varchar(255))                        as site_label,
+                                cast(placement_id as varchar(255))                        as placement_id,
+                                cast(placement_label as varchar(255))                        as placement_label,
+                                human_impressions                                        as human_impressions,
+                                half_duration_impressions                                as half_duration_impressions,
+                                groupm_payable_impressions                               as groupm_payable_impressions
 
-                                         '
+                                from wmprodfeeds.united.moat_impression
+                                where    regexp_instr(placement_id,''\\d'') > 0
+                                -- and cast(event_date as date) >= ''2018-01-01''
+                                and campaign_id <> ''undefined''
+                                and site_id <> ''undefined''
+                                and placement_id <> ''undefined''
+                               '
 
                               )) as t0
 
@@ -180,16 +181,12 @@ insert into master.dbo.mt_summ
                   left join
                   (
                     select *
-                    from openQuery(VerticaUnited,
+                    from openQuery(redshift,
                                    '
-                  select cast (p1.placement as varchar (4000)) as ''placement'',p1.placement_id as ''placement_id'',p1.campaign_id as ''campaign_id'',p1.site_id_dcm as ''site_id_dcm''
-from ( select campaign_id as campaign_id,site_id_dcm as site_id_dcm,placement_id as placement_id,placement as placement,cast (placement_start_date as date ) as thisdate,
-row_number() over (partition by campaign_id,site_id_dcm,placement_id order by cast (placement_start_date as date ) desc ) as x1
-from diap01.mec_us_united_20056.dfa2_placements
+                  select cast (placement as varchar (4000)) as placement,placement_id as placement_id, campaign_id as campaign_id, site_id_dcm as site_id_dcm
+                  from wmprodfeeds.united.dfa2_placements
+                  where  regexp_instr(left(placement, 6),''P%'') > 0
 
-) as p1
-where x1 = 1
-                  and  left(p1.placement,6) like ''P%''
                        '
                     )) as p1
                   on mt.placement_id = cast(p1.placement_id as varchar)
@@ -198,16 +195,11 @@ where x1 = 1
                   left join
                   (
                     select *
-                    from openQuery(VerticaUnited,
+                    from openQuery(redshift,
                                    '
-select cast (p1.placement as varchar (4000)) as ''placement'',p1.placement_id as ''placement_id'',p1.campaign_id as ''campaign_id'',p1.site_id_dcm as ''site_id_dcm'',p1.placementnumber
-from ( select campaign_id as campaign_id,site_id_dcm as site_id_dcm,placement_id as placement_id,placement as placement,   left(cast(placement as varchar(4000)), 6) as PlacementNumber,cast (placement_start_date as date ) as thisdate,
-row_number() over (partition by campaign_id,site_id_dcm,placement_id order by cast (placement_start_date as date ) desc ) as x1
-from diap01.mec_us_united_20056.dfa2_placements
-
-) as p1
-where x1 = 1
-                  and  left(p1.placement,6) like ''P%''
+                  select cast (placement as varchar (4000)) as placement,placement_id as placement_id,left(cast(placement as varchar(4000)), 6) as PlacementNumber, campaign_id as campaign_id, site_id_dcm as site_id_dcm
+                  from wmprodfeeds.united.dfa2_placements
+                  where  regexp_instr(left(placement, 6),''P%'') > 0
                        '
                     )) as p2
                   on left(mt.placement_label,6) = p2.PlacementNumber
@@ -235,17 +227,11 @@ where x1 = 1
            left join
            (
              select *
-             from openQuery(VerticaUnited,
+             from openQuery(redshift,
                             '
-                  select c1.campaign_id, c1.campaign
-                  from (
-
-                  select
-                  cast(campaign as varchar(4000)) as ''campaign'', campaign_id as ''campaign_id''
-                       from diap01.mec_us_united_20056.dfa2_campaigns
-                  ) as c1
-
-                  group by c1.campaign_id, c1.campaign'
+              select cast (campaign as varchar (4000)) as campaign, campaign_id as campaign_id
+              from wmprodfeeds.united.dfa2_campaigns
+                  '
              )) as c1
            on t1.campaign_id = cast(c1.campaign_id as varchar)
 
@@ -253,17 +239,11 @@ where x1 = 1
            left join
            (
              select *
-             from openQuery(VerticaUnited,
+             from openQuery(redshift,
                             '
-                  select s1.site_id_dcm, s1.site_dcm
-                  from (
-
-                  select
-                  cast(site_dcm as varchar(4000)) as ''site_dcm'', site_id_dcm as ''site_id_dcm''
-       from diap01.mec_us_united_20056.dfa2_sites
-         ) as s1
-
-                  group by s1.site_dcm, s1.site_id_dcm'
+              select cast (site_dcm as varchar (4000)) as site_dcm,site_id_dcm as site_id_dcm
+              from wmprodfeeds.united.dfa2_sites
+                  '
              )) as s1
            on t1.site_id = cast(s1.site_id_dcm as varchar)
 
@@ -271,16 +251,11 @@ where x1 = 1
            left join
            (
              select *
-             from openQuery(VerticaUnited,
+             from openQuery(redshift,
                             '
-                  select cast (p1.placement as varchar (4000)) as ''placement'',p1.placement_id as ''placement_id'',p1.campaign_id as ''campaign_id'',p1.site_id_dcm as ''site_id_dcm''
-                  from ( select campaign_id as campaign_id,site_id_dcm as site_id_dcm,placement_id as placement_id,placement as placement,cast (placement_start_date as date ) as thisdate,
-                  row_number() over (partition by campaign_id,site_id_dcm,placement_id order by cast (placement_start_date as date ) desc ) as x1
-                  from diap01.mec_us_united_20056.dfa2_placements
-
-                  ) as p1
-                  where x1 = 1
-                  and  left(p1.placement,6) like ''P%''
+                  select cast (placement as varchar (4000)) as placement,placement_id as placement_id
+                  from wmprodfeeds.united.dfa2_placements
+                  where  regexp_instr(left(placement, 6),''P%'') > 0
                   '
              )) as p3
            on t1.placement_code = cast(p3.placement_id as varchar)
@@ -298,7 +273,6 @@ where x1 = 1
 
        ) as t2
   group by
--- t2.joinKey,
     t2.mtDate,
     t2.media_property,
     t2.campaign_name,

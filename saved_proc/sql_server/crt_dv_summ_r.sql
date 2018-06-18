@@ -1,10 +1,10 @@
-create procedure dbo.crt_dv_summ
+create procedure dbo.crt_dv_summ_r
 as
-if OBJECT_ID('master.dbo.dv_summ',N'U') is not null
-    drop table master.dbo.dv_summ;
+if OBJECT_ID('master.dbo.dv_summ_r',N'U') is not null
+    drop table master.dbo.dv_summ_r;
 
 
-create table master.dbo.dv_summ
+create table master.dbo.dv_summ_r
 (
     joinKey                     varchar(255) not null,
     dvDate                      date         not null,
@@ -18,7 +18,7 @@ create table master.dbo.dv_summ
 
 );
 
-insert into master.dbo.dv_summ
+insert into master.dbo.dv_summ_r
     select distinct
         DV.joinKey,
         DV.dvDate,
@@ -70,6 +70,7 @@ insert into master.dbo.dv_summ
 
 
                    where t0.placement_name <> 'Rolled-up Placements'
+                   and [date] >= '2018-01-01'
 
 
                    ) as t1
@@ -79,7 +80,7 @@ insert into master.dbo.dv_summ
     where DV.placement_name not like '%[Dd][Oo]%[Nn][Oo][Tt]%[Uu][Ss][Ee]%'
         and DV.placement_name not like '%[Nn]o%[Tt]racking%'
 --         and dv.placement_code != '300492'
-        and cast(DV.dvDate as date) >= '2017-01-01'
+        and cast(DV.dvDate as date) >= '2018-01-01'
     group by
         DV.joinKey,
         DV.dvDate,
