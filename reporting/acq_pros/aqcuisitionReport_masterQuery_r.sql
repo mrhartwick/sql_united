@@ -324,7 +324,7 @@ and conversion_id in (1,2)
 
 left join wmprodfeeds.exchangerates.exchange_rates as rates
 on upper(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3)) = upper(rates.currency)
-and md_interaction_date_loc = rates.date
+and md_event_date_loc = rates.date
 
 group by
  ta.md_interaction_date_loc

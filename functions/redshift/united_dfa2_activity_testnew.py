@@ -126,7 +126,7 @@ tm_fmt = "%Y-%m-%d %H:%M:%S.%f"
 dt_fmt = "%Y-%m-%d"
 
 # Convert Unix epoch to timestamp
-def convert_to_na_ts(value):
+def convert_int_to_na_ts(value):
    if not (value == '' or value is None):
         try:
            result = datetime.datetime.fromtimestamp(long(value)/1000000)
@@ -138,7 +138,7 @@ def convert_to_na_ts(value):
 # Multiple versions of the same function for use with succeeding functions.
 # I'm sure there's something about Python function scope I don't understand.
 
-def convert_to_na_ts_2(value):
+def convert_int_to_na_ts_2(value):
    if not (value == '' or value is None):
         try:
            result = datetime.datetime.fromtimestamp(long(value)/1000000)
@@ -146,20 +146,52 @@ def convert_to_na_ts_2(value):
         except:
            return None
 
-def convert_to_na_ts_3(value):
+def convert_int_to_na_ts_3(value):
    if not (value == '' or value is None):
         try:
            result = datetime.datetime.fromtimestamp(long(value)/1000000)
            return result
         except:
            return None
+
+# def convert_to_na_ts_4(value):
+#    if not (value == '' or value is None):
+#         try:
+#            result = datetime.datetime.fromtimestamp(long(value)/1000000)
+#            return result
+#         except:
+#            return None
+
+# def convert_to_na_ts_5(value):
+#    if not (value == '' or value is None):
+#         try:
+#            result = datetime.datetime.fromtimestamp(long(value)/1000000)
+#            return result
+#         except:
+#            return None
+
+# def convert_to_na_ts_6(value):
+#    if not (value == '' or value is None):
+#         try:
+#            result = datetime.datetime.fromtimestamp(long(value)/1000000)
+#            return result
+#         except:
+#            return None
 
 # =================================================================================
 # Convert Unix epoch to date
-def convert_to_na_dt(value):
+def convert_int_to_na_dt(value):
    if not (value == '' or value is None):
         try:
            result =convert_to_na_ts(value).date()
+           return result
+        except:
+           return None
+
+def convert_evt_to_na_dt(value):
+   if not (value == '' or value is None):
+        try:
+           result = value.date()
            return result
         except:
            return None
@@ -169,7 +201,8 @@ def convert_to_na_dt(value):
 # pytz must have a timezone in order to convert it, so we assign UTC,
 # convert it to EST, which gives us a string. Then strip the tz again
 # using strftime
-def convert_to_es_ts(value):
+
+def convert_int_to_es_ts(value):
    if not (value == '' or value is None):
         try:
     	   tz = timezone('America/New_York')
@@ -178,12 +211,31 @@ def convert_to_es_ts(value):
         except:
            return None
 
+def convert_evt_to_es_ts(value):
+   if not (value == '' or value is None):
+        try:
+    	   tz = timezone('America/New_York')
+           result = pytz.utc.localize(value, is_dst=None).astimezone(tz).strftime(tm_fmt)
+           return result
+        except:
+           return None
+
+
 # Convert Unix epoch to EST (GMT -5) date
-def convert_to_es_dt(value):
+def convert_int_to_es_dt(value):
    if not (value == '' or value is None):
         try:
     	   tz = timezone('America/New_York')
            result = pytz.utc.localize(convert_to_na_ts_3(value), is_dst=None).astimezone(tz).date()
+           return result
+        except:
+           return None
+
+def convert_evt_to_es_dt(value):
+   if not (value == '' or value is None):
+        try:
+    	   tz = timezone('America/New_York')
+           result = pytz.utc.localize(value, is_dst=None).astimezone(tz).date()
            return result
         except:
            return None
@@ -211,13 +263,18 @@ except:
 currrent_time = datetime.datetime.now().strftime(tm_fmt)
 
 # UDFs for use with pyspark sql dataframe
-udf_cvt_to_na_ts = udf(convert_to_na_ts, TimestampType())
-udf_cvt_to_na_dt = udf(convert_to_na_dt, DateType())
-udf_cvt_to_es_ts = udf(convert_to_es_ts, StringType())
-udf_cvt_to_es_dt = udf(convert_to_es_dt, DateType())
+udf_cvt_int_to_na_ts = udf(convert_int_to_na_ts, TimestampType())
+udf_cvt_int_to_na_dt = udf(convert_int_to_na_dt, DateType())
+udf_cvt_int_to_es_ts = udf(convert_int_to_es_ts, StringType())
+udf_cvt_int_to_es_dt = udf(convert_int_to_es_dt, DateType())
+
+udf_cvt_evt_to_es_ts = udf(convert_evt_to_es_ts, StringType())
+udf_cvt_evt_to_na_dt = udf(convert_evt_to_na_dt, DateType())
+udf_cvt_evt_to_es_dt = udf(convert_evt_to_es_dt, DateType())
 
 try:
-	df = df1.withColumn("AcquiredTime", lit(currrent_time)).withColumn("md_interaction_time", udf_cvt_to_na_ts(df1._c19)).withColumn("md_interaction_time_loc", udf_cvt_to_es_ts(df1._c19).cast("timestamp")).withColumn("md_interaction_date", udf_cvt_to_na_dt(df1._c19)).withColumn("md_interaction_date_loc", udf_cvt_to_es_dt(df1._c19).cast("date"))
+	df = df1.withColumn("AcquiredTime", lit(currrent_time)).withColumn("md_interaction_time", 		udf_cvt_int_to_na_ts(df1._c19)).withColumn("md_interaction_time_loc", 	udf_cvt_int_to_es_ts(df1._c19)).withColumn("md_interaction_date", 		udf_cvt_int_to_na_dt(df1._c19)).withColumn("md_interaction_date_loc", 	udf_cvt_int_to_es_dt(df1._c19)).withColumn("md_event_time_loc", 		udf_cvt_evt_to_es_ts(df1._c106)).withColumn("md_event_date", 			udf_cvt_evt_to_na_dt(df1._c106)).withColumn("md_event_date_loc", 		udf_cvt_evt_to_es_dt(df1._c106))
+
 except:
 	sendNotification(args, 'Fail', 0, '', 'Error occurred while formatting columns')
 	raise
@@ -339,7 +396,10 @@ try:
 			   ('md_interaction_time', 'cast:timestamp'),
 			   ('md_interaction_time_loc', 'cast:timestamp'),
 			   ('md_interaction_date', 'cast:date'),
-			   ('md_interaction_date_loc', 'cast:date')
+			   ('md_interaction_date_loc', 'cast:date'),
+			   ('md_event_time_loc', 'cast:timestamp'),
+			   ('md_event_date', 'cast:date'),
+			   ('md_event_date_loc', 'cast:date')
 			   ])
 
 except:
@@ -459,7 +519,11 @@ applymapping1 = ApplyMapping.apply(frame=datasource1, mappings=[("_c0", "long", 
 																("md_interaction_time", "timestamp", "md_interaction_time","timestamp"),
 																("md_interaction_time_loc", "timestamp", "md_interaction_time_loc","timestamp"),
 																("md_interaction_date", "date", "md_interaction_date","date"),
-																("md_interaction_date_loc", "date", "md_interaction_date_loc","date")
+																("md_interaction_date_loc", "date", "md_interaction_date_loc","date"),
+																("md_event_time_loc", "timestamp", "md_event_time_loc","timestamp"),
+																("md_event_date", "date", "md_event_date","date"),
+																("md_event_date_loc", "date", "md_event_date_loc","date")
+
 																], transformation_ctx="applymapping1")
 
 ## Drops all null fields in this DynamicFrame.

@@ -209,7 +209,7 @@ insert into master.dbo.dfa_flatCost_dt2_r
                               from
                                   (
                                       select
-                                          Prisma.adserverPlacementID                 as adserverPlacementID,
+                                          pr.adserverPlacementID                 as adserverPlacementID,
                                           r1.plce_id                  as plce_id,
                                           r1.placement                   as placement,
                                           MONTH(cast(r1.dcmDate as date))     as dcmMonth,
@@ -217,17 +217,17 @@ insert into master.dbo.dfa_flatCost_dt2_r
                                           [dbo].udf_yrmoToInt(r1.dcmDate)     as dcmYrMo,
                                           [dbo].udf_dateToInt(r1.dcmDate)     as dcmDate,
                                           r1.site_dcm,
-                                          Prisma.CostMethod                          as Cost_Method,
-                                          Prisma.Cost_ID                             as Cost_ID,
-                                          Prisma.Rate                                as Rate,
-                                          Prisma.PackageCat                          as PackageCat,
-                                          Prisma.stYrMo                              as stYrMo,
-                                          Prisma.edYrMo                              as edYrMo,
-                                          [dbo].udf_dateToInt(Prisma.PlacementStart) as stDate,
-                                          [dbo].udf_dateToInt(Prisma.PlacementEnd)   as edDate,
+                                          pr.CostMethod                          as Cost_Method,
+                                          pr.Cost_ID                             as Cost_ID,
+                                          pr.Rate                                as Rate,
+                                          pr.PackageCat                          as PackageCat,
+                                          pr.stYrMo                              as stYrMo,
+                                          pr.edYrMo                              as edYrMo,
+                                          [dbo].udf_dateToInt(pr.PlacementStart) as stDate,
+                                          [dbo].udf_dateToInt(pr.PlacementEnd)   as edDate,
                                           SUM(r1.Impressions)                 as impressions,
                                           SUM(r1.clicks)                      as clicks,
-                                          Prisma.Planned_Amt                         as Planned_Amt
+                                          pr.Planned_Amt                         as Planned_Amt
 
                                       from (
                                                --
@@ -338,10 +338,10 @@ group by
                                               select *
                                               from [10.2.186.148,4721].DM_1161_UnitedAirlinesUSA.dbo.prs_summ
 
-                                          ) as Prisma
-                                              on r1.Placement_ID = Prisma.AdserverPlacementId
+                                          ) as pr
+                                              on r1.Placement_ID = pr.AdserverPlacementId
 
-                                      where Prisma.CostMethod = 'Flat'
+                                      where pr.CostMethod = 'Flat'
                                       and r1.campaign not like '%Search%'
                                       and r1.campaign not like '%[_]UK[_]%'
                                       and r1.campaign not like '%2016%'
@@ -353,20 +353,20 @@ group by
                                       group by
                                           cast(r1.dcmDate as date)
                                           ,r1.plce_id
-                                          ,Prisma.CostMethod
+                                          ,pr.CostMethod
                                           ,[dbo].udf_dateToInt(r1.dcmDate)
                                           ,[dbo].udf_yrmoToInt(r1.dcmDate)
-                                          ,Prisma.stYrMo
-                                          ,Prisma.edYrMo
-                                          ,Prisma.PlacementStart
-                                          ,Prisma.PlacementEnd
-                                          ,Prisma.Rate
-                                          ,Prisma.Planned_Amt
-                                          ,Prisma.PackageCat
-                                          ,Prisma.adserverPlacementID
+                                          ,pr.stYrMo
+                                          ,pr.edYrMo
+                                          ,pr.PlacementStart
+                                          ,pr.PlacementEnd
+                                          ,pr.Rate
+                                          ,pr.Planned_Amt
+                                          ,pr.PackageCat
+                                          ,pr.adserverPlacementID
                                           ,r1.site_dcm
                                           ,r1.placement
-                                          ,Prisma.Cost_ID
+                                          ,pr.Cost_ID
                                   ) as f0
 
                               group by

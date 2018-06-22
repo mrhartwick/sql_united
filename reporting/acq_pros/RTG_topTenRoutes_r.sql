@@ -60,6 +60,7 @@ from (
 
 --                        Redshift regex isn't as smart as Vertica - you can't choose which subexpression to keep.
 --                        So we have to break the string into smaller pieces before matching
+--                        This is actually faster
                           regexp_substr(regexp_replace(regexp_substr(t1.other_data,'(u5\\=)(.*)(\\;u6\\=)'),'(u5\\=)(.*)(\\()','u5=(',0),'([A-Z][A-Z][A-Z])',1,1,'e') as rt_1_orig,
                           regexp_substr(regexp_replace(regexp_substr(t1.other_data,'(u7\\=)(.*)(\\;u8\\=)'),'(u7\\=)(.*)(\\()','u7=(',0),'([A-Z][A-Z][A-Z])',1,1,'e') as rt_1_dest,
 
@@ -73,7 +74,7 @@ from (
                           when (length(ISNULL(regexp_substr(regexp_replace(regexp_substr(t1.other_data,'(u6\\=)(.*)(\\;u1\\=)'),'(u6\\=)(.*)(\\()','u6=(',0),'([A-Z][A-Z][A-Z])',1,1,'e'),'')) = 0) then ''
                           else regexp_substr(regexp_replace(regexp_substr(t1.other_data,'(u6\\=)(.*)(\\;u1\\=)'),'(u6\\=)(.*)(\\()','u6=(',0),'([A-Z][A-Z][A-Z])',1,1,'e') ||' to '|| regexp_substr(regexp_replace(regexp_substr(t1.other_data,'(u8\\=)(.*)(\\;u9\\=)'),'(u8\\=)(.*)(\\()','u8=(',0),'([A-Z][A-Z][A-Z])',1,1,'e') end as route_2,
 
-                          cast(datediff('day',md_interaction_date_loc,t1.traveldate_1) as numeric(20,10)) as pch_window_day,
+                          cast(datediff('day',md_event_date_loc,t1.traveldate_1) as numeric(20,10)) as pch_window_day,
                           case when conversion_id = 1 or conversion_id = 2 then 1 else 0 end as conv,
                           case when conversion_id = 1 or conversion_id = 2 then t1.total_conversions else 0 end as tickets
 
