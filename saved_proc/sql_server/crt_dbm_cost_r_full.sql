@@ -192,14 +192,14 @@ sum(case when activity_id = 1086066 and ta.conversion_id = 1 then 1 else 0 end) 
 sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then 1 else 0 end ) as clk_con,
 sum(case when activity_id = 978826 and ta.conversion_id = 1 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as clk_tix,
 sum(case when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') = 0 and ta.conversion_id = 1 then cast(((ta.total_revenue * 1000000) / (rates.exchange_rate)) as decimal(20,10))
-          when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') > 0 and ta.conversion_id = 1 then cast(((ta.total_revenue*1000000)/.0103) as decimal(20,10)) else 0 end ) as clk_rev,
+          when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') > 0 and ta.conversion_id = 1 then cast(((ta.total_revenue*1000)/.0103) as decimal(20,10)) else 0 end ) as clk_rev,
 sum(case when activity_id = 1086066 and ta.conversion_id = 2 then 1 else 0 end) as vew_led,
 sum(case when activity_id = 978826  and ta.conversion_id = 2 and ta.total_revenue <> 0 then 1 else 0 end ) as vew_con,
 sum(case when activity_id = 978826  and ta.conversion_id = 2 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as vew_tix,
 sum(case when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') = 0 and ta.conversion_id = 2 then cast(((ta.total_revenue * 1000000) / (rates.exchange_rate)) as decimal(20,10))
-          when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') > 0 and ta.conversion_id = 2 then cast(((ta.total_revenue*1000000)/.0103) as decimal(20,10)) else 0 end ) as vew_rev,
+          when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') > 0 and ta.conversion_id = 2 then cast(((ta.total_revenue*1000)/.0103) as decimal(20,10)) else 0 end ) as vew_rev,
 sum(case when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') = 0 then cast(((ta.total_revenue * 1000000) / (rates.exchange_rate)) as decimal(20,10))
-          when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') > 0 then cast(((ta.total_revenue*1000000)/.0103) as decimal(20,10)) end) as rev
+          when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') > 0 then cast(((ta.total_revenue*1000)/.0103) as decimal(20,10)) end) as rev
 
 from
 (
