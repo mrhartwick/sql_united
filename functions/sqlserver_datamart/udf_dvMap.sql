@@ -29,6 +29,7 @@ as
           when @campaign_id = 21057553 then 'Y' --MileagePlus
           when @campaign_id = 21128474 then 'Y' --personal threshold
           when @campaign_id = 20945117 then 'Y' --social extension
+          when @campaign_id = 21230517 and @site_id_dcm = 1190273 then 'Y' --sydney premium cabin sale
 
 
 
