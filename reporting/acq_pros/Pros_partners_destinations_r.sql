@@ -101,11 +101,11 @@ rev)
             from diap01.mec_us_united_20056.dfa2_activity a
 
             left join diap01.mec_us_mecexchangerates_20067.exchange_rates as rates
-            on upper(substring(a.other_data,(instr(a.other_data,'u3=') + 3),3)) = upper(rates.currency)
+            on upper(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3)) = upper(rates.currency)
             and cast(timestamp_trunc(to_timestamp(a.event_time / 1000000),'SS') as date) = rates.date
 
             where cast(timestamp_trunc(to_timestamp(interaction_time / 1000000),'SS') as date) between '2018-01-01' and '2018-03-31'
-            and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
+            -- and not regexp_like(substring(other_data,(instr(other_data,'u3=') + 3),5),'mil.*','ib')
             and (activity_id = 978826 or activity_id = 1086066)
             and campaign_id = 20606595 -- GM ACQ 2018
             and (advertiser_id <> 0)
@@ -275,7 +275,7 @@ from
                                 ) as s1
                                 on t1.site_id_dcm = s1.site_id_dcm
 
-                                where regexp_like(p1.placement,''.*_PROS_FT.*'',''ib'')
+                                where regexp_instr(p1.placement,''.*_PROS_FT.*'') > 0
                                 and t1.site_id_dcm in (1190273, 1239319)
                                 and t1.campaign_id = 20606595
                                 and cast(timestamp_trunc(to_timestamp(con_tim / 1000000),''SS'') as date) between ''2018-01-01'' and ''2018-03-31''
@@ -511,7 +511,7 @@ from
                                 ) as s1
                                 on t1.site_id_dcm = s1.site_id_dcm
 
-                                where regexp_like(p1.placement,''.*_PROS_FT.*'',''ib'')
+                                where regexp_instr(p1.placement,''.*_PROS_FT.*'') > 0
                                 and t1.site_id_dcm = 3267410
                                 and t1.campaign_id = 20606595
                                 and cast(timestamp_trunc(to_timestamp(con_tim / 1000000),''SS'') as date) between ''2018-01-01'' and ''2018-04-30''
