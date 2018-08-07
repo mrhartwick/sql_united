@@ -61,8 +61,16 @@ as
                                  when @campaignID = 20819775 then 'Native Outbrain 2018'
                                  when @campaignID = 20945117 then 'Social Extension 2018'
                                  when @campaignID = 21057553 then 'MileagePlus 2018'
+                                 when @campaignID = 21512507 then 'United AFAR Sponsorship 2018'
+                                 when @campaignID = 21434672 then 'Japan Acquisition Display 2018'
+                                 when @campaignID = 21375351 then 'OTA Route Conquesting 2018'
+                                 when @campaignID = 21276874 then 'TripAdvisor 2018'
+                                 when @campaignID = 21276874 then 'US Shannon 2018'
+                                 when @campaignID = 21245035 then 'Evite Test 2018'
+                                 when @campaignID = 21415122 then 'Trade 2018'
+                                 when @campaignID = 21302991 then 'Golden State Warriors Congrats 2018'
 
-                               else @campaignName end;
+                                 else @campaignName end;
         return @finalCampaignName
     end
 go
