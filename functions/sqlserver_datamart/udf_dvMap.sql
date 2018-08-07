@@ -76,6 +76,11 @@ as
                    (@site_id_dcm = 1853564))                                -- Live Intent
                    then 'N'
 
+
+                   ----- Corrections to Trade additional partners 2018
+                        when @campaign_id = 21415122
+                            then 'Y'
+
           ----- Corrections to GM Acquisition, Prospecting Partners
                when @campaign_id = 10742878 and
                   ((@site_id_dcm = 1578478 and @placement like '%[Mm]obile_GOOGLE INC_GEN_INT_PROS_FT%') or   -- Google
