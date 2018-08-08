@@ -70,7 +70,7 @@ AS
 				when @site_name like '[Pp][Cc][Mm][Aa]%' then 'PCMA'
 				when @site_name like '[Qq]uartz%' then 'Quartz'
 				when @site_name like '[Qq]uantcast%' then 'Quantcast'
-				when @site_name like '[Ss]kyscanner%' then 'Skyscanner'
+				when @site_name like '[Ss][Kk][Yy][Ss][Cc][Aa][Nn][Nn][Ee][Rr]%' then 'Skyscanner'
 				when @site_name like '[Ss]mart%[Bb]r[ei][ei]f%' then 'SmartBrief'
 				when @site_name like '[Ss]marter%[Tt]ravel%' then 'Trip Advisor'
 				when @site_name like '[Ss]mithsonian%' then 'Smithsonian'
@@ -104,6 +104,7 @@ AS
         		when @site_name like '[Tt]ravel[Ww]eekly%' then 'TravelWeekly'
 			  	when @site_name like '[Pp]lace%[Ii][Qq]%' then 'PlaceIQ'
 					when @site_name like '[Aa]dara%[Mm]edia%' then 'Adara Media'
+					when @site_name like '[Ee]vite%' then 'Evite'
 				else @site_name end
 				;
 
