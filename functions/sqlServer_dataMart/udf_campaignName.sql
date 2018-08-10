@@ -69,7 +69,8 @@ as
                                  when @campaignID = 21245035 then 'Evite Test 2018'
                                  when @campaignID = 21415122 then 'Trade 2018'
                                  when @campaignID = 21302991 then 'Golden State Warriors Congrats 2018'
-
+                                 when @campaignID = 21255991 then 'Global Traveler Sponsorship 2018'
+                                 when @campaignID = 21340185 then 'US Shannon 2018'
                                  else @campaignName end;
         return @finalCampaignName
     end
