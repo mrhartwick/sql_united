@@ -131,118 +131,11 @@ dat_fmt = "%Y-%m-%d"
 def convert_to_ts(value):
    if not (value == '' or value is None):
         try:
-           dtm_fmt = "%Y%m%d-%H:%M:%S"
-           result = datetime.strptime(value,"%Y%m%d-%H:%M:%S").strftime(tm_fmt)
+           # dtm_fmt = "%Y%m%d-%H:%M:%S"
+           result = datetime.datetime.strptime(value,"%Y%m%d-%H:%M:%S")
            return result
         except:
            return None
-
-
-# Multiple versions of the same function for use with succeeding functions.
-# I'm sure there's something about Python function scope I don't understand.
-
-# def convert_int_to_na_ts_2(value):
-#    if not (value == '' or value is None):
-#         try:
-#            result = datetime.datetime.fromtimestamp(long(value)/1000000)
-#            return result
-#         except:
-#            return None
-
-# def convert_int_to_na_ts_3(value):
-#    if not (value == '' or value is None):
-#         try:
-#            result = datetime.datetime.fromtimestamp(long(value)/1000000)
-#            return result
-#         except:
-#            return None
-
-# def convert_to_na_ts_4(value):
-#    if not (value == '' or value is None):
-#         try:
-#            result = datetime.datetime.fromtimestamp(long(value)/1000000)
-#            return result
-#         except:
-#            return None
-
-# def convert_to_na_ts_5(value):
-#    if not (value == '' or value is None):
-#         try:
-#            result = datetime.datetime.fromtimestamp(long(value)/1000000)
-#            return result
-#         except:
-#            return None
-
-# def convert_to_na_ts_6(value):
-#    if not (value == '' or value is None):
-#         try:
-#            result = datetime.datetime.fromtimestamp(long(value)/1000000)
-#            return result
-#         except:
-#            return None
-
-# =================================================================================
-# Convert Unix epoch to date
-# def convert_int_to_na_dt(value):
-#    if not (value == '' or value is None):
-#         try:
-#            result =convert_to_na_ts(value).date()
-#            return result
-#         except:
-#            return None
-
-# def convert_evt_to_na_dt(value):
-#    if not (value == '' or value is None):
-#         try:
-#            result = value.date()
-#            return result
-#         except:
-#            return None
-
-# Convert Unix epoch to EST (GMT -5) timestamp
-# Timestamps in logfiles are timezone naive, but we know they're UTC.
-# pytz must have a timezone in order to convert it, so we assign UTC,
-# convert it to EST, which gives us a string. Then strip the tz again
-# using strftime
-
-# def convert_int_to_es_ts(value):
-#    if not (value == '' or value is None):
-#         try:
-#     	   tz = timezone('America/New_York')
-#            result = pytz.utc.localize(convert_to_na_ts_2(value), is_dst=None).astimezone(tz).strftime(tm_fmt)
-#            return result
-#         except:
-#            return None
-
-# def convert_evt_to_es_ts(value):
-#    if not (value == '' or value is None):
-#         try:
-#     	   tz = timezone('America/New_York')
-#            result = pytz.utc.localize(value, is_dst=None).astimezone(tz).strftime(tm_fmt)
-#            return result
-#         except:
-#            return None
-
-
-# # Convert Unix epoch to EST (GMT -5) date
-# def convert_int_to_es_dt(value):
-#    if not (value == '' or value is None):
-#         try:
-#     	   tz = timezone('America/New_York')
-#            result = pytz.utc.localize(convert_to_na_ts_3(value), is_dst=None).astimezone(tz).date()
-#            return result
-#         except:
-#            return None
-
-# def convert_evt_to_es_dt(value):
-#    if not (value == '' or value is None):
-#         try:
-#     	   tz = timezone('America/New_York')
-#            result = pytz.utc.localize(value, is_dst=None).astimezone(tz).date()
-#            return result
-#         except:
-#            return None
-
 
 args = getResolvedOptions(sys.argv, ['TempDir', 'JOB_NAME','s3Path','sender_address','recipient_address'])
 sc = SparkContext()
@@ -265,18 +158,12 @@ except:
 
 # currrent_time = datetime.datetime.now().strftime(tm_fmt)
 
-# # UDFs for use with pyspark sql dataframe
-udf_convert_to_ts = udf(convert_to_ts, StringType())
-# udf_cvt_int_to_na_dt = udf(convert_int_to_na_dt, DateType())
-# udf_cvt_int_to_es_ts = udf(convert_int_to_es_ts, StringType())
-# udf_cvt_int_to_es_dt = udf(convert_int_to_es_dt, DateType())
 
-# udf_cvt_evt_to_es_ts = udf(convert_evt_to_es_ts, StringType())
-# udf_cvt_evt_to_na_dt = udf(convert_evt_to_na_dt, DateType())
-# udf_cvt_evt_to_es_dt = udf(convert_evt_to_es_dt, DateType())
+udf_convert_to_ts = udf(convert_to_ts, TimestampType())
 
 try:
 	df = df1.withColumn("event_time", udf_convert_to_ts(df1.Time).cast("timestamp"))
+	# df = df1.withColumn("event_time", udf_convert_to_ts(df1.Time))
 
 except:
 	sendNotification(args, 'Fail', 0, '', 'Error occurred while formatting columns')
@@ -321,34 +208,34 @@ except:
     sendNotification(args, 'Fail', 0, '', 'Error occurred while updating datatypes')
     raise
 ## Mapping of source column and target column including data types.
-applymapping1 = ApplyMapping.apply(frame=datasource1, mappings=[("Time", "string", "ft_time", "string",),
-																("User-ID", "string", "user_id", "string",),
-																("IP", "string", "ip", "string",),
-																("Advertiser-ID", "int",  "advertiser_id", "int", ),
-																("Event-ID", "int",  "event_id", "int", ),
-																("Campaign-ID", "int",  "campaign_id", "int", ),
-																("Site-ID", "int",  "site_id", "int", ),
-																("Placement-ID", "int",  "placement_id", "int", ),
-																("Creative-ID", "int",  "creative_id", "int", ),
-																("Version-ID", "int",  "version_id", "int", ),
-																("Country-ID", "int",  "country_id", "int", ),
-																("State-ID", "int",  "state_id", "int", ),
-																("Browser-ID", "int",  "browser_id", "int", ),
-																("Device-ID", "int",  "device_id", "int", ),
-																("DMA-ID", "int",  "dma_id", "int", ),
-																("City-ID", "int",  "city_id", "int", ),
-																("OS-ID", "int",  "os_id", "int", ),
-																("Connection-ID", "int",  "connection_id", "int", ),
-																("Site-Data", "string", "site_data", "string",),
-																("Site-Keyword", "string", "site_keyword", "string",),
-																("Keyword", "string", "keyword", "string",),
-																("Site-Section", "string", "site_section", "string",),
-																("Impression-ID", "string", "impression_id", "string",),
-																("Custom-Data", "string", "custom_data", "string",),
-																("Product-Code", "string", "product_code", "string",),
-																("Device9-ID", "string", "device9_id", "string",),
-																("Postal-Code", "string", "postal_code", "string"),
-																("event_time",	"timestamp", "event_time", "timestamp")
+applymapping1 = ApplyMapping.apply(frame=datasource1, mappings=[("Time", "string", "ft_time", 					"string"),
+																("User-ID", "string", "user_id", 				"string"),
+																("IP", "string", "ip", 							"string"),
+																("Advertiser-ID", "int",  "advertiser_id", 		"int"),
+																("Event-ID", "int",  "event_id", 				"int"),
+																("Campaign-ID", "int",  "campaign_id", 			"int"),
+																("Site-ID", "int",  "site_id", 					"int"),
+																("Placement-ID", "int",  "placement_id", 		"int"),
+																("Creative-ID", "int",  "creative_id", 			"int"),
+																("Version-ID", "int",  "version_id", 			"int"),
+																("Country-ID", "int",  "country_id", 			"int"),
+																("State-ID", "int",  "state_id", 				"int"),
+																("Browser-ID", "int",  "browser_id", 			"int"),
+																("Device-ID", "int",  "device_id", 				"int"),
+																("DMA-ID", "int",  "dma_id", 					"int"),
+																("City-ID", "int",  "city_id", 					"int"),
+																("OS-ID", "int",  "os_id", 						"int"),
+																("Connection-ID", "int",  "connection_id", 		"int"),
+																("Site-Data", "string", "site_data", 			"string"),
+																("Site-Keyword", "string", "site_keyword", 		"string"),
+																("Keyword", "string", "keyword", 				"string"),
+																("Site-Section", "string", "site_section", 		"string"),
+																("Impression-ID", "string", "impression_id", 	"string"),
+																("Custom-Data", "string", "custom_data", 		"string"),
+																("Product-Code", "string", "product_code", 		"string"),
+																("Device9-ID", "string", "device9_id", 			"string"),
+																("Postal-Code", "string", "postal_code", 		"string"),
+																("event_time",	"timestamp", "event_time", 		"timestamp")
 																], transformation_ctx="applymapping1")
 
 ## Drops all null fields in this DynamicFrame.
