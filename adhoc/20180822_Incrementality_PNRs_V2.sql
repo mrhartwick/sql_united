@@ -1,3 +1,5 @@
+
+
 select a.campaign,
             md_event_date_loc as conversion_date,
             a.user_id,
@@ -32,6 +34,8 @@ select a.campaign,
               a.user_id,
               a.pnr,
               md_interaction_date_loc;
+
+
 -- ================================================================================================================
 select campaign,
        md_event_date_loc as impression_date,
