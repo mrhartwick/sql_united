@@ -1,8 +1,8 @@
 
---PROSPECTING DESTINATIONS: COST-EFFICIENT METRICS
+--OTA ORIGIN & DESTINATIONS: COST-EFFICIENT METRICS
 --Step1: Create table that includes imps, rev, tickets, and leads in the route-level (RUN THIS IN VERTICA)
 
-create table wmprodfeeds.united.ual_route_cost1
+create table wmprodfeeds.united.ual_ota_route_1
 (
 user_id      varchar(50),
 con_date      date,
@@ -20,7 +20,7 @@ tix          int,
 rev          decimal(20,10)
 );
 
-insert into  wmprodfeeds.united.ual_route_cost1
+insert into  wmprodfeeds.united.ual_ota_route_1
 (user_id,
 con_date,
 imp_date,
@@ -90,12 +90,11 @@ rev)
               on upper(substring(other_data,(regexp_instr(other_data,'u3\\=') + 3),3)) = upper(rates.currency)
               and md_event_date_loc = rates.date
 
-            where md_interaction_date_loc between '2018-06-01' and '2018-07-31'
+            where md_interaction_date_loc between '2018-07-01' and '2018-07-31'
             and (activity_id = 978826 or activity_id = 1086066)
-            and campaign_id = 20606595 -- GM ACQ 2018
+            and campaign_id = 21375351
             and (advertiser_id <> 0)
             and (length(isnull(event_sub_type,'')) > 0)
-            and site_id_dcm in (1190273,1239319, 3267410) --Sojern, Adara, and Quantcast
             ) as ta,
 
             (
@@ -106,10 +105,9 @@ rev)
                 ,row_number() over() as imp_nbr
             from wmprodfeeds.united.dfa2_impression
 
-             where md_event_date_loc between '2018-06-01' and '2018-07-31'
-            and campaign_id = 20606595 -- GM ACQ 2018
+             where md_event_date_loc between '2018-07-01' and '2018-07-31'
+            and campaign_id = 21375351
             and (advertiser_id <> 0)
-                and site_id_dcm in (1190273,1239319, 3267410) --Sojern, Adara, and Quantcast
             ) as ti
 
       where
@@ -118,16 +116,17 @@ rev)
 
 commit;
 
---=====================================================================================================================
---RUN IN SQL: PROSPECTING IN NEED-DEST ROUTE LEVEL PULL
+--============================================================================================================================================================================
+--RUN THIS IN SQL: FINAL PULL
+
 select
     t2.dcmdate               as "Date",
+    t2.campaign              as campaign,
+    t2.route_1_origin        as origin,
     t2.destination           as destination,
-    t2.site                  as site,
     sum(t2.impressions)      as imps,
     sum(t2.led)              as leads,
     sum(t2.tix)              as tix,
-    sum(t2.cost)             as cost,
     sum(t2.rev)              as rev
 
 from
@@ -143,8 +142,6 @@ from
             t1.placement                                                                                 as placement,
             case when (len(ISNULL(t1.rt_2_dest,'')) = 0) then t1.rt_1_dest
             when t1.rt_1_orig = t1.rt_2_dest and t1.rt_2_orig = t1.rt_1_dest then t1.rt_1_dest
-            when t1.rt_2_dest in ('SYD','MEL','PEK','PVG','CTU','XIY','HKG','EZE','SCL','LHR','DUB','GVA','EDI','FRA','CDG','HNL','KOA','ITO','LIH','SIN','OGG','GRU','TLV','PPT') then t1.rt_2_dest
-            when t1.rt_1_dest in ('SYD','MEL','PEK','PVG','CTU','XIY','HKG','EZE','SCL','LHR','DUB','GVA','EDI','FRA','CDG','HNL','KOA','ITO','LIH','SIN','OGG','GRU','TLV','PPT') then t1.rt_1_dest
             else t1.rt_2_dest
             end                                                                                          as destination,
             t1.rt_1_dest                                                                                 as route_1_destination,
@@ -163,19 +160,9 @@ from
             prs.placementend                                                                             as placementend,
             cast(prs.rate as decimal(10,2))                                                              as rate,
             sum(t1.impressions)                                                                          as impressions,
-            case when t1.site_id_dcm = 1190273 -- Adara
-                then cast((sum(cast(impressions as decimal(20,10))) * cast(prs.rate as decimal(20,10))) as
-                          decimal(20,10)) * 0.40682684
-            when t1.site_id_dcm = 1239319 -- Sojern
-                then cast((sum(cast(impressions as decimal(20,10))) * cast(prs.rate as decimal(20,10))) as
-                          decimal(20,10)) * 0.720099978 end                                              as cost,
             sum(t1.led)                                                                                  as led,
             sum(t1.tix)                                                                                  as tix,
-            sum(case
-                when t1.site_id_dcm = 1190273 -- Adara
-                then cast(((t1.rev)  * .048)  as decimal(10,2))
-                when t1.site_id_dcm = 1239319 -- Sojern
-                then cast(((t1.rev)  * .048) as decimal(10,2)) end)  as rev,
+            sum(cast(((t1.rev) * 0.0480) as decimal (10,2)))  as rev,
 
             case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
             else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
@@ -203,7 +190,7 @@ from
                                 sum(led)          as led,
                                 sum(tix)          as tix,
                                 sum(rev) as rev
-                                from wmprodfeeds.united.ual_route_cost1 as t1
+                                from wmprodfeeds.united.ual_ota_route_1 as t1
 
                                 left join
 (
@@ -228,10 +215,8 @@ from wmprodfeeds.united.dfa2_sites
 ) as s1
 on t1.site_id_dcm = s1.site_id_dcm
 
-                                where regexp_instr(p1.placement,''.*_PROS_FT.*'') > 0
-                                and t1.site_id_dcm in (1190273, 1239319)
-                                and t1.campaign_id = 20606595
-                                and con_date between ''2018-06-01'' and ''2018-07-31''
+                                where t1.campaign_id = 21375351
+                                and con_date between ''2018-07-01'' and ''2018-07-31''
 
                                 group by
 
@@ -259,8 +244,7 @@ on t1.site_id_dcm = s1.site_id_dcm
             ) as prs
             on t1.placement_id = prs.adserverplacementid
 
-          where t1.dcmdate between '2018-06-01' and '2018-07-31'
-          and t1.placement like '%PROS_FT%'
+          where t1.dcmdate between '2018-07-01' and '2018-07-31'
 
         group by
             t1.dcmdate
@@ -289,35 +273,8 @@ on t1.site_id_dcm = s1.site_id_dcm
 
     ) as t2
 
-
-where (
-        t2.destination like '%SYD%'
-        or t2.destination like '%MEL%'
-        or t2.destination like '%PEK%'
-        or t2.destination like '%PVG%'
-        or t2.destination like '%CTU%'
-        or t2.destination like '%XIY%'
-        or t2.destination like '%HKG%'
-        or t2.destination like '%EZE%'
-        or t2.destination like '%SCL%'
-        or t2.destination like '%LHR%'
-        or t2.destination like '%DUB%'
-        or t2.destination like '%GVA%'
-        or t2.destination like '%EDI%'
-        or t2.destination like '%FRA%'
-        or t2.destination like '%CDG%'
-        or t2.destination like '%HNL%'
-        or t2.destination like '%KOA%'
-        or t2.destination like '%ITO%'
-        or t2.destination like '%LIH%'
-        or t2.destination like '%SIN%'
-        or t2.destination like '%OGG%'
-        or t2.destination like '%GRU%'
-        or t2.destination like '%TLV%'
-        or t2.destination like '%PPT%'
-)
-
 group by
     t2.dcmdate,
-    t2.destination,
-    t2.site
+    t2.campaign,
+    t2.route_1_origin,
+    t2.destination
