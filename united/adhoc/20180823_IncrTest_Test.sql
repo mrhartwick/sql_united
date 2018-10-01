@@ -13,47 +13,48 @@ create table if not exists wmprodfeeds.united.ual_inc_test_tbl1
   impressiontime timestamp   not null,
   cvr_nbr        int         not null,
   tix            int,
+  rev            decimal(37,15),
   imp_nbr        int,
   prc_nbr        int
 );
 
 insert into wmprodfeeds.united.ual_inc_test_tbl1
-(campaign,user_id,pnr,conversiontime,impressiontime,cvr_nbr,tix,imp_nbr,prc_nbr)
+(campaign,user_id,pnr,conversiontime,impressiontime,cvr_nbr,tix,rev,imp_nbr,prc_nbr)
 
 (select
-        b.campaign,
+                b.campaign,
                 a.user_id,
-        a.pnr,
+                a.pnr,
                 a.conversiontime,
                 b.impressiontime,
                 a.cvr_nbr,
-        a.tix,
+                a.tix,
+                a.rev,
                 b.imp_nbr,
-        a.prc_nbr
+                a.prc_nbr
 from
                 (select
                                 user_id,
                                 udf_base64decode(replace((left(right(other_data, len(other_data) - position('u18=' in other_data) - 3), position(';' in right(other_data, len(other_data) - position('u18=' in other_data) - 3)) - 1)),'=','==')) as pnr,
---                 other_data,
---                 left(right(other_data, len(other_data) - position('u18=' in other_data) - 3), position(';' in right(other_data, len(other_data) - position('u18=' in other_data) - 3)) - 1) as thing,
                                 total_conversions as tix,
                                 md_event_time_loc                            as conversiontime,
-                                row_number() over ()                        as cvr_nbr
-, --                              Use to limit conversions to one per cookie per day
-                               row_number() over (partition by user_id, md_event_date_loc order by md_event_time_loc asc)                        as prc_nbr
+                                row_number() over ()                        as cvr_nbr,
+ --                             Use to limit conversions to one per cookie per day
+                                row_number() over (partition by user_id, md_event_date_loc order by md_event_time_loc asc)                        as prc_nbr
+                                case when regexp_instr(substring(other_data,(regexp_instr(other_data,'u3\\=') + 3),3),'Mil.*') = 0 then cast(((t1.total_revenue * 1000000) / (rates.exchange_rate)) as decimal(20,10))
+                                     when regexp_instr(substring(other_data,(regexp_instr(other_data,'u3\\=') + 3),3),'Mil.*') > 0 then cast(((t1.total_revenue*1000)/.0103) as decimal(20,10)) end as rev
                 from
                                 wmprodfeeds.united.dfa2_activity    as t1
+
+                                left join wmprodfeeds.exchangerates.exchange_rates as rates
+                                on upper(substring(other_data,(regexp_instr(other_data,'u3\\=') + 3),3)) = upper(rates.currency)
+                                and md_event_date_loc = rates.date
                 where
                                 t1.activity_id = 978826 and
                                 user_id != '0' and
-
-
-
-            user_id not in ('AMsySZYdPcUq6XxR_34Vx_6kIpyP',
-                    'AMsySZYEleBcOq0jVeYOhdEtV8d1',
-                    'AMsySZZQoayDkqvL9bNJOqx3aMwB') and
-                    md_event_date_loc between '2018-08-30' and '2018-09-09' and
-                total_conversions > 0
+                                user_id not in ('AMsySZYdPcUq6XxR_34Vx_6kIpyP', 'AMsySZYEleBcOq0jVeYOhdEtV8d1', 'AMsySZZQoayDkqvL9bNJOqx3aMwB') and
+                                md_event_date_loc between '2018-08-30' and '2018-09-18' and
+                                total_conversions > 0
                 ) as a,
 
                 (select
@@ -70,10 +71,10 @@ from
                                 wmprodfeeds.united.dfa2_placements      as p1
                                 on t2.placement_id = p1.placement_id
                 where
-                t2.campaign_id = 20606595 and
+                                t2.campaign_id = 20606595 and
                                 user_id != '0' and
-                                md_event_date_loc between '2018-08-30' and '2018-09-09' and
-                regexp_instr(p1.placement,'.*Incrementality-Test.*') > 0
+                                md_event_date_loc between '2018-08-30' and '2018-09-18' and
+                                regexp_instr(p1.placement,'.*Incrementality-Test.*') > 0
                 ) as b
 where
                 b.user_id = a.user_id and
@@ -324,7 +325,7 @@ from (select case when regexp_instr(p1.placement, '.*Incrementality-Test-Exposed
       from wmprodfeeds.united.dfa2_impression as t2
              left join wmprodfeeds.united.dfa2_placements as p1 on t2.placement_id = p1.placement_id
       where t2.campaign_id = 20606595 and user_id != '0' and
-          md_event_date_loc between '2018-08-30' and '2018-09-09' and
+          md_event_date_loc between '2018-08-30' and '2018-09-18' and
             regexp_instr(p1.placement, '.*Incrementality-Test.*') > 0) as t1
 group by
     user_id,
@@ -352,7 +353,7 @@ from (select case when regexp_instr(p1.placement, '.*Incrementality-Test-Exposed
       from wmprodfeeds.united.dfa2_impression as t2
              left join wmprodfeeds.united.dfa2_placements as p1 on t2.placement_id = p1.placement_id
       where t2.campaign_id = 20606595 and user_id != '0' and
-          md_event_date_loc between '2018-08-30' and '2018-09-09' and
+          md_event_date_loc between '2018-08-30' and '2018-09-18' and
             regexp_instr(p1.placement, '.*Incrementality-Test.*') > 0) as t1
 group by
 --    user_id,
@@ -388,4 +389,4 @@ select other_data
                                 user_id != '0' and
             user_id = 'AMsySZZQoayDkqvL9bNJOqx3aMwB'
 --  and
---                    md_event_date_loc between '2018-09-04' and '2018-09-09'
+--                    md_event_date_loc between '2018-09-04' and '2018-09-18'
