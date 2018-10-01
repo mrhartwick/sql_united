@@ -85,7 +85,7 @@ from (
 --                             capture all dates, no matter the format; Vertica only camptured some
                                cast(replace(replace(regexp_substr(other_data,'(u9\\=)(\\d.?\\d.?\\d.?\\d.?\\d.?\\d.?\\d.?\\d)(\\;u10\\=)'),'u9=',''),';u10=','') as date) as traveldate_1
                                from wmprodfeeds.united.dfa2_activity
-                               where md_interaction_date_loc between '2018-01-01' and '2018-01-31'
+                               where md_interaction_date_loc between '2018-08-01' and '2018-08-31'
                                    and activity_id = 978826
                                    and total_revenue <> 0
                                    and total_conversions <> 0
@@ -126,7 +126,7 @@ from (
                           on t1.site_id_dcm = s1.site_id_dcm
 
                   ) as t2
-where not t2.placement like '%PROS_FT%'
+where t2.placement not like '%PROS_FT%' and t2.placement not like '%Route%'
          ) as t3
     where (length(isnull(cast(t3.traveldate_1 as varchar),'')) > 0)
 

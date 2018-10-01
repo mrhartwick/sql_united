@@ -31,8 +31,7 @@ as
           when @campaign_id = 21128474 then 'Y' --personal threshold
           when @campaign_id = 20945117 then 'Y' --social extension
           when @campaign_id = 21230517 and @site_id_dcm = 1190273 then 'Y' --sydney premium cabin sale
-          when @campaign_id = 21245035 then 'Y' --Evite
-          when @campaign_id = 21434672 then 'Y' --Japan Display Acq.
+          when @campaign_id = 21434672 and @site_id_dcm = 1239319 then 'Y' --Japan Display Acq.
 
 
 

@@ -1,5 +1,5 @@
 
-------FARE-SALE REPORT
+------Fare Sale REPORT
 --      Version incorporating capped cost and DBM cost
 --
 --  this query is a bit of a hack. non-optimal aspects are necessitated by the particularities of the current tech stack on united.
@@ -13,25 +13,25 @@
 
 -- these summary/reference tables can be run once a day as a regular process or before the query is run
 -- -- -- --
--- exec master.dbo.crt_dv_summ go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
--- exec master.dbo.crt_mt_summ go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec master.dbo.crt_dv_summ_r go    -- crt_ separate dv aggregate table and store it in my instance; joining to the vertica table in the query
+-- exec master.dbo.crt_mt_summ_r go    -- crt_ separate moat aggregate table and store it in my instance; joining to the vertica table in the query
 -- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_ivd_summTbl go
---
+-- --DM_1161_UnitedAirlinesUSA.dbo.crt_ivd_summTbl
 -- exec [10.2.186.148\SQLINS02, 4721].DM_1161_UnitedAirlinesUSA.dbo.crt_prs_viewTbl go
 -- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_amttbl go
 -- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_packtbl go
 -- exec [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.dbo.crt_prs_summtbl go
--- exec master.dbo.crt_dfa_flatCost_dt2 go
--- exec master.dbo.crt_dbm_cost go
--- exec master.dbo.crt_dfa_cost_dt2 go
+-- exec master.dbo.crt_dfa_flatCost_dt2_r go
+-- exec master.dbo.crt_dbm_cost_r go
+-- exec master.dbo.crt_dfa_cost_dt2_r go
 
 
 
 declare @report_st date
 declare @report_ed date
 --
-set @report_ed = '2018-04-20';
-set @report_st = '2018-02-09';
+set @report_ed = '2018-07-31';
+set @report_st = '2018-06-01';
 
 --
 -- set @report_ed = dateadd(day, -datepart(day, getdate()), getdate());
@@ -41,10 +41,8 @@ select
     cast(t3.dcmdate as date)                                                                           as "date",
     cast(dateadd(week,datediff(week,0,cast(t3.dcmdate as date)),0) as date)                            as "week",
     datename(month,cast(t3.dcmdate as date))                                                           as "month",
-    case when t3.dcmdate between '2018-02-09' and '2018-02-16' then 'Flight 1'
-         when t3.dcmdate between '2018-02-22' and '2018-02-26' then 'Flight 2'
-         when t3.dcmdate between '2018-03-22' and '2018-03-30' then 'Flight 3'
-         when t3.dcmdate between '2018-04-06' and '2018-04-20' then 'Flight 4'
+    case when t3.dcmdate between '2018-07-01' and '2018-07-05' then 'Flight 1'
+         when t3.dcmdate between '2018-07-13' and '2018-07-26' then 'Flight 2'
          else '' end                                                                                   as "Flght",
     case when t3.placement like '%Boston%' then 'Boston'
          when t3.placement like '%Chicago%' then 'Chicago'
@@ -64,23 +62,21 @@ select
     t3.cost_id                                                                                         as cost_id,
     [dbo].udf_campaignname(t3.campaign_id,t3.campaign)                                                 as campaign,
     t3.campaign_id                                                                                     as "campaign id",
-    [dbo].udf_sitename(t3.site_dcm)                                                                    as "site",
-    t3.site_id_dcm                                                                                     as "site id",
-    t3.costmethod                                                                                      as "cost method",
-    t3.placement                                                                                       as placement,
-    t3.placement_id                                                                                    as placement_id,
-    t3.placementend                                                                                    as "placement end",
-    t3.placementstart                                                                                  as "placement start",
+    [dbo].udf_sitename(t3.site_dcm)                                                                   as "site",
+    t3.site_id_dcm                                                                                    as "site id",
+    t3.costmethod                                                                                     as "cost method",
+    t3.placement                                                                                      as placement,
+    t3.placement_id                                                                                   as placement_id,
+    t3.placementend                                                                                   as "placement end",
+    t3.placementstart                                                                                 as "placement start",
     t3.dv_map                                                                                          as "dv map",
     t3.rate                                                                                            as rate,
     t3.planned_amt                                                                                     as "planned amt",
     t3.planned_cost                                                                                    as "planned cost",
-    sum(case when t3.billimps > t3.cnslimps and t3.dcmdate between '2018-02-01' and '2018-03-30'
-              then cast((((t3.cnslimps * 0.69) * t3.rate) / 1000) as
-                           decimal(20,10)) else t3.cost  end)                                          as cost,
+    sum(case when t3.costmethod like '[Ff]lat' then t3.flatcost else t3.cost end)                      as cost,
     sum(t3.led)                                                                                        as leads,
     sum(t3.unq_led)                                                                                    as unq_leads,
-    sum(case when t3.dlvrimps > t3.cnslimps then t3.cnslimps else t3.dlvrimps end)                     as "delivered impressions",
+    sum(t3.dlvrimps)                                                                                   as "delivered impressions",
     sum(t3.billimps)                                                                                   as "billable impressions",
     sum(t3.cnslimps)                                                                                   as "dfa impressions",
     sum(t3.iv_impressions)                                                                             as "innovid impressions",
@@ -90,9 +86,9 @@ select
     sum(t3.tot_rev)                                                                                    as revenue,
     sum(t3.vew_rev)                                                                                    as vew_rev,
     sum(t3.clk_rev)                                                                                    as clk_thru_rev,
-    sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue",
-    sum(t3.dv_viewed)                                                                                  as dv_viewed,
-    sum(t3.dv_impressions)                                                                             as dv_total_imps
+    sum(t3.adjsrevenue)                                                                                as "adjusted (final) revenue"
+
+
 
 
 from (
@@ -102,8 +98,8 @@ from (
 -- declare @report_st date,
 -- @report_ed date;
 -- --
--- set @report_ed = '2018-04-20';
--- set @report_st = '2018-02-09';
+-- set @report_ed = '2018-07-31';
+-- set @report_st = '2018-01-01';
 
 select
     cast(t2.dcmdate as date)                                                   as dcmdate,
@@ -154,20 +150,7 @@ sum(case
   when (t2.costmethod = 'dCPM' and(placement LIKE '%CatchAll1%' OR placement LIKE '%NoBidStrategy%'))
   then cast(((t2.rev)  * 0.0105)  as decimal(10,2))
 
-  when (t2.campaign_id = 20713692) --Fare Sale
-  then cast(((t2.rev)  * 0.0480)  as decimal(10,2))
-
-  when (t2.campaign_id = 20721526) --Display Meta
-  then cast(((t2.rev)  * 0.0480)  as decimal(10,2))
-
-  when (t2.campaign_id = 20606595 and t2.site_id_dcm in (1190273, 1239319)) --GM Acq: Adara & Sojern
-  then cast(((t2.rev)  * 0.0800)  as decimal(10,2))
-
-  when (t2.campaign_id = 20606595 and t2.site_id_dcm = 3267410) --GM Acq: Quantcast
-  then cast(((t2.rev)  * 0.0480)  as decimal(10,2))
-
   else cast(((t2.rev) * 0.0480) as decimal (10,2))  end)                                                  as adjsrevenue,
-
 
 
     sum(case when t2.costmethod = 'Flat' then t2.impressions else cst.dlvrimps end) as dlvrimps,
@@ -243,7 +226,7 @@ sum(case
                sum(t1.rev)                                  as rev,
                sum(t1.unq_led)                              as unq_led,
                case when cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) <= 0 then 0
-                    else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
+               else cast(month(prs.placementend) as int) - cast(month(cast(t1.dcmdate as date)) as int) end as diff,
                [dbo].udf_dvMap(t1.campaign_id,t1.site_id_dcm,t1.placement,prs.CostMethod,prs.dv_map) as dv_map
 
 
@@ -253,15 +236,15 @@ sum(case
 -- openquery function call must not exceed 8,000 characters; no room for comments inside the function
     from (
            select *
-           from openQuery(verticaunited,
+           from openQuery(redshift,
 '
 select
-cast(r1.date as date)                     as dcmdate,
-cast(month(cast(r1.date as date)) as int) as reportmonth,
-campaign.campaign                         as campaign,
+r1.date                    as dcmdate,
+cast(date_part(month,(r1.date)) as int) as reportmonth,
+c1.campaign                         as campaign,
 r1.campaign_id                            as campaign_id,
 r1.site_id_dcm                            as site_id_dcm,
-directory.site_dcm                        as site_dcm,
+s1.site_dcm                        as site_dcm,
 left(p1.placement,6)                      as plce_id,
 replace(replace(p1.placement ,'','', ''''),''"'','''') as placement,
 r1.placement_id                           as placement_id,
@@ -279,7 +262,7 @@ from (
 
 
 select
-cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as date ) as "date"
+ ta.md_interaction_date_loc as "date"
 ,ta.campaign_id as campaign_id
 ,ta.site_id_dcm as site_id_dcm
 ,ta.placement_id as placement_id
@@ -289,30 +272,30 @@ cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as dat
 ,sum(case when activity_id = 1086066 then 1 else 0 end) as led
 ,sum(case when activity_id = 978826 and ta.total_revenue <> 0 then 1 else 0 end ) as con
 ,sum(case when activity_id = 978826 and ta.total_revenue <> 0 then ta.total_conversions else 0 end ) as tix
-,sum(case when not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 1 then ((ta.total_revenue * 1000000) /(rates.exchange_rate))
-     when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 1 then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) else 0 end ) as clk_rev
-,sum(case when not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 2 then ((ta.total_revenue * 1000000) /(rates.exchange_rate))
-     when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') and ta.conversion_id = 2 then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) else 0 end ) as vew_rev
-,sum(case when not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') then ((ta.total_revenue * 1000000)/rates.exchange_rate)
-     when regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'') then cast(((ta.total_revenue*1000)/.0103) as decimal (10,2)) end) as rev
+,sum(case when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') = 0 and ta.conversion_id = 1 then cast(((ta.total_revenue * 1000000) / (rates.exchange_rate)) as decimal(20,10))
+          when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') > 0 and ta.conversion_id = 1 then cast(((ta.total_revenue*1000)/.0103) as decimal(20,10)) else 0 end ) as clk_rev
+,sum(case when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') = 0 and ta.conversion_id = 2 then cast(((ta.total_revenue * 1000000) / (rates.exchange_rate)) as decimal(20,10))
+          when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') > 0 and ta.conversion_id = 2 then cast(((ta.total_revenue*1000)/.0103) as decimal(20,10)) else 0 end ) as vew_rev
+,sum(case when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') = 0 then cast(((ta.total_revenue * 1000000) / (rates.exchange_rate)) as decimal(20,10))
+          when regexp_instr(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3),''Mil.*'') > 0 then cast(((ta.total_revenue*1000)/.0103) as decimal(20,10)) end) as rev
 
 from
 (
 select *
-from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-02-09'' and ''2018-04-20''
+from wmprodfeeds.united.dfa2_activity
+where md_interaction_date_loc between ''2018-01-01'' and ''2018-07-31''
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
 and (activity_id = 978826 or activity_id = 1086066)
 and conversion_id in (1,2)
 ) as ta
 
-left join diap01.mec_us_mecexchangerates_20067.exchange_rates as rates
-on upper ( substring (other_data,(instr(other_data,''u3='')+3),3)) = upper (rates.currency)
-and cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) = rates.date
+left join wmprodfeeds.exchangerates.exchange_rates as rates
+on upper(substring(other_data,(regexp_instr(other_data,''u3\\='') + 3),3)) = upper(rates.currency)
+and md_event_date_loc = rates.date
 
 group by
-cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as date )
+ ta.md_interaction_date_loc
 ,ta.campaign_id
 ,ta.site_id_dcm
 ,ta.placement_id
@@ -321,7 +304,7 @@ cast (timestamp_trunc(to_timestamp(ta.interaction_time / 1000000),''SS'') as dat
 union all
 
 select
-cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as "date"
+ ti.md_event_date_loc as "date"
 ,ti.campaign_id as campaign_id
 ,ti.site_id_dcm as site_id_dcm
 ,ti.placement_id as placement_id
@@ -335,16 +318,16 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date ) as
 ,0 as vew_rev
 ,0 as rev
 
+
 from (
 select *
-from diap01.mec_us_united_20056.dfa2_impression
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-02-09'' and ''2018-04-20''
-
-
+from wmprodfeeds.united.dfa2_impression
+where md_event_date_loc between ''2018-01-01'' and ''2018-07-31''
 and (advertiser_id <> 0)
 ) as ti
+
 group by
-cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date )
+ ti.md_event_date_loc
 ,ti.campaign_id
 ,ti.site_id_dcm
 ,ti.placement_id
@@ -352,7 +335,7 @@ cast (timestamp_trunc(to_timestamp(ti.event_time / 1000000),''SS'') as date )
 union all
 
 select
-cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date ) as "date"
+ tc.md_event_date_loc as "date"
 ,tc.campaign_id as campaign_id
 ,tc.site_id_dcm as site_id_dcm
 ,tc.placement_id as placement_id
@@ -370,13 +353,13 @@ cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date ) as
 from (
 
 select *
-from diap01.mec_us_united_20056.dfa2_click
-where cast (timestamp_trunc(to_timestamp(event_time / 1000000),''SS'') as date ) between ''2018-02-09'' and ''2018-04-20''
+from wmprodfeeds.united.dfa2_click
+where md_event_date_loc between ''2018-01-01'' and ''2018-07-31''
 and (advertiser_id <> 0)
 ) as tc
 
 group by
-cast (timestamp_trunc(to_timestamp(tc.event_time / 1000000),''SS'') as date )
+ tc.md_event_date_loc
 ,tc.campaign_id
 ,tc.site_id_dcm
 ,tc.placement_id
@@ -385,7 +368,7 @@ union all
 
 
 select
-cast (timestamp_trunc(to_timestamp(td.interaction_time / 1000000),''SS'') as date ) as "date"
+ td.md_interaction_date_loc as "date"
 ,td.campaign_id as campaign_id
 ,td.site_id_dcm as site_id_dcm
 ,td.placement_id as placement_id
@@ -402,66 +385,61 @@ cast (timestamp_trunc(to_timestamp(td.interaction_time / 1000000),''SS'') as dat
 
 from (
 
-select distinct(user_id), activity_id, conversion_id, interaction_time, campaign_id, site_id_dcm, placement_id
-from diap01.mec_us_united_20056.dfa2_activity
-where cast (timestamp_trunc(to_timestamp(interaction_time / 1000000),''SS'') as date ) between ''2018-02-09'' and ''2018-04-20''
-and not regexp_like(substring(other_data,(instr(other_data,''u3='') + 3),5),''mil.*'',''ib'')
+select distinct(user_id), activity_id, conversion_id, interaction_time, md_interaction_date_loc, campaign_id, site_id_dcm, placement_id
+from wmprodfeeds.united.dfa2_activity
+where md_interaction_date_loc between ''2018-01-01'' and ''2018-07-31''
 and (advertiser_id <> 0)
 and (length(isnull(event_sub_type,'''')) > 0)
+and conversion_id in (1,2)
 and (user_id <> ''0'')
 ) as td
 
 group by
-cast (timestamp_trunc(to_timestamp(td.interaction_time / 1000000),''SS'') as date )
+ td.md_interaction_date_loc
 ,td.campaign_id
 ,td.site_id_dcm
 ,td.placement_id
 
 ) as r1
 
-left join
-(
-select cast (campaign as varchar (4000)) as ''campaign'',campaign_id as ''campaign_id''
-from diap01.mec_us_united_20056.dfa2_campaigns
-) as campaign
-on r1.campaign_id = campaign.campaign_id
 
 left join
 (
-select cast (p1.placement as varchar (4000)) as ''placement'',p1.placement_id as ''placement_id'',p1.campaign_id as ''campaign_id'',p1.site_id_dcm as ''site_id_dcm''
+select cast (campaign as varchar (4000)) as campaign,campaign_id as campaign_id
+from wmprodfeeds.united.dfa2_campaigns
+) as c1
+on r1.campaign_id = c1.campaign_id
 
-from ( select campaign_id as campaign_id,site_id_dcm as site_id_dcm,placement_id as placement_id,placement as placement,cast (placement_start_date as date ) as thisdate,
-row_number() over (partition by campaign_id,site_id_dcm,placement_id order by cast (placement_start_date as date ) desc ) as x1
-from diap01.mec_us_united_20056.dfa2_placements
 
+left join
+(
+select cast (placement as varchar (4000)) as placement,placement_id as placement_id
+from wmprodfeeds.united.dfa2_placements
 ) as p1
-where x1 = 1
-) as p1
-on r1.placement_id    = p1.placement_id
-and r1.campaign_id = p1.campaign_id
-and r1.site_id_dcm  = p1.site_id_dcm
+on r1.placement_id = p1.placement_id
+
 
 left join
 (
-select cast (site_dcm as varchar (4000)) as ''site_dcm'',site_id_dcm as ''site_id_dcm''
-from diap01.mec_us_united_20056.dfa2_sites
-) as directory
-on r1.site_id_dcm = directory.site_id_dcm
+select cast (site_dcm as varchar (4000)) as site_dcm,site_id_dcm as site_id_dcm
+from wmprodfeeds.united.dfa2_sites
+) as s1
+on r1.site_id_dcm = s1.site_id_dcm
 
-where  regexp_like(p1.placement,''P.?'',''ib'')
-and not regexp_like(p1.placement,''.?do\s?not\s?use.?'',''ib'')
-and not regexp_like(campaign.campaign,''.*Search.*'',''ib'')
-and not regexp_like(campaign.campaign,''.*BidManager.*'',''ib'')
-and  regexp_like(campaign.campaign,''.*2018.*'',''ib'')
-and r1.campaign_id = 20713692
+where
+    regexp_instr(p1.placement,''.?do\s?not\s?use.?'') = 0
+and regexp_instr(c1.campaign,''.*Search.*'') = 0
+and regexp_instr(c1.campaign,''.*BidManager.*'') = 0
+and  regexp_instr(c1.campaign,''.*2018.*'') > 0
+and  regexp_instr(p1.placement,''^P.*'') > 0
 
 
 group by
-cast (r1.date as date)
-,directory.site_dcm
+r1.date
+,s1.site_dcm
 ,r1.site_id_dcm
 ,r1.campaign_id
-,campaign.campaign
+,c1.campaign
 ,r1.placement_id
 ,p1.placement
 ')
@@ -510,7 +488,7 @@ cast (r1.date as date)
       left join
       (
         select *
-        from master.dbo.dfa_cost_dt2
+        from master.dbo.dfa_cost_dt2_r
       ) as cst
         on cast(t2.dcmmatchdate as varchar(8)) + t2.plce_id = cast(cst.dcmdate as varchar(8)) + cst.plce_id
 
@@ -519,7 +497,7 @@ cast (r1.date as date)
 
   left join (
               select *
-              from master.dbo.dv_summ
+              from master.dbo.dv_summ_r
               where dvdate between @report_st and @report_ed
             ) as dv
       on
@@ -530,7 +508,7 @@ cast (r1.date as date)
 
   left join (
               select *
-              from master.dbo.mt_summ
+              from master.dbo.mt_summ_r
               where mtdate between @report_st and @report_ed
             ) as mt
       on
@@ -582,6 +560,7 @@ group by
 
      ) as t3
 
+where t3.campaign_id = '20713692'
 
 group by
   t3.dcmdate
