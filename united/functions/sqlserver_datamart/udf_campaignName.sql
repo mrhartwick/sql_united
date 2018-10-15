@@ -73,6 +73,10 @@ as
                                  when @campaignID = 21340185 then 'US Shannon 2018'
                                  when @campaignID = 21375051 then 'United Corporate Preferred Campaign 2018'
                                  when @campaignID = 21568413 then 'Expedia Test 2018'
+                                 when @campaignID = 21682827 then 'SFO-SIN Onshore 2018'
+                                 when @campaignID = 21751126 then 'PlacePass DR Campaign 2018'
+                                 when @campaignID = 21616302 then 'Win NY Campaign 2018'
+                                 when @campaignID = 21606196 then 'Win SF Campaign 2018'
                                  else @campaignName end;
         return @finalCampaignName
     end
