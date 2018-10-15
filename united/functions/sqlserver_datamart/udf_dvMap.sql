@@ -34,8 +34,14 @@ as
           when @campaign_id = 21434672 and @site_id_dcm = 1239319 then 'Y' --Japan Display Acq.
 
 
+--SFO-SIN 2018
+          when @campaign_id = 21682827 AND (@site_id_dcm = 4167910 OR @site_id_dcm = 1190273) then 'Y'
 
+--win sf 2018
+          when @campaign_id = 21606196 AND (@site_id_dcm = 4926865 OR @site_id_dcm = 4167910 OR @site_id_dcm = 1669510) then 'Y'
 
+--win ny 2018
+          when @campaign_id = 21616302 AND (@site_id_dcm = 1995643 OR @site_id_dcm = 4928980) then 'Y'
 
               ----2018 olympics
 
