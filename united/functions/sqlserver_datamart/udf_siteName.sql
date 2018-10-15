@@ -105,6 +105,8 @@ AS
 			  	when @site_name like '[Pp]lace%[Ii][Qq]%' then 'PlaceIQ'
 					when @site_name like '[Aa]dara%[Mm]edia%' then 'Adara Media'
 					when @site_name like '[Ee]vite%' then 'Evite'
+					when @site_name like '[Ss]pot[Xx]%' then 'Spot X'
+					when @site_name like '[Bb]rand%[Nn]etworks%' OR @site_name like '[Bb]rand[Nn]etworks%' then 'Brand Networks'
 				else @site_name end
 				;
 
