@@ -77,6 +77,8 @@ as
                                  when @campaignID = 21751126 then 'PlacePass DR Campaign 2018'
                                  when @campaignID = 21616302 then 'Win NY Campaign 2018'
                                  when @campaignID = 21606196 then 'Win SF Campaign 2018'
+                                 when @campaignID = 21822879 then 'United US-Ireland DR Onshore 2018'
+                                 when @campaignID = 21772778 then 'IAH-SYD Onshore 2018'
                                  else @campaignName end;
         return @finalCampaignName
     end
