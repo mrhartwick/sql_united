@@ -31,6 +31,10 @@ create table master.dbo.dfa_cost_dt2_r
   Clks          int            not null,
   ClksRunTot    int            not null,
   ClksRemain    int            not null,
+  Completes     int            not null,
+  CompletesRunTot    int            not null,
+  CompletesRemain    int            not null,
+  Vid_completes int            not null,
   planned_amt   int            ,
   planned_cost  decimal(20,10) ,
   vew_con       int            not null,
@@ -53,14 +57,12 @@ insert into master.dbo.dfa_cost_dt2_r
     t8.plce_id       as plce_id,
     t8.dcmDate       as dcmDate,
     t8.costmethod    as prsCostMethod,
---     t8.PackageCat    as PackageCat,
     t8.rate          as prsRate,
     t8.stDate        as prsStDate,
     t8.edDate        as prsEdDate,
     t8.diff          as diff,
     t8.flatcost      as flatcost,
     t8.cost          as cost,
-    -- case when t8.costmethod like '[Ff]lat' then t8.flatcost else t8.cost end as cost,
     t8.lagCost       as lagCost,
     t8.costRunTot    as costRunTot,
     t8.costRemain    as costRemain,
@@ -76,6 +78,10 @@ insert into master.dbo.dfa_cost_dt2_r
     t8.clks          as clks,
     t8.clksRunTot    as clksRunTot,
     t8.clksRemain    as clksRemain,
+    t8.completes     as completes,
+    t8.completesRunTot    as completesRunTot,
+    t8.completesRemain    as completesRemain,
+    t8.vid_completes as vid_completes,
     t8.planned_amt   as planned_amt,
     t8.planned_cost  as planned_cost,
     t8.vew_con       as vew_con,
@@ -131,21 +137,23 @@ insert into master.dbo.dfa_cost_dt2_r
 
 
 
-                 when t7.costmethod like '[Cc][Pp][Cc]%' and
+                 when t7.costmethod like '[Cc][Pp][Cc]' and
                       t7.diff >= 0 and
                       t7.cost < t7.planned_cost and
                       t7.clksRunTot <= t7.planned_amt
                  then t7.cost
 
 
--- --               TEMPORARY CONDITION FOR SAN JOSE
--- --               cond_2_dCPM
---                  when t7.costmethod like '[Dd][Cc][Pp][Mm]%' and
---                       t7.campaign_id = 11224605
---                  then t7.cost
+--               cond_2_CPV
 
 
---               cond_2_dCPM
+
+                when (t7.costmethod like '[Cc][Pp][Cc][Vv]' or t7.costmethod like '[Cc][Pp][Vv]')  and
+                     t7.diff >= 0 and
+                     t7.cost < t7.planned_cost and
+                     t7.completesRunTot <= t7.planned_amt
+                then t7.cost
+
 
 
 --               cond_2_1
@@ -185,11 +193,17 @@ insert into master.dbo.dfa_cost_dt2_r
                  Condition order matches that of the cost case statement above.
  */
                  case
-                 when t7.costmethod like '[Cc][Pp][Cc]%' and
+                 when t7.costmethod like '[Cc][Pp][Cc]' and
                       t7.diff >= 0 and
                       t7.cost < t7.planned_cost and
                       t7.clksRunTot <= t7.planned_amt
                  then 'cond_2_CPC'
+
+                 when (t7.costmethod like '[Cc][Pp][Cc][Vv]' or t7.costmethod like '[Cc][Pp][Vv]')  and
+                      t7.diff >= 0 and
+                      t7.cost < t7.planned_cost and
+                      t7.completesRunTot <= t7.planned_amt
+                 then 'cond_2_CPV'
 
 
                  when t7.costmethod like '[Dd][Cc][Pp][Mm]%'
@@ -241,6 +255,10 @@ insert into master.dbo.dfa_cost_dt2_r
                  isNull(t7.clks,cast(0 as decimal(20,10)))          as clks,
                  isNull(t7.clksRunTot,cast(0 as decimal(20,10)))    as clksRunTot,
                  isNull(t7.clksRemain,cast(0 as int))               as clksRemain,
+                 isNull(t7.completes,cast(0 as decimal(20,10)))     as completes,
+                 isNull(t7.completesRunTot,cast(0 as decimal(20,10))) as completesRunTot,
+                 isNull(t7.completesRemain,cast(0 as int))          as completesRemain,
+                 isNull(t7.vid_completes,cast(0 as int))            as vid_completes,
                  isNull(t7.vew_con,cast(0 as int))                  as vew_con,
                  isNull(t7.clk_con,cast(0 as int))                  as clk_con,
                  isNull(t7.vew_tix,cast(0 as int))                  as vew_tix,
@@ -285,8 +303,13 @@ insert into master.dbo.dfa_cost_dt2_r
 
 
                         when t6.diff >= 0 and
-                             t6.costmethod like '[Cc][Pp][Cc]%' and
+                             t6.costmethod like '[Cc][Pp][Cc]' and
                              t6.clks >= t6.planned_amt
+                        then isNull(t6.cost,cast(0 as decimal(20,10))) - isNull(t6.lagCost,cast(0 as decimal(20,10)))
+
+                        when t6.diff >= 0 and
+                             (t6.costmethod like '[Cc][Pp][Cc][Vv]' or t6.costmethod like '[Cc][Pp][Vv]')  and
+                             t6.completes >= t6.planned_amt
                         then isNull(t6.cost,cast(0 as decimal(20,10))) - isNull(t6.lagCost,cast(0 as decimal(20,10)))
 
                         when t6.diff >= 0 and
@@ -304,9 +327,14 @@ insert into master.dbo.dfa_cost_dt2_r
                         then 'cond_1_1'
 
                         when t6.diff >= 0 and
-                             t6.costmethod like '[Cc][Pp][Cc]%' and
+                             t6.costmethod like '[Cc][Pp][Cc]' and
                              t6.clks >= t6.planned_amt
                         then 'cond_1_2'
+
+                        when t6.diff >= 0 and
+                             (t6.costmethod like '[Cc][Pp][Cc][Vv]' or t6.costmethod like '[Cc][Pp][Vv]') and
+                             t6.completes >= t6.planned_amt
+                        then 'cond_1_4'
 
                         when t6.diff >= 0 and
                              t6.Imps >= t6.planned_amt
@@ -334,6 +362,10 @@ insert into master.dbo.dfa_cost_dt2_r
                         isNull(t6.clks,cast(0 as int))                  as clks,
                         isNull(t6.clksRunTot,cast(0 as int))            as clksRunTot,
                         isNull(t6.clksRemain,cast(0 as int))            as clksRemain,
+                        isNull(t6.completes,cast(0 as int))             as completes,
+                        isNull(t6.completesRunTot,cast(0 as int))       as completesRunTot,
+                        isNull(t6.completesRemain,cast(0 as int))       as completesRemain,
+                        t6.vid_completes                                as vid_completes,
                         t6.vew_con                                      as vew_con,
                         t6.clk_con                                      as clk_con,
                         t6.vew_tix                                      as vew_tix,
@@ -371,19 +403,18 @@ insert into master.dbo.dfa_cost_dt2_r
                       t5.flatcost as flatcost,
                       sum(t5.cost) over (partition by t5.cost_id,t5.plce_id,t5.dcmDate)                         as cost,
                       lag(t5.cost,1,0) over (partition by t5.cost_id
-                        order by t5.dcmDate,t5.plce_id)                                                       as lagCost,
+                        order by t5.dcmDate,t5.plce_id)                                                         as lagCost,
                       sum(t5.cost) over (partition by t5.cost_id
-                        order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row) as costRunTot,
+                        order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row)   as costRunTot,
                       case
                       when (cast(t5.planned_cost as decimal(20,10)) - sum(t5.cost) over (partition by t5.cost_id
                         order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
                       else (cast(t5.planned_cost as decimal(20,10)) - sum(t5.cost) over (partition by t5.cost_id
                         order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row))
                       end                                                                                       as costRemain,
-
                       sum(t5.billimps) over (partition by t5.cost_id,t5.plce_id,t5.dcmDate)                     as Imps,
                       sum(t5.billimps) over (partition by t5.cost_id
-                        order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row) as impsRunTot,
+                        order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row)   as impsRunTot,
                       case
                       when (cast(t5.planned_amt as decimal(20,10)) - sum(t5.billimps) over (partition by t5.cost_id
                         order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
@@ -398,13 +429,23 @@ insert into master.dbo.dfa_cost_dt2_r
                       t5.mt_imps                                                                                as mt_imps,
                       sum(t5.clicks) over (partition by t5.cost_id,t5.plce_id,t5.dcmDate)                       as clks,
                       sum(t5.clicks) over (partition by t5.cost_id
-                        order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row) as clksRunTot,
+                        order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row)   as clksRunTot,
                       case
                       when (cast(t5.planned_amt as decimal(20,10)) - sum(t5.clicks) over (partition by t5.cost_id
                         order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
                       else (cast(t5.planned_amt as decimal(20,10)) - sum(t5.clicks) over (partition by t5.cost_id
                         order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row))
-                      end                                                                                       as clksRemain,
+                      end                                                                                        as clksRemain,
+                      sum(t5.iv_completes) over (partition by t5.cost_id,t5.plce_id,t5.dcmDate)                  as completes,
+                      sum(t5.iv_completes) over (partition by t5.cost_id
+                        order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row)    as completesRunTot,
+                      case
+                      when (cast(t5.planned_amt as decimal(20,10)) - sum(t5.iv_completes) over (partition by t5.cost_id
+                        order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row)) <= 0 then 0
+                      else (cast(t5.planned_amt as decimal(20,10)) - sum(t5.iv_completes) over (partition by t5.cost_id
+                        order by t5.dcmDate,t5.plce_id asc range between unbounded preceding and current row))
+                      end                                                                                       as completesRemain,
+                      t5.iv_completes                                                                           as vid_completes,
                       t5.vew_con                                                                                as vew_con,
                       t5.clk_con                                                                                as clk_con,
                       t5.vew_tix                                                                                as vew_tix,
@@ -448,6 +489,7 @@ insert into master.dbo.dfa_cost_dt2_r
 
                               when t4.dcmDate - t4.stDate < 0 then 0
                               when (t4.costmethod like '[Cc][Pp][Cc]' and (t4.edDate - t4.dcmDate) >= 0 and sum(t4.clicks) >= t4.planned_amt) then t4.planned_cost
+                              when ((t4.costmethod like '[Cc][Pp][Cc][Vv]' or t4.costmethod like '[Cc][Pp][Vv]') and (t4.edDate - t4.dcmDate) >= 0 and sum(t4.iv_completes) >= t4.planned_amt) then t4.planned_cost
                               when t4.costmethod not like '[Dd][Cc][Pp][Mm]%' and (t4.edDate - t4.dcmDate) >= 0 and sum(t4.billimps) >= t4.planned_amt then t4.planned_cost
                               when (t4.edDate - t4.dcmDate) >= 0 then sum(t4.cost)
                               when (t4.edDate - t4.dcmDate) < 0 then 0
@@ -457,6 +499,7 @@ insert into master.dbo.dfa_cost_dt2_r
                               case
                               when t4.dcmDate - t4.stDate < 0 then 'cond_0_1'
                               when (t4.edDate - t4.dcmDate) >= 0 and t4.costmethod like '[Cc][Pp][Cc]' and sum(t4.clicks) >= t4.planned_amt then 'cond_0_2'
+                              when (t4.edDate - t4.dcmDate) >= 0 and (t4.costmethod like '[Cc][Pp][Cc][Vv]' or t4.costmethod like '[Cc][Pp][Vv]') and sum(t4.iv_completes) >= t4.planned_amt then 'cond_0_2'
                               when (t4.edDate - t4.dcmDate) >= 0 and sum(t4.billimps) >= t4.planned_amt then 'cond_0_2'
                               when (t4.edDate - t4.dcmDate) >= 0 then 'cond_0_3'
                               when (t4.edDate - t4.dcmDate) < 0 then 'cond_0_4'
@@ -473,6 +516,7 @@ insert into master.dbo.dfa_cost_dt2_r
                               sum(t4.dv_imps)                                  as dv_imps,
                               sum(t4.mt_imps)                                  as mt_imps,
                               sum(t4.clicks)                                   as clicks,
+                              sum(t4.iv_completes)                             as iv_completes,
                               sum(t4.vew_con)                                  as vew_con,
                               sum(t4.clk_con)                                  as clk_con,
                               sum(t4.vew_tix)                                  as vew_tix,
@@ -531,6 +575,7 @@ select
   t3.mt_imps                             as mt_imps,
   case when t3.costmethod = 'dCPM' then db.clicks
   else t3.clicks end                     as clicks,
+  t3.iv_completes                        as iv_completes,
 -- bring in DBM metrics
   db.vew_con                             as vew_con,
   db.clk_con                             as clk_con,
@@ -596,12 +641,23 @@ from (
 
 
              -- COST FOR PLACEMENTS NOT SUBJECT TO VIEWABILITY ====================================================================
+             --completed views based cost; source Innovid
+
+             when   (
+                    (t2.dv_map = 'Y' or t2.dv_map = 'N') and
+                    -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
+                    (t2.costmethod = 'CPV' or t2.costmethod = 'CPCV') and
+                    (len(isnull(iv.joinkey,'')) > 0)
+                    )
+             then   cast((sum(cast(iv.all_completion as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
+
+
 
              --  Click-based cost; source Innovid
              when   (
                     (t2.dv_map = 'Y' or t2.dv_map = 'N') and
                     -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                    (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV') and
+                    (t2.costmethod = 'CPC') and
                     (len(isnull(iv.joinkey,'')) > 0)
                     )
              then   cast((sum(cast(iv.click_thrus as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
@@ -610,7 +666,7 @@ from (
              when   (
                     (t2.dv_map = 'Y' or t2.dv_map = 'N') and
                     -- (t2.eddate - t2.dcmmatchdate >= 0 or t2.dcmmatchdate - t2.stdate >= 0) and
-                    (t2.costmethod = 'CPC' or t2.costmethod = 'CPCV')
+                    (t2.costmethod = 'CPC')
                     )
              then   cast((sum(cast(t2.clicks as decimal(20,10))) * cast(t2.rate as decimal(20,10))) as decimal(20,10))
 -- ===========================================================================================================================
@@ -815,7 +871,7 @@ from (
                         (len(isnull(mt.joinkey,'')) > 0)
                     then mt.total_impressions
 
-                    when t2.dv_map = 'Y' then dv.total_impressions
+                    when t2.dv_map = 'Y'  then dv.total_impressions
 
                     when t2.dv_map = 'M' and
                         (len(isnull(mt.joinkey,'')) = 0) and
@@ -846,7 +902,7 @@ from (
                         (len(isnull(mt.joinkey,'')) = 0) and
                         (len(isnull(dv.joinkey,'')) > 0)
                     then dv.groupm_billable_impressions
-                    when t2.dv_map = 'Y' then dv.groupm_billable_impressions
+                    when t2.dv_map = 'Y'  then dv.groupm_billable_impressions
                     when t2.dv_map = 'M' and
                         (len(isnull(mt.joinkey,'')) = 0) and
                         (t2.campaign_id = 10918234) and
@@ -1067,7 +1123,7 @@ r1.date
                      left join
                      (
                          select *
-                         from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
+                         from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].prs_summ
                      ) as prs
                          on t1.placement_id = prs.adserverplacementid
 --    where prs.costmethod != 'Flat'
@@ -1133,7 +1189,7 @@ r1.date
 
              left join (
                            select *
-                           from [10.2.186.148,4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
+                           from [10.2.186.148\SQLINS02, 4721].dm_1161_unitedairlinesusa.[dbo].ivd_summ_agg
 -- where ivdate between @report_st and @report_ed
                        ) as iv
                  on
@@ -1203,9 +1259,9 @@ group by
                                   t4.flatcost,
                                   t4.plce_id
                           ) as t5
--- where t5.costmethod != 'Flat'
+
                   ) as t6
          ) as t7
-        -- where (len(isnull(t7.cost_id,'')) != 0)
+
 ) as t8
 go
