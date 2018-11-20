@@ -107,6 +107,8 @@ AS
 					when @site_name like '[Ee]vite%' then 'Evite'
 					when @site_name like '[Ss]pot[Xx]%' then 'Spot X'
 					when @site_name like '[Bb]rand%[Nn]etworks%' OR @site_name like '[Bb]rand[Nn]etworks%' then 'Brand Networks'
+					when @site_name like '[Bb][Bb][Cc]%' then 'BBC'
+					when @site_name like '[Aa][Mm][Aa][Zz][Oo][Nn]%' then 'Amazon'
 				else @site_name end
 				,' ','');
 RETURN @finalSiteName

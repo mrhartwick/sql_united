@@ -26,19 +26,24 @@ as
           ----------------------additional 2018 campaigns
           when @campaign_id = 21086860 then 'Y' --trade Jetstream
           when @campaign_id = 21206832 then 'Y'--trade rightsized
-          when @campaign_id = 21182874 then 'Y' --economy Plus
+          when @campaign_id = 21415122 then 'N'--trade rightsized
+          when @campaign_id = 21182874 then 'N' --economy Plus
           when @campaign_id = 21057553 then 'Y' --MileagePlus
           when @campaign_id = 21128474 then 'Y' --personal threshold
           when @campaign_id = 20945117 then 'Y' --social extension
           when @campaign_id = 21230517 and @site_id_dcm = 1190273 then 'Y' --sydney premium cabin sale
           when @campaign_id = 21434672 and @site_id_dcm = 1239319 then 'Y' --Japan Display Acq.
+          when @campaign_id = 21772778 then 'Y' --iah-syd onshore
+          when @campaign_id = 21822879 then 'Y' --US-Ireland DR Onshore
+          when @campaign_id = 21605413 and @site_id_dcm = 4928071 then 'Y' --win sf barter
+          when @campaign_id = 21852893 then 'Y' --weather test
 
 
 --SFO-SIN 2018
           when @campaign_id = 21682827 AND (@site_id_dcm = 4167910 OR @site_id_dcm = 1190273) then 'Y'
 
 --win sf 2018
-          when @campaign_id = 21606196 AND (@site_id_dcm = 4926865 OR @site_id_dcm = 4167910 OR @site_id_dcm = 1669510) then 'Y'
+          when @campaign_id = 21606196 AND (@site_id_dcm = 4926865 OR @site_id_dcm = 1669510 OR @site_id_dcm = 4167910) then 'Y'
 
 --win ny 2018
           when @campaign_id = 21616302 AND (@site_id_dcm = 1995643 OR @site_id_dcm = 4928980) then 'Y'
