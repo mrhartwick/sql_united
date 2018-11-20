@@ -76,9 +76,16 @@ as
                                  when @campaignID = 21682827 then 'SFO-SIN Onshore 2018'
                                  when @campaignID = 21751126 then 'PlacePass DR Campaign 2018'
                                  when @campaignID = 21616302 then 'Win NY Campaign 2018'
-                                 when @campaignID = 21606196 then 'Win SF Campaign 2018'
+                                 when @campaignID = 21606196 or @campaignID = 21605413 then 'Win SF Campaign 2018'
                                  when @campaignID = 21822879 then 'United US-Ireland DR Onshore 2018'
                                  when @campaignID = 21772778 then 'IAH-SYD Onshore 2018'
+                                 when @campaignID = 21870944 then 'IAH-SYD DR Onshore 2018'
+                                 when @campaignID = 21887711 then 'NYC Marathon NYT Sponsorship 2018'
+                                 when @campaignID = 21884062 then 'United Hearst Elle+Esquire 2018'
+                                 when @campaignID = 21916803 then 'Travelzoo Test 2018'
+                                 when @campaignID = 21929459 then 'Brazil 2018'
+                                 when @campaignID = 21847600 then 'Amazon Test 2018'
+                                 when @campaignID = 21852893 then 'Weather Test 2018'
                                  else @campaignName end;
         return @finalCampaignName
     end
