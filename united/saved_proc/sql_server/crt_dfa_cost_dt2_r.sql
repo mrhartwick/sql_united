@@ -1,4 +1,4 @@
-create procedure dbo.crt_dfa_cost_dt2_r
+alter procedure dbo.crt_dfa_cost_dt2_r
 as
 if OBJECT_ID('master.dbo.dfa_cost_dt2_r',N'U') is not null
     drop table master.dbo.dfa_cost_dt2_r;
@@ -561,19 +561,20 @@ select
   else t3.cost end                       as cost,
   db.dbm_cost                            as dbm_cost,
   t3.rate                                as rate,
-  case when t3.site_id_dcm = 1239319 then t3.dlvrimps
+  case when (t3.site_id_dcm in (1239319,5019019, 4020991))  then t3.dlvrimps
   when t3.costmethod = 'dCPM' then db.imps
   else t3.dlvrimps end                   as dlvrimps,
-  case when t3.site_id_dcm = 1239319 then t3.billimps
+  case when  (t3.site_id_dcm in (1239319,5019019, 4020991))  then t3.billimps
   when t3.costmethod = 'dCPM' then db.imps
   else t3.billimps end                   as billimps,
-  case when t3.site_id_dcm = 1239319 then t3.dfa_imps
+  case when (t3.site_id_dcm in (1239319,5019019, 4020991))  then t3.dfa_imps
   when t3.costmethod = 'dCPM' then db.imps
   else t3.dfa_imps end                   as dfa_imps,
   t3.iv_imps                             as iv_imps,
   t3.dv_imps                             as dv_imps,
   t3.mt_imps                             as mt_imps,
-  case when t3.costmethod = 'dCPM' then db.clicks
+  case when  (t3.site_id_dcm in (1239319,5019019, 4020991)) then t3.clicks
+       when t3.costmethod = 'dCPM' then db.clicks
   else t3.clicks end                     as clicks,
   t3.iv_completes                        as iv_completes,
 -- bring in DBM metrics
