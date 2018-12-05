@@ -37,6 +37,8 @@ as
           when @campaign_id = 21822879 then 'Y' --US-Ireland DR Onshore
           when @campaign_id = 21605413 and @site_id_dcm = 4928071 then 'Y' --win sf barter
           when @campaign_id = 21852893 then 'Y' --weather test
+          when @campaign_id = 21847600 then 'Y' --amazon test
+          when @campaign_id = 21870944 and(@site_id_dcm = 5060516 OR @site_id_dcm = 5028818)  then 'Y' --iah-syd dr onshore foursquare nativo
 
 
 --SFO-SIN 2018
