@@ -6,7 +6,7 @@ AS
 	(
 		ParentId    INT NOT NULL,
 		PackageName NVARCHAR(4000),
-		Cost_ID NVARCHAR(6),
+		Cost_ID 	NVARCHAR(6),
 		PackageType NVARCHAR(100)
 
 	);
