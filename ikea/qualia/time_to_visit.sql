@@ -1,10 +1,8 @@
-select
-count(*)
-from
-	(
-select
+-- select
 -- count(*)
---        avg(days_to_vis)
+-- from
+-- 	(
+select
        campaign,
        aud,
 --        placementname,
@@ -12,10 +10,8 @@ select
        days_to_vis,
        sitename,
        subsite,
-       siz_sid,
-householdid
---        count(distinct householdid) as visits
-
+--        siz_sid,
+	   householdid
 
 from (
 select
@@ -29,14 +25,14 @@ select
        campaign,
        siz_sid,
        sitename,
-       subsite,
+       case when sitename = 'Xaxis' then subsite || ' (xaxis)' else sitename end as subsite,
+--        subsite,
 --        placementname,
        hh_imp_rank,
 aud
            from
 (
 select
---        count(*)
        householdid,
 
 		case when (p1.placementname like '%\\_GU\\_%' or p1.placementname like '%\\_HU\\_%') then 'upper'
@@ -52,7 +48,8 @@ select
 			) or (c1.campaignname = 'IKE_IKE_SEA_GM-Commercial_FY18_DIS_AWR_X_X_(IKE-SEA-028)' and (p1.placementname like '%Kitchen%' or p1.placementname like '%KITCHEN%')))
 		    then 'Kitchens Offer'
 
-        when c1.campaignname = 'IKE_IKE_SEA_GM-Commercial_FY18_DIS_AWR_X_X_(IKE-SEA-028)' then 'Commercial'
+        when (c1.campaignname = 'IKE_IKE_SEA_GM-Commercial_FY18_DIS_AWR_X_X_(IKE-SEA-028)') and (p1.placementname like '%\\_GU\\_%' or p1.placementname like '%\\_HU\\_%') then 'Commercial Upper'
+        when (c1.campaignname = 'IKE_IKE_SEA_GM-Commercial_FY18_DIS_AWR_X_X_(IKE-SEA-028)') and (p1.placementname like '%\\_GL\\_%' or p1.placementname like '%\\_HL\\_%') then 'Commercial Lower'
 		when c1.campaignname = 'IKE_IKE_KIT_GM-Kitchens_FY18_DIS_AWR_X_X_(IKE-KIT-015)' then 'Kitchens Awareness'
 
 		when c1.campaignname = 'IKE_IKE_CTG_GM_Catalog_FY18_DIS_AWR_X_X_(IKE-CTG-002)' then 'Catalog'
@@ -88,7 +85,7 @@ select
 		when  p1.placementname like '%\\_UND\\_%' then 'Undertone'
 		when  p1.placementname like '%\\_VER\\_%' then 'Verve'
 		when  p1.placementname like '%\\_VDG\\_%' then 'Videology'
-		when  p1.placementname like '%\\_XAD\\_%' then 'Xad'
+		when  p1.placementname like '%\\_XAD\\_%' then 'xAd'
 		when (p1.placementname like '%\\_DM\\_%' or  p1.placementname like '%\\_DMWEB\\_%' or  p1.placementname like '%\\_X\\_%' or  p1.placementname like '%\\_XAX\\_%' or  p1.placementname like '%\\_XAXIS\\_%') then 'Xaxis'
 		when  p1.placementname like '%\\_YLB\\_%' then 'Yeildbot'
 		when  p1.placementname like '%\\_YMO\\_%' then 'YieldMo'
@@ -97,51 +94,52 @@ select
 		else 'other' end as subsite,
 
        decode(SPLIT_PART(p1.placementname, '_', 13),
-'ABANDON', 'Lifestyle',
-'COMPCON', 'Compet. Conq.',
-'CROSS15', 'Lifestyle',
-'CROSS30', 'Lifestyle',
-'DEMO', 'GEN',
-'DESIGN', 'Home Design',
-'DIY', 'DIY',
-'EPISODE', 'Lifestyle',
-'FOOD', 'Food',
-'GEN', 'GEN',
-'HOMEIMP', 'Home Imp.',
-'IKEACOMP', 'Compet. Conq.',
-'IKEADMA', 'IKEA DMAs',
-'IKEADMAS', 'IKEA DMAs',
-'IKEASHOP',  'Shoppers',
-'IMEADMAS', 'IKEA DMAs',
-'KITCHENS', 'Kitchens',
-'LALKITCHENS', 'Kitchens',
-'LIFESTY', 'Lifestyle',
-'LIFESTYL', 'Lifestyle',
-'LIFETSY', 'Lifestyle',
-'MOBFLEXOFF1', 'Lifestyle',
-'MOBFLEXOFF2', 'Lifestyle',
-'NEW MOVERS', 'New Movers',
-'NEWMOVE', 'New Movers',
-'PAGEGRABOFF1', 'Lifestyle',
-'PAGEGRABOFF2', 'Lifestyle',
-'PARENT', 'Moms/Parents',
-'PARENTS', 'Moms/Parents',
-'PREROLL', 'PreRoll',
-'REMODEL', 'Lifestyle',
-'SHOPPERS', 'Shoppers',
-'SITE', 'IKEA.com Visitors',
-'SQINTRO1', 'Lifestyle',
-'STUDENT', 'Student',
-'TRUEVIEW', 'TrueView',
-'TRUVIEW', 'TrueView',
-'WEDDING', 'Weddings', 'unknown') as aud,
+		'ABANDON', 'Lifestyle',
+		'COMPCON', 'Compet. Conq.',
+		'CROSS15', 'Lifestyle',
+		'CROSS30', 'Lifestyle',
+		'DEMO', 'GEN',
+		'DESIGN', 'Home Design',
+		'DIY', 'DIY',
+		'EPISODE', 'Lifestyle',
+		'FOOD', 'Food',
+		'GEN', 'GEN',
+		'HOMEIMP', 'Home Imp.',
+		'IKEACOMP', 'Compet. Conq.',
+		'IKEADMA', 'IKEA DMAs',
+		'IKEADMAS', 'IKEA DMAs',
+		'IKEASHOP',  'Shoppers',
+		'IMEADMAS', 'IKEA DMAs',
+		'KITCHENS', 'Lifestyle',
+		'LALKITCHENS', 'Kitchens',
+		'LIFESTY', 'Lifestyle',
+		'LIFESTYL', 'Lifestyle',
+		'LIFETSY', 'Lifestyle',
+		'MOBFLEXOFF1', 'Lifestyle',
+		'MOBFLEXOFF2', 'Lifestyle',
+		'NEW MOVERS', 'New Movers',
+		'NEWMOVE', 'New Movers',
+		'PAGEGRABOFF1', 'Lifestyle',
+		'PAGEGRABOFF2', 'Lifestyle',
+		'PARENT', 'Baby',
+		'PARENTS', 'Baby',
+		'PREROLL', 'PreRoll',
+		'REMODEL', 'Lifestyle',
+		'SHOPPERS', 'Shoppers',
+		'SITE', 'IKEA.com Visitors',
+		'SQINTRO1', 'Lifestyle',
+		'STUDENT', 'Student',
+		'TRUEVIEW', 'TrueView',
+		'TRUVIEW', 'TrueView',
+		'WEDDING', 'Bridal', 'unknown') as aud,
 
        impressiondate::date,
        visit_time::date,
        days_to_vis,
        hh_imp_rank,
        siz_sid,
-       s1.sitename
+       case when s1.sitename = 'Well and Good NYC' then 'Well & Good' else s1.sitename end as sitename
+
 
 from wmprodfeeds.ikea.qualia_visitors_hh t1
 
@@ -162,7 +160,7 @@ and hh_vis_rank = 1
 and siz_plc is not null
 and siz_sid is not null
 and (length(isnull(s1.sitename,'')) > 0)
--- and s1.sitename <> 'MNI.com'
+and s1.sitename <> 'MNI.com'
 -- and siz_sid = 18556
 -- Only pulling campaigns with 10K+ householdIDs
 and t1.siz_cid in (
@@ -193,6 +191,7 @@ where funnel <> 'other'
 -- group by aud
 	) as t2
 where new_rank = 1
+and subsite <> 'Linqia'
 group by
        campaign,
          aud,
@@ -200,8 +199,7 @@ group by
        funnel,
          subsite,
          householdid,
-         siz_sid,
          sitename,
        days_to_vis
-	) t3
+-- 	) t3
 ;
