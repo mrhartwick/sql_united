@@ -268,119 +268,119 @@ commit;
 
 -- Get Impressions from users not in converter table
 
-create table diap01.mec_us_united_20056.ual_freq_slm_imp2
-(
-    user_id    varchar(50) not null,
-    event_time int         not null,
-    yr int not null,
-    wk int not null,
-    imp_key    varchar     not null,
-    cost       decimal     not null,
-    imp        int         not null
+-- create table diap01.mec_us_united_20056.ual_freq_slm_imp2
+-- (
+--     user_id    varchar(50) not null,
+--     event_time int         not null,
+--     yr int not null,
+--     wk int not null,
+--     imp_key    varchar     not null,
+--     cost       decimal     not null,
+--     imp        int         not null
 
-);
+-- );
 
-insert into diap01.mec_us_united_20056.ual_freq_slm_imp2
-(user_id,event_time,yr,wk,imp_key,cost,imp)
+-- insert into diap01.mec_us_united_20056.ual_freq_slm_imp2
+-- (user_id,event_time,yr,wk,imp_key,cost,imp)
 
-    (select
-        t4.user_id,
-        t4.event_time,
-        date_part('year',cast(timestamp_trunc(to_timestamp(t4.event_time / 1000000),'SS') as date)) as yr,
-        date_part('week',cast(timestamp_trunc(to_timestamp(t4.event_time / 1000000),'SS') as date)) as wk,
-        t4.imp_key,
-        t4.cost,
-        t4.imp
-    from
-        (select
-            t3.user_id,
-            t3.event_time,
-            md5(t3.user_id || cast(t3.event_time as varchar )) as imp_key,
-            sum(t3.cost)                                       as cost,
-            count(*)                                           as imp
-        from (select
-            *,
-            case when ((cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-07-15' and '2016-08-31') and (t2.site_id_dcm = 2202011)) then 1
-            when ((cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-09-01' and '2016-12-31') and (t2.site_id_dcm = 1578478)) then 1 else 2 end as rank,
-            cast((dbm_total_media_cost_usd / 1000000000) as decimal)                                                                                                               as cost
-        from
-            diap01.mec_us_united_20056.dfa2_impression as t2
+--     (select
+--         t4.user_id,
+--         t4.event_time,
+--         date_part('year',cast(timestamp_trunc(to_timestamp(t4.event_time / 1000000),'SS') as date)) as yr,
+--         date_part('week',cast(timestamp_trunc(to_timestamp(t4.event_time / 1000000),'SS') as date)) as wk,
+--         t4.imp_key,
+--         t4.cost,
+--         t4.imp
+--     from
+--         (select
+--             t3.user_id,
+--             t3.event_time,
+--             md5(t3.user_id || cast(t3.event_time as varchar )) as imp_key,
+--             sum(t3.cost)                                       as cost,
+--             count(*)                                           as imp
+--         from (select
+--             *,
+--             case when ((cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-07-15' and '2016-08-31') and (t2.site_id_dcm = 2202011)) then 1
+--             when ((cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-09-01' and '2016-12-31') and (t2.site_id_dcm = 1578478)) then 1 else 2 end as rank,
+--             cast((dbm_total_media_cost_usd / 1000000000) as decimal)                                                                                                               as cost
+--         from
+--             diap01.mec_us_united_20056.dfa2_impression as t2
 
-            left join
-            (select
-                p1.placement,p1.placement_id,p1.campaign_id,p1.site_id_dcm
+--             left join
+--             (select
+--                 p1.placement,p1.placement_id,p1.campaign_id,p1.site_id_dcm
 
-            from (select
-                campaign_id,site_id_dcm,placement_id,placement,cast(placement_start_date as date)                     as thisdate,
-                                                               row_number() over ( partition by campaign_id,site_id_dcm,placement_id
-                                                                   order by cast(placement_start_date as date) desc ) as x1
-            from diap01.mec_us_united_20056.dfa2_placements
-                 ) as p1
-            where x1 = 1
-            ) as p2
-            on t2.placement_id = p2.placement_id
+--             from (select
+--                 campaign_id,site_id_dcm,placement_id,placement,cast(placement_start_date as date)                     as thisdate,
+--                                                                row_number() over ( partition by campaign_id,site_id_dcm,placement_id
+--                                                                    order by cast(placement_start_date as date) desc ) as x1
+--             from diap01.mec_us_united_20056.dfa2_placements
+--                  ) as p1
+--             where x1 = 1
+--             ) as p2
+--             on t2.placement_id = p2.placement_id
 
-        where cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-07-15' and '2016-12-31'
-            and (t2.campaign_id = 9639387 or t2.campaign_id = 8958859)
-            and (t2.site_id_dcm = 1578478 or t2.site_id_dcm = 2202011)
---      and user_id not in (select distinct user_id from diap01.mec_us_united_20056.ual_freq_tbl1)
-            and (advertiser_id <> 0)
-            and user_id <> '0'
---      Big Blue - Google prospecting
-            and (not regexp_like(left(p2.placement,6),'P9P.*','ib')
-            and not regexp_like(left(p2.placement,6),'PBN.*','ib'))
-             ) as t3
-        where t3.rank = 1
-        group by t3.user_id,t3.event_time
-        ) as t4
-    where t4.imp_key not in (select distinct imp_key
-    from diap01.mec_us_united_20056.ual_freq_slm_tbl1)
-    );
-commit;
+--         where cast(timestamp_trunc(to_timestamp(event_time / 1000000),'SS') as date) between '2016-07-15' and '2016-12-31'
+--             and (t2.campaign_id = 9639387 or t2.campaign_id = 8958859)
+--             and (t2.site_id_dcm = 1578478 or t2.site_id_dcm = 2202011)
+-- --      and user_id not in (select distinct user_id from diap01.mec_us_united_20056.ual_freq_tbl1)
+--             and (advertiser_id <> 0)
+--             and user_id <> '0'
+-- --      Big Blue - Google prospecting
+--             and (not regexp_like(left(p2.placement,6),'P9P.*','ib')
+--             and not regexp_like(left(p2.placement,6),'PBN.*','ib'))
+--              ) as t3
+--         where t3.rank = 1
+--         group by t3.user_id,t3.event_time
+--         ) as t4
+--     where t4.imp_key not in (select distinct imp_key
+--     from diap01.mec_us_united_20056.ual_freq_slm_tbl1)
+--     );
+-- commit;
 -- ====================================================================================================================
 -- ====================================================================================================================
 -- Summary non-converter Impressions table
 
-create table diap01.mec_us_united_20056.ual_freq_slm_imp3
-(
-    user_id varchar(50) not null,
-    yr      int         not null,
-    wk      int         not null,
---  cvr_cnt    int         not null,
-    imp_cnt int         not null,
---  cvr_credit decimal     not null,
---  revenue    decimal     not null,
-    cost    decimal     not null
-);
+-- create table diap01.mec_us_united_20056.ual_freq_slm_imp3
+-- (
+--     user_id varchar(50) not null,
+--     yr      int         not null,
+--     wk      int         not null,
+-- --  cvr_cnt    int         not null,
+--     imp_cnt int         not null,
+-- --  cvr_credit decimal     not null,
+-- --  revenue    decimal     not null,
+--     cost    decimal     not null
+-- );
 
-insert into diap01.mec_us_united_20056.ual_freq_slm_imp3
-(user_id,
- yr,
- wk,
- -- cvr_cnt,
- imp_cnt,
- -- cvr_credit,
- -- revenue,
- cost)
+-- insert into diap01.mec_us_united_20056.ual_freq_slm_imp3
+-- (user_id,
+--  yr,
+--  wk,
+--  -- cvr_cnt,
+--  imp_cnt,
+--  -- cvr_credit,
+--  -- revenue,
+--  cost)
 
-    (select
-        user_id,
-        yr,
-        wk,
---      0         as cvr_cnt,
-        sum(imp)  as imp_cnt,
---      0         as cvr_credit,
---      0         as revenue,
-        sum(cost) as cost
-    from
-        diap01.mec_us_united_20056.ual_freq_slm_imp2
-    group by
-        user_id,
-        yr,
-        wk
+--     (select
+--         user_id,
+--         yr,
+--         wk,
+-- --      0         as cvr_cnt,
+--         sum(imp)  as imp_cnt,
+-- --      0         as cvr_credit,
+-- --      0         as revenue,
+--         sum(cost) as cost
+--     from
+--         diap01.mec_us_united_20056.ual_freq_slm_imp2
+--     group by
+--         user_id,
+--         yr,
+--         wk
 
-    );
-commit;
+--     );
+-- commit;
 
 -- ====================================================================================================================
 -- ====================================================================================================================
