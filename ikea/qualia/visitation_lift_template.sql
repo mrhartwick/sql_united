@@ -163,3 +163,25 @@ where 		device_id not in (
 												    			and impressiondate::date between '2018-10-08' and '2018-12-25'
     						) and cast(timestamp_2 as date) between '2018-10-08' and '2018-12-25'
 );
+
+
+
+
+select
+distinct
+			s1.sitename,
+			p1.siteid
+
+from
+            wmprodfeeds.ikea.sizmek_placements p1
+
+left join
+            wmprodfeeds.ikea.sizmek_sites s1
+			on p1.siteid = s1.siteid
+where
+			p1.campaignid in (913509, 913795)
+
+
+
+
+

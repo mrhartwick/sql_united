@@ -1,3 +1,5 @@
+-- Frequency Table
+
 drop table if exists wmprodfeeds.ikea.freq_tbl1;
 create table wmprodfeeds.ikea.freq_tbl1 (
 
@@ -41,8 +43,8 @@ insert into wmprodfeeds.ikea.freq_tbl1
       );
 
 
-
-
+-- ===============================================================================================
+-- Frequency output
 
   select
                 yr,

@@ -172,7 +172,7 @@ and t1.siz_cid in (
 
 	)
 
-and impressiondate::date between '2017-09-01' and '2018-07-31'
+and impressiondate::date between '2017-09-01' and '2018-08-31'
 
 group by
 c1.campaignname,
