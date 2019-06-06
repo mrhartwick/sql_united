@@ -109,8 +109,7 @@ q3.timestamp_2                    as visit_time
 										  t2.householdid
 -- 								          t3.cvr_time
 
-
-								   from wmprodfeeds.ikea.qualia_impressions t1
+							   from wmprodfeeds.ikea.qualia_impressions t1
 -- 						  pull householdids associated with impression file
 								   left join wmprodfeeds.ikea.qualia_graph t2
 											  on t1.deviceid = t2.platformid
